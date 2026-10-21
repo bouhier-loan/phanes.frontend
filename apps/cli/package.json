@@ -1,0 +1,15 @@
+{
+  "name": "@phanes/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Development CLI: runs Phanes analyses on a local folder.",
+  "type": "module",
+  "bin": {
+    "phanes": "./src/main.ts"
+  },
+  "dependencies": {
+    "@phanes/core": "workspace:*",
+    "@phanes/renpy-formats": "workspace:*",
+    "@phanes/testkit": "workspace:*"
+  }
+}

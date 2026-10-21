@@ -1,0 +1,9 @@
+* text=auto eol=lf
+*.rpa binary
+*.rpi binary
+*.rpyc binary
+*.rpymc binary
+*.pickle binary
+*.bin binary
+*.png binary
+*.ogg binary

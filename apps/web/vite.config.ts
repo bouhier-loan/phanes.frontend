@@ -1,0 +1,14 @@
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    target: 'es2023',
+    // All target browsers support modulepreload; the polyfill would use fetch().
+    modulePreload: { polyfill: false },
+  },
+  worker: {
+    format: 'es',
+  },
+});

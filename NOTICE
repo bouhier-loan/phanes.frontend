@@ -1,0 +1,22 @@
+Phanes
+Copyright (c) 2026 Loan Bouhier
+Licensed under the MIT License (see LICENSE).
+
+This project reads file formats defined by third-party software. Their source
+code was used as a reference for format details; where code or logic is
+adapted, the relevant files say so in a header comment.
+
+-------------------------------------------------------------------------------
+Ren'Py — https://github.com/renpy/renpy
+Copyright 2004-2026 Tom Rothamel <pytom@bishoujo.us>
+MIT License. Referenced: renpy/loader.py, renpy/script.py, renpy/ast.py,
+renpy/compat/pickle.py, renpy/cslots.pyx, launcher/game/archiver.rpy.
+
+-------------------------------------------------------------------------------
+unrpyc — https://github.com/CensoredUsername/unrpyc
+Copyright (c) 2012-2024 Yuri K. Schlesner, CensoredUsername, Jackmcbarn
+MIT License. Used as a test oracle (tools/oracle) and as a reference for the
+representation of Ren'Py AST classes.
+
+-------------------------------------------------------------------------------
+No code from unrpa (GPL-3.0) is used in this project.

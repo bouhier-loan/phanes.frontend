@@ -1,0 +1,13 @@
+{
+  "name": "@phanes/testkit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Node-only test helpers: file sources and fixture loading.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@phanes/renpy-formats": "workspace:*"
+  }
+}
