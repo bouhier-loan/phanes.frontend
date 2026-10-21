@@ -49,6 +49,10 @@ export default defineConfig(
     files: ['apps/web/src/**/*.{ts,tsx}'],
     extends: [reactHooks.configs.flat.recommended],
     languageOptions: { globals: globals.browser },
+    rules: {
+      // Only relevant to the React Compiler, which this app does not use.
+      'react-hooks/incompatible-library': 'off',
+    },
   },
   prettier,
 );

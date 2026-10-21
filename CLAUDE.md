@@ -6,7 +6,9 @@ Browser-only analyzer for Ren'Py games. pnpm monorepo, TypeScript strict, Vite +
 
 - `pnpm lint`, `pnpm format:check`, `pnpm typecheck` (`tsc -b`), `pnpm test` (Vitest projects), `pnpm build`
 - `pnpm phanes <command> <path>`: dev CLI (tsx) — see `apps/cli`
-- `pnpm e2e`: Playwright tests for `apps/web`
+- `pnpm e2e`: Playwright tests for `apps/web` (builds and serves the production bundle with its
+  CSP). In a sandbox with a preinstalled Chromium: `PLAYWRIGHT_CHROMIUM_EXECUTABLE=... pnpm e2e
+--project chromium`. `PHANES_BASE_URL` targets an already running instance instead.
 
 ## Rules
 
@@ -20,6 +22,11 @@ Browser-only analyzer for Ren'Py games. pnpm monorepo, TypeScript strict, Vite +
 - No network requests at analysis time; no lazy-loaded chunks needed by the analysis.
 - Do not copy code from unrpa (GPL-3.0). Ren'Py and unrpyc are MIT: cite them in a header comment
   when adapting logic, and keep NOTICE up to date.
+- The CSP lives in `apps/web/csp.ts` and `deploy/security-headers.conf` (kept equal by a test).
+  It enforces Trusted Types: the only allowed script URL is a same-origin `/assets/*.js`
+  (`apps/web/src/trusted-types.ts`, imported first).
+- The analysis worker is created at startup (`apps/web/src/worker/client.ts`); never add lazy
+  imports to the analysis path, or the network tab would show requests during an analysis.
 - UI strings are French and live in `apps/web/src/ui/strings.fr.ts`; code, comments and commits are
   English.
 

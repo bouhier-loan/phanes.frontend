@@ -3,7 +3,8 @@
   "compilerOptions": {
     "lib": ["ES2023", "DOM"],
     "types": ["node"],
-    "tsBuildInfoFile": "./node_modules/.tmp/node.tsbuildinfo"
+    "tsBuildInfoFile": "./node_modules/.tmp/node.tsbuildinfo",
+    "allowImportingTsExtensions": true
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "playwright.config.ts", "e2e"]
+  "include": ["vite.config.ts", "vitest.config.ts", "playwright.config.ts", "csp.ts", "e2e", "test"]
 }

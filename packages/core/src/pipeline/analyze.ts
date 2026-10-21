@@ -28,6 +28,15 @@ export interface AnalyzeOptions {
   readonly onProgress?: (progress: AnalyzeProgress) => void;
   /** Clock, injectable for reproducible reports. */
   readonly now?: () => Date;
+  /** Polled between files; returning true stops the analysis with an AnalysisCancelled error. */
+  readonly isCancelled?: () => boolean;
+}
+
+export class AnalysisCancelled extends Error {
+  override readonly name = 'AnalysisCancelled';
+  constructor() {
+    super('analysis cancelled');
+  }
 }
 
 export const DEFAULT_ANALYSES: readonly Analysis[] = [
@@ -44,6 +53,7 @@ export async function loadProject(
   options: AnalyzeOptions = {},
 ): Promise<Project> {
   const progress = (phase: AnalyzePhase) => (p: { done: number; total: number; path: string }) => {
+    if (options.isCancelled?.()) throw new AnalysisCancelled();
     options.onProgress?.({ phase, done: p.done, total: p.total, current: p.path });
   };
   const built = await buildVfs(files, {

@@ -130,3 +130,13 @@ describe('version heuristics without version files', () => {
     });
   });
 });
+
+describe('cancellation', () => {
+  it('stops between files', async () => {
+    const { AnalysisCancelled } = await import('../src');
+    let calls = 0;
+    await expect(
+      analyzeFiles(await dist('8.5.3'), { isCancelled: () => ++calls > 2 }),
+    ).rejects.toBeInstanceOf(AnalysisCancelled);
+  });
+});
