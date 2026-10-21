@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
-import { networkRequests, openApp, REPO, waitForReport } from './helpers';
+import { networkRequests, openApp, openSection, REPO, waitForReport } from './helpers';
 
 let dir = '';
 
@@ -41,7 +41,7 @@ test('lists a 6 GiB archive without loading it', async ({ page }) => {
   // Time spent by Playwright handing the file over vs. by the app analyzing it.
   console.log(`setInputFiles: ${handedOver - started} ms, analysis: ${analyzed - handedOver} ms`);
   expect(analyzed - handedOver).toBeLessThan(30_000);
-  await page.getByRole('tab', { name: 'Inventaire' }).click();
+  await openSection(page, 'Inventaire');
   await expect(page.getByTestId('inventory')).toContainText('20 000 entrées');
   await expect(page.getByTestId('inventory')).toContainText('6 Go');
   expect(networkRequests(watch)).toEqual([]);

@@ -1,4 +1,4 @@
-import type { AnalyzeProgress, Report } from '@phanes/core';
+import type { AnalyzeProgress, Diagnostic, Report } from '@phanes/core';
 import * as Comlink from 'comlink';
 import type { PickedFile } from '../adapters/collect';
 import type { AnalysisWorkerApi } from './protocol';
@@ -16,8 +16,9 @@ const remote = Comlink.wrap<AnalysisWorkerApi>(worker);
 export function analyzeInWorker(
   files: readonly PickedFile[],
   onProgress: (p: AnalyzeProgress) => void,
+  onDiagnostics: (d: readonly Diagnostic[]) => void,
 ): Promise<Report> {
-  return remote.analyze(files, Comlink.proxy(onProgress));
+  return remote.analyze(files, Comlink.proxy(onProgress), Comlink.proxy(onDiagnostics));
 }
 
 export function cancelAnalysis(): void {
@@ -27,3 +28,12 @@ export function cancelAnalysis(): void {
 export function isCancellation(error: unknown): boolean {
   return error instanceof Error && error.message === 'cancelled';
 }
+
+/** Queries on the last analyzed project (reader, dialogue, assets). */
+export const workerQueries = {
+  outline: () => remote.outline(),
+  readLabel: (name: string) => remote.readLabel(name),
+  dialogue: () => remote.dialogue(),
+  search: (query: string, limit = 200) => remote.search(query, limit),
+  openAsset: (path: string) => remote.openAsset(path),
+};
