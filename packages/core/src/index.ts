@@ -31,3 +31,4 @@ export {
   loadTranslationIds,
   translationIdsOf,
 } from './pipeline/scripts';
+export * from './reader';
