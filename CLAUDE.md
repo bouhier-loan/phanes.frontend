@@ -24,7 +24,12 @@ Browser-only analyzer for Ren'Py games. pnpm monorepo, TypeScript strict, Vite +
   when adapting logic, and keep NOTICE up to date.
 - The CSP lives in `apps/web/csp.ts` and `deploy/security-headers.conf` (kept equal by a test).
   It enforces Trusted Types: the only allowed script URL is a same-origin `/assets/*.js`
-  (`apps/web/src/trusted-types.ts`, imported first).
+  (`apps/web/src/trusted-types.ts`, imported first). `connect-src` allows only the OIDC issuer
+  (`apps/web/src/auth/config.ts`); `img-src`/`media-src` allow `blob:` for local previews.
+- Sign-in (OIDC, Pocket ID) happens in `apps/web/src/auth/AuthGate.tsx`, before the app renders;
+  nothing may contact the provider afterwards. E2E tests mock it (`apps/web/e2e/oidc.ts`).
+- Script reader data and asset blobs come from the worker on demand (`worker/protocol.ts`);
+  asset previews are lazy `Blob` slices of the dropped files, never full reads.
 - The analysis worker is created at startup (`apps/web/src/worker/client.ts`); never add lazy
   imports to the analysis path, or the network tab would show requests during an analysis.
 - UI strings are French and live in `apps/web/src/ui/strings.fr.ts`; code, comments and commits are
@@ -47,4 +52,8 @@ rebuilds `fixtures/build`. The 7.4.11 SDK ships a Python 2.7 interpreter
   requires the anti-corruption layer to produce the same projection for every SDK.
 - Dialogue statistics follow `docs/stats.md`; hand counts live in
   `fixtures/expected/phanes_demo.stats.json`. Change both together.
+- Story and asset analyses follow `docs/analyses.md`; hand counts live in
+  `fixtures/expected/phanes_demo.story.json` (`core/test/story.test.ts`). Change both together.
+- Translation identifiers are read from slot 2 of the `.rpyc` files (`loadTranslationIds`), not
+  recomputed: Ren'Py's algorithm differs between versions.
 - Verified format facts (and surprises) are in `docs/formats.md`.

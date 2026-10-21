@@ -5,7 +5,8 @@ déposez le dossier d'un jeu (ou des fichiers `.rpa`, `.rpyc`, `.rpy`) et obtene
 structure, ses personnages, ses dialogues, ses choix et ses ressources.
 
 Aucun fichier ne quitte votre machine : l'analyse tourne dans un Web Worker, sans aucune requête
-réseau (CSP `connect-src 'none'`).
+réseau. La seule connexion autorisée (CSP `connect-src https://auth.lonedev.fr`) est la connexion
+OIDC, faite avant l'affichage de l'application.
 
 ## Structure
 
@@ -19,7 +20,7 @@ réseau (CSP `connect-src 'none'`).
 | `fixtures`               | Mini-jeux compilés avec plusieurs SDK Ren'Py                               |
 | `tools`                  | Génération des fixtures, oracle unrpyc                                     |
 
-## Fonctionnalités (MVP)
+## Fonctionnalités
 
 - **Inventaire** : arborescence unifiée des fichiers et du contenu des archives `.rpa`
   (RPA-1.0, 2.0, 3.0), tailles, types, fichiers masqués ; les archives ne sont jamais chargées
@@ -28,11 +29,35 @@ réseau (CSP `connect-src 'none'`).
   décodés par une VM pickle qui n'exécute rien.
 - **Vue d'ensemble** : version de Ren'Py, labels, répliques, mots, temps de lecture, langues.
 - **Personnages** : répliques et mots par personnage (`define`, `init python`,
-  `DynamicCharacter`, noms littéraux, narrateur, `extend`).
-- **Labels** avec fichier et ligne, **diagnostics** en français, **export JSON**.
+  `DynamicCharacter`, noms littéraux, narrateur, `extend`), couleur, fichiers, sprites.
+- **Labels** avec fichier, ligne et statut, **diagnostics** en français, **export JSON**.
+- **Histoire** : graphe des labels (jump, call, choix, fins, labels inaccessibles, sauts cassés),
+  menus de choix, variables (où elles sont modifiées et lues), lecteur de script reconstitué.
+- **Ressources et langues** : images déclarées et affichées, sons, vidéos (aperçus lus sur place
+  par des URL `blob:`, jamais extraits), couverture des traductions.
 
-Définitions des statistiques : [docs/stats.md](docs/stats.md). Format du rapport :
-[docs/report-schema.md](docs/report-schema.md). Détails des formats : [docs/formats.md](docs/formats.md).
+Définitions des statistiques : [docs/stats.md](docs/stats.md) et [docs/analyses.md](docs/analyses.md).
+Format du rapport : [docs/report-schema.md](docs/report-schema.md). Détails des formats :
+[docs/formats.md](docs/formats.md).
+
+## Connexion (OIDC)
+
+L'interface demande une connexion au fournisseur d'identité Pocket ID de `auth.lonedev.fr`
+(client public `27c855f7-406c-4a57-9117-8370bd85e9dd`, code d'autorisation avec PKCE, réglages
+dans `apps/web/src/auth/config.ts`). Toutes les requêtes vers le fournisseur ont lieu avant
+l'affichage de l'application ; la session dure le temps de l'onglet (`sessionStorage`) et n'est
+jamais rafraîchie pendant une analyse.
+
+À déclarer dans Pocket ID pour ce client :
+
+- URL de rappel : `https://<domaine>/auth/callback`, `http://127.0.0.1:4173/auth/callback` (E2E)
+  et `http://localhost:5173/auth/callback` (développement) ;
+- URL de rappel de déconnexion : `https://<domaine>/`.
+
+L'application étant statique, la connexion masque l'interface mais ne protège pas le bundle :
+un contrôle d'accès réel se ferait devant nginx (oauth2-proxy, forward auth). En développement,
+`VITE_AUTH=off pnpm --filter @phanes/web dev` désactive la connexion. Les tests E2E remplacent le
+fournisseur par une simulation (`apps/web/e2e/oidc.ts`).
 
 ## Développement
 
