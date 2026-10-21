@@ -46,3 +46,21 @@ export function networkRequests(watch: Watch): string[] {
 export function payload(path: string, name = path.split('/').pop() ?? path) {
   return { name, mimeType: 'application/octet-stream', buffer: readFileSync(path) };
 }
+
+/**
+ * Waits for the report. On failure, reports what the page shows instead
+ * (progress, message, error), to tell harness limits from app bugs.
+ */
+export async function waitForReport(page: Page, timeout = 15_000): Promise<void> {
+  try {
+    await expect(page.getByTestId('report')).toBeVisible({ timeout });
+  } catch (error) {
+    const state = await page
+      .locator('main')
+      .innerText()
+      .catch(() => '(page unavailable)');
+    throw new Error(`report not shown after ${timeout} ms; page shows: ${state.slice(0, 500)}`, {
+      cause: error,
+    });
+  }
+}

@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
-import { networkRequests, openApp, REPO } from './helpers';
+import { networkRequests, openApp, REPO, waitForReport } from './helpers';
 
 let dir = '';
 
@@ -35,8 +35,12 @@ test('lists a 6 GiB archive without loading it', async ({ page }) => {
   const watch = await openApp(page);
   const started = Date.now();
   await page.getByTestId('folder-input').setInputFiles(join(dir, 'HugeGame'));
-  await expect(page.getByTestId('report')).toBeVisible({ timeout: 60_000 });
-  expect(Date.now() - started).toBeLessThan(30_000);
+  const handedOver = Date.now();
+  await waitForReport(page, 60_000);
+  const analyzed = Date.now();
+  // Time spent by Playwright handing the file over vs. by the app analyzing it.
+  console.log(`setInputFiles: ${handedOver - started} ms, analysis: ${analyzed - handedOver} ms`);
+  expect(analyzed - handedOver).toBeLessThan(30_000);
   await page.getByRole('tab', { name: 'Inventaire' }).click();
   await expect(page.getByTestId('inventory')).toContainText('20 000 entrées');
   await expect(page.getByTestId('inventory')).toContainText('6 Go');

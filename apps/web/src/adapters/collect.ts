@@ -55,11 +55,11 @@ export function collectFromDrop(
   for (const item of Array.from(items)) {
     if (item.kind !== 'file') continue;
     const entry = item.webkitGetAsEntry();
-    if (entry) roots.push(entry);
-    else {
-      const file = item.getAsFile();
-      if (file) plain.push(file);
-    }
+    // Directories need the entries API; plain files are taken directly,
+    // which is synchronous and works for every kind of drop.
+    const file = entry?.isDirectory ? null : item.getAsFile();
+    if (file) plain.push(file);
+    else if (entry) roots.push(entry);
   }
   return walkEntries(roots, plain, onProgress);
 }
@@ -70,21 +70,30 @@ async function walkEntries(
   onProgress?: CollectProgress,
 ): Promise<PickedFile[]> {
   const out: PickedFile[] = plain.map((file) => ({ path: file.name, file }));
+  // Breadth-first walk: iterating an array also visits items appended during
+  // the loop, without the O(n) cost of shift().
   const queue = [...roots];
   const pendingFiles: FileSystemFileEntry[] = [];
-  while (queue.length > 0) {
-    const entry = queue.shift();
-    if (!entry || isHidden(entry.name)) continue;
-    if (isDirectory(entry)) queue.push(...(await readAllEntries(entry)));
-    else if (isFile(entry)) pendingFiles.push(entry);
+  for (const entry of queue) {
+    if (isHidden(entry.name)) continue;
+    if (isDirectory(entry)) {
+      try {
+        for (const child of await readAllEntries(entry)) queue.push(child);
+      } catch {
+        // An unreadable folder (permissions...) is skipped, the rest is analyzed.
+      }
+    } else if (isFile(entry)) pendingFiles.push(entry);
   }
-  // Resolve File objects a few at a time, so huge folders do not flood the event loop.
+  // Resolve File objects a few at a time, so huge folders do not flood the
+  // event loop. An unreadable entry is skipped rather than failing the drop.
   for (let i = 0; i < pendingFiles.length; i += 64) {
     const chunk = pendingFiles.slice(i, i + 64);
-    const files = await Promise.all(chunk.map(fileOf));
-    files.forEach((file, j) => {
+    const files = await Promise.allSettled(chunk.map(fileOf));
+    files.forEach((result, j) => {
       const entry = chunk[j];
-      if (entry) out.push({ path: entry.fullPath.replace(/^\/+/, ''), file });
+      if (entry && result.status === 'fulfilled') {
+        out.push({ path: entry.fullPath.replace(/^\/+/, ''), file: result.value });
+      }
     });
     onProgress?.(out.length);
   }

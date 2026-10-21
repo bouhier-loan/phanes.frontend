@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
-import { FIXTURES, networkRequests, openApp, payload } from './helpers';
+import { FIXTURES, networkRequests, openApp, payload, waitForReport } from './helpers';
 
 const DIST = join(FIXTURES, 'build', '8.5.3', 'phanes_demo', 'dist');
 
@@ -83,7 +83,7 @@ test('accepts dropped files', async ({ page }) => {
   );
   await page.getByTestId('dropzone').dispatchEvent('drop', { dataTransfer });
 
-  await expect(page.getByTestId('report')).toBeVisible();
+  await waitForReport(page);
   await expect(page.locator('.stat', { hasText: 'Labels' })).toContainText('7');
   await expect(page.getByText('≤ 7')).toBeVisible();
   expect(networkRequests(watch)).toEqual([]);
