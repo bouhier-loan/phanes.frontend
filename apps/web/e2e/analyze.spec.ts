@@ -16,6 +16,12 @@ test('analyzes a game folder without any network request', async ({ page }) => {
   await expect(page.locator('.stat', { hasText: 'Répliques' })).toContainText('17');
   await expect(page.locator('.stat', { hasText: 'Mots' })).toContainText('71');
   await expect(page.locator('.stat', { hasText: 'Fins' })).toContainText('3');
+  const speed = page.getByRole('button', { name: /^Vitesse de lecture/ });
+  await expect(speed).toHaveAttribute('aria-expanded', 'false');
+  await speed.click();
+  await page.getByRole('button', { name: '300 mots/min' }).click();
+  await expect(speed).toContainText('300 mots/min');
+  await expect(speed).toHaveAttribute('aria-expanded', 'false');
 
   await openSection(page, 'Personnages');
   await expect(page.getByTestId('characters')).toContainText('Eileen');

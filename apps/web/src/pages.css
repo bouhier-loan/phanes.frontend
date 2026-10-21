@@ -216,6 +216,9 @@
 .reading-speed {
   margin-top: auto;
   padding-top: 12px;
+}
+
+.reading-speed .field {
   flex-wrap: wrap;
 }
 

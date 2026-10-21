@@ -1,7 +1,7 @@
 import { type FileKind, readingMinutes } from '@phanes/core';
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import { DownloadIcon } from '../components/icons';
-import { Callout, Meter, PageHeader, StatCard } from '../components/ui';
+import { Callout, Meter, PageHeader, Select, StatCard } from '../components/ui';
 import { formatBytes, formatDuration, formatMinutes, formatNumber, formatPercent } from '../format';
 import { useReport } from '../report';
 import { href } from '../route';
@@ -206,7 +206,6 @@ function EnginePanel() {
 export function OverviewPage() {
   const r = useReport();
   const [wpm, setWpm] = useState(200);
-  const speedId = useId();
   const o = t.overview;
   const overview = r.overview;
   return (
@@ -244,22 +243,15 @@ export function OverviewPage() {
               {readingValue(readingMinutes(overview.dialogue, wpm))}
             </span>
             <p className="muted small">{o.readingNote}</p>
-            <div className="field reading-speed">
-              <label htmlFor={speedId}>{o.speed}</label>
-              <select
-                id={speedId}
-                className="select"
-                value={wpm}
-                onChange={(e) => {
-                  setWpm(Number(e.currentTarget.value));
+            <div className="reading-speed">
+              <Select
+                label={o.speed}
+                value={String(wpm)}
+                onChange={(n) => {
+                  setWpm(Number(n));
                 }}
-              >
-                {SPEEDS.map((n) => (
-                  <option key={n} value={n}>
-                    {o.wpm(n)}
-                  </option>
-                ))}
-              </select>
+                options={SPEEDS.map((n) => ({ value: String(n), label: o.wpm(n) }))}
+              />
             </div>
           </div>
           <div className="stat-grid key-stats">

@@ -1,6 +1,6 @@
 import type { GraphEdge, GraphNode, MenuEntry, StoryGraphResult } from '@phanes/core';
-import { useId, useMemo, useState } from 'react';
-import { PageHeader } from '../components/ui';
+import { useMemo, useState } from 'react';
+import { PageHeader, Select } from '../components/ui';
 import { DEFAULT_LAYOUT, layoutGraph } from '../graph/layout';
 import { formatLocation, formatNumber } from '../format';
 import { useReport } from '../report';
@@ -244,7 +244,6 @@ export function GraphPage({ focus }: { focus: string | null }) {
   const r = useReport();
   const g = t.graph;
   const graph = r.graph;
-  const scopeId = useId();
   const files = useMemo(
     () => [...new Set((graph?.nodes ?? []).map((n) => n.file))].sort(),
     [graph],
@@ -298,24 +297,17 @@ export function GraphPage({ focus }: { focus: string | null }) {
       </PageHeader>
 
       <div className="toolbar graph-toolbar">
-        <div className="field">
-          <label htmlFor={scopeId}>{g.scope}</label>
-          <select
-            id={scopeId}
-            className="select"
-            value={scope ?? ''}
-            onChange={(e) => {
-              setScope(e.currentTarget.value === '' ? null : e.currentTarget.value);
-            }}
-          >
-            <option value="">{g.wholeGame}</option>
-            {files.map((f) => (
-              <option key={f} value={f}>
-                {f.replace(/^game\//, '')}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Select
+          label={g.scope}
+          value={scope ?? ''}
+          onChange={(f) => {
+            setScope(f === '' ? null : f);
+          }}
+          options={[
+            { value: '', label: g.wholeGame },
+            ...files.map((f) => ({ value: f, label: f.replace(/^game\//, '') })),
+          ]}
+        />
         <ul aria-label={g.legend} className="legend">
           {LEGEND.map((l) => (
             <li key={l.style}>

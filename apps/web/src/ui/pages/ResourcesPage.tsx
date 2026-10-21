@@ -6,7 +6,7 @@ import type {
   ImageCategory,
   VideoAsset,
 } from '@phanes/core';
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { mediaType } from '../../adapters/media-type';
 import { useAssetUrl } from '../assets';
 import {
@@ -17,7 +17,7 @@ import {
   MusicIcon,
   PlayIcon,
 } from '../components/icons';
-import { Callout, ChipGroup, PageHeader, StatCard } from '../components/ui';
+import { Callout, ChipGroup, PageHeader, Select, StatCard } from '../components/ui';
 import { basename, formatBytes, formatLocation, formatNumber } from '../format';
 import { useReport } from '../report';
 import { href } from '../route';
@@ -223,7 +223,6 @@ function Images({ focus }: { focus: string | null }) {
   const [shown, setShown] = useState(GALLERY);
   const [sort, setSort] = useState<'size' | 'name' | 'folder'>('size');
   const [neverShown, setNeverShown] = useState(NEVER);
-  const sortId = useId();
   const images = useMemo(() => assets?.images.entries ?? [], [assets]);
   const list = useMemo(
     () => images.filter((i) => category === 'all' || i.category === category),
@@ -394,21 +393,16 @@ function Images({ focus }: { focus: string | null }) {
             <h2 id="titre-inutilisees">
               {res.neverTitle} <span className="faint">· {formatNumber(never.length)}</span>
             </h2>
-            <div className="field">
-              <label htmlFor={sortId}>{res.sortLabel}</label>
-              <select
-                id={sortId}
-                className="select"
-                value={sort}
-                onChange={(e) => {
-                  setSort(e.currentTarget.value as typeof sort);
-                }}
-              >
-                <option value="size">{res.sort.size}</option>
-                <option value="name">{res.sort.name}</option>
-                <option value="folder">{res.sort.folder}</option>
-              </select>
-            </div>
+            <Select
+              label={res.sortLabel}
+              value={sort}
+              onChange={setSort}
+              options={[
+                { value: 'size', label: res.sort.size },
+                { value: 'name', label: res.sort.name },
+                { value: 'folder', label: res.sort.folder },
+              ]}
+            />
           </div>
           <div className="table-wrap">
             <table className="table">

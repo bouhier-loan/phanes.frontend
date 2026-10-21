@@ -1,6 +1,6 @@
 import type { MenuEntry, MenuOption } from '@phanes/core';
-import { type ReactNode, useId, useMemo, useState } from 'react';
-import { ChipGroup, PageHeader } from '../components/ui';
+import { type ReactNode, useMemo, useState } from 'react';
+import { ChipGroup, PageHeader, Select } from '../components/ui';
 import { formatLocation } from '../format';
 import { useReport } from '../report';
 import { href } from '../route';
@@ -119,7 +119,6 @@ export function ChoicesPage({ focus }: { focus: string | null }) {
   const [filter, setFilter] = useState<Filter>('all');
   const [file, setFile] = useState('');
   const [shown, setShown] = useState(PAGE);
-  const fileId = useId();
   const c = t.choices;
   const menus = r.menus;
   const definitions = useMemo(
@@ -178,25 +177,18 @@ export function ChoicesPage({ focus }: { focus: string | null }) {
                 { value: 'prompt', label: c.filters.prompt, count: menus.totals.withPrompt },
               ]}
             />
-            <div className="field">
-              <label htmlFor={fileId}>{c.file}</label>
-              <select
-                id={fileId}
-                className="select"
-                value={file}
-                onChange={(e) => {
-                  setFile(e.currentTarget.value);
-                  setShown(PAGE);
-                }}
-              >
-                <option value="">{c.allFiles}</option>
-                {files.map((f) => (
-                  <option key={f} value={f}>
-                    {f.replace(/^game\//, '')}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label={c.file}
+              value={file}
+              onChange={(f) => {
+                setFile(f);
+                setShown(PAGE);
+              }}
+              options={[
+                { value: '', label: c.allFiles },
+                ...files.map((f) => ({ value: f, label: f.replace(/^game\//, '') })),
+              ]}
+            />
           </div>
           <div className="stack" data-testid="menus">
             {list.slice(0, shown).map((m) => (

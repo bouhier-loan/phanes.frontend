@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { formatNumber } from '../format';
-import { InfoIcon, SearchIcon, WarningIcon } from './icons';
+import { ChevronDownIcon, InfoIcon, SearchIcon, WarningIcon } from './icons';
 
 export function PageHeader({
   crumbs,
@@ -80,6 +80,114 @@ export function StatCard({
       <span className="stat-value">{value}</span>
       {detail !== undefined && <span className="stat-detail">{detail}</span>}
       {children}
+    </div>
+  );
+}
+
+export interface SelectOption<T extends string> {
+  readonly value: T;
+  readonly label: string;
+}
+
+/**
+ * A drop-down list made of buttons. Not a native `<select>`: WebKit renders
+ * one with an inline stylesheet that `style-src 'self'` refuses.
+ */
+export function Select<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: readonly SelectOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const id = useId();
+  const root = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const list = useRef<HTMLUListElement>(null);
+  const close = () => {
+    setOpen(false);
+    trigger.current?.focus();
+  };
+  useEffect(() => {
+    if (!open) return;
+    list.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus();
+    const onPointer = (e: PointerEvent) => {
+      if (!(e.target instanceof Node) || !root.current?.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointer);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+    };
+  }, [open]);
+  const current = options.find((o) => o.value === value);
+  return (
+    <div
+      ref={root}
+      className="field"
+      onBlur={(e) => {
+        if (!(e.relatedTarget instanceof Node) || !e.currentTarget.contains(e.relatedTarget))
+          setOpen(false);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' && open) {
+          e.preventDefault();
+          close();
+        }
+      }}
+    >
+      <span id={`${id}-label`}>{label}</span>
+      <div className="dropdown">
+        <button
+          ref={trigger}
+          type="button"
+          className="select"
+          aria-expanded={open}
+          aria-controls={`${id}-list`}
+          aria-labelledby={`${id}-label ${id}-value`}
+          onClick={() => {
+            setOpen(!open);
+          }}
+        >
+          <span id={`${id}-value`}>{current?.label}</span>
+          <ChevronDownIcon size={14} />
+        </button>
+        {open && (
+          <ul
+            ref={list}
+            id={`${id}-list`}
+            className="dropdown-list"
+            aria-label={label}
+            onKeyDown={(e) => {
+              if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+              e.preventDefault();
+              const items = [...e.currentTarget.querySelectorAll('button')];
+              const at = items.findIndex((b) => b === document.activeElement);
+              const step = e.key === 'ArrowDown' ? 1 : items.length - 1;
+              items[(at + step) % items.length]?.focus();
+            }}
+          >
+            {options.map((o) => (
+              <li key={o.value}>
+                <button
+                  type="button"
+                  aria-pressed={o.value === value}
+                  onClick={() => {
+                    onChange(o.value);
+                    close();
+                  }}
+                >
+                  {o.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
