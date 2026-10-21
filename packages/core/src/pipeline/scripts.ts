@@ -187,8 +187,9 @@ export function translationIdsOf(script: ScriptFile, statements: readonly Stmt[]
 
 /**
  * Reads the translation identifiers Ren'Py stored in slot 2 of every
- * default-language script. Slot 1 (the one analyzed) has none, and recomputing
- * them is not reliable across Ren'Py versions (docs/analyses.md).
+ * default-language script (computed by renpy/translation/__init__.py). Slot 1,
+ * the one analyzed, has none, and recomputing them is not reliable across
+ * Ren'Py versions (docs/analyses.md).
  */
 export async function loadTranslationIds(
   vfs: Vfs,

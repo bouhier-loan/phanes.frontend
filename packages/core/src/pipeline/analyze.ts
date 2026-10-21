@@ -1,10 +1,15 @@
 import type { FileSource, RpaReadOptions, RpycOptions } from '@phanes/renpy-formats';
 import type { Analysis } from '../analyses/analysis';
+import { assetsAnalysis } from '../analyses/assets';
 import { charactersAnalysis } from '../analyses/characters';
 import { diagnosticsAnalysis } from '../analyses/diagnostics';
+import { storyGraphAnalysis } from '../analyses/graph';
 import { inventoryAnalysis } from '../analyses/inventory';
 import { labelsAnalysis } from '../analyses/labels';
+import { menusAnalysis } from '../analyses/menus';
 import { overviewAnalysis } from '../analyses/overview';
+import { translationsAnalysis } from '../analyses/translations';
+import { variablesAnalysis } from '../analyses/variables';
 import { type Diagnostic, diagnosticFromError } from '../model/diagnostic';
 import type { Json } from '../model/json';
 import type { Project } from '../model/project';
@@ -47,6 +52,11 @@ export const DEFAULT_ANALYSES: readonly Analysis[] = [
   charactersAnalysis,
   labelsAnalysis,
   diagnosticsAnalysis,
+  storyGraphAnalysis,
+  menusAnalysis,
+  variablesAnalysis,
+  assetsAnalysis,
+  translationsAnalysis,
 ];
 
 /** Loads the project: file tree, archive indexes, compiled scripts, version files. */

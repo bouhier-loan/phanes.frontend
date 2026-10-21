@@ -46,6 +46,8 @@ export interface LabelStats {
   lines: number;
   words: number;
   cjkChars: number;
+  /** Ids of the speakers with a line in the label. */
+  readonly speakers: Set<string>;
 }
 
 export interface DialogueIndex {
@@ -237,12 +239,15 @@ export const dialogueIndex = memo((project: Project): DialogueIndex => {
     if (label !== null) {
       let l = byLabel.get(label);
       if (!l) {
-        l = { lines: 0, words: 0, cjkChars: 0 };
+        l = { lines: 0, words: 0, cjkChars: 0, speakers: new Set() };
         byLabel.set(label, l);
       }
       l.words += count.words;
       l.cjkChars += count.cjkChars;
-      if (isLine) l.lines++;
+      if (isLine) {
+        l.lines++;
+        l.speakers.add(stats.id);
+      }
     }
   };
 

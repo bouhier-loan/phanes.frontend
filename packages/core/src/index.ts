@@ -16,6 +16,12 @@ export * from './analyses/overview';
 export * from './analyses/characters';
 export * from './analyses/labels';
 export * from './analyses/diagnostics';
+export * from './analyses/graph';
+export * from './analyses/menus';
+export * from './analyses/variables';
+export * from './analyses/assets';
+export * from './analyses/translations';
+export { menuKey, scanFlow, type FlowContext, type FlowHandlers } from './analyses/flow';
 export * from './pipeline/report';
 export * from './pipeline/analyze';
 export {
