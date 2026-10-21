@@ -6,3 +6,5 @@ export { inflateZlib, looksLikeZlib } from './zlib/inflate';
 export type { InflateOptions } from './zlib/inflate';
 export * from './pickle';
 export * from './rpa';
+export * from './rpyc';
+export * from './dump';

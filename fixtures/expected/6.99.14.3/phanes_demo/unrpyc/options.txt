@@ -1,0 +1,244 @@
+[
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'options.rpy',
+                    3,
+                    <renpy.ast.PyExpr 
+                        .filename = 'options.rpy',
+                        .linenumber = 3,
+                        .py = None
+                    > = '_("Phanes Demo")',
+                    0
+                ),
+                .mode = 'eval',
+                .py = None,
+                .source = <renpy.ast.PyExpr 
+                    .filename = 'options.rpy',
+                    .linenumber = 3,
+                    .py = None
+                > = '_("Phanes Demo")'
+            >,
+            .filename = 'options.rpy',
+            .index = None,
+            .linenumber = 3,
+            .name = (
+                b'options.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .operator = '=',
+            .store = 'store.config',
+            .varname = 'name'
+        >],
+        .filename = 'options.rpy',
+        .linenumber = 3,
+        .name = (
+            b'options.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'options.rpy',
+                    4,
+                    <renpy.ast.PyExpr 
+                        .filename = 'options.rpy',
+                        .linenumber = 4,
+                        .py = None
+                    > = '"1.0"',
+                    0
+                ),
+                .mode = 'eval',
+                .py = None,
+                .source = <renpy.ast.PyExpr 
+                    .filename = 'options.rpy',
+                    .linenumber = 4,
+                    .py = None
+                > = '"1.0"'
+            >,
+            .filename = 'options.rpy',
+            .index = None,
+            .linenumber = 4,
+            .name = (
+                b'options.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .operator = '=',
+            .store = 'store.config',
+            .varname = 'version'
+        >],
+        .filename = 'options.rpy',
+        .linenumber = 4,
+        .name = (
+            b'options.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'options.rpy',
+                    5,
+                    <renpy.ast.PyExpr 
+                        .filename = 'options.rpy',
+                        .linenumber = 5,
+                        .py = None
+                    > = '"PhanesDemo"',
+                    0
+                ),
+                .mode = 'eval',
+                .py = None,
+                .source = <renpy.ast.PyExpr 
+                    .filename = 'options.rpy',
+                    .linenumber = 5,
+                    .py = None
+                > = '"PhanesDemo"'
+            >,
+            .filename = 'options.rpy',
+            .index = None,
+            .linenumber = 5,
+            .name = (
+                b'options.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .operator = '=',
+            .store = 'store.build',
+            .varname = 'name'
+        >],
+        .filename = 'options.rpy',
+        .linenumber = 5,
+        .name = (
+            b'options.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'options.rpy',
+                    6,
+                    <renpy.ast.PyExpr 
+                        .filename = 'options.rpy',
+                        .linenumber = 6,
+                        .py = None
+                    > = '"PhanesDemo-1700000000"',
+                    0
+                ),
+                .mode = 'eval',
+                .py = None,
+                .source = <renpy.ast.PyExpr 
+                    .filename = 'options.rpy',
+                    .linenumber = 6,
+                    .py = None
+                > = '"PhanesDemo-1700000000"'
+            >,
+            .filename = 'options.rpy',
+            .index = None,
+            .linenumber = 6,
+            .name = (
+                b'options.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .operator = '=',
+            .store = 'store.config',
+            .varname = 'save_directory'
+        >],
+        .filename = 'options.rpy',
+        .linenumber = 6,
+        .name = (
+            b'options.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Python 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'options.rpy',
+                    8,
+                    0
+                ),
+                .mode = 'exec',
+                .py = None,
+                .source = """
+build.archive("scripts", "all")
+build.archive("images", "all")
+build.classify("game/**.rpy", None)
+build.classify("game/**.rpyc", "scripts")
+build.classify("game/images/**", "images")
+build.classify("game/cache/**", None)
+build.classify("game/saves/**", None)
+"""
+                
+            >,
+            .filename = 'options.rpy',
+            .linenumber = 8,
+            .name = (
+                b'options.rpy',
+                0,
+                0
+            ),
+            .next = None
+        >],
+        .filename = 'options.rpy',
+        .linenumber = 8,
+        .name = (
+            b'options.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Return 
+        .expression = None,
+        .filename = 'options.rpy',
+        .linenumber = 8,
+        .name = (
+            b'options.rpy',
+            0,
+            0
+        ),
+        .next = None
+    >
+]

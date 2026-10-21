@@ -1,0 +1,229 @@
+[
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Screen 
+            .filename = 'extra.rpy',
+            .linenumber = 3,
+            .name = (
+                b'extra.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .screen = <renpy.sl2.slast.SLScreen 
+                .analysis = None,
+                .children = [<renpy.sl2.slast.SLDisplayable 
+                    .child_or_fixed = True,
+                    .children = [<renpy.sl2.slast.SLDisplayable 
+                        .child_or_fixed = False,
+                        .children = [
+                            <renpy.sl2.slast.SLDisplayable 
+                                .child_or_fixed = False,
+                                .children = [],
+                                .default_keywords = {},
+                                .displayable = <class renpy.text.text.Text>,
+                                .imagemap = False,
+                                .keyword = [],
+                                .location = (
+                                    'extra.rpy',
+                                    6
+                                ),
+                                .pass_context = False,
+                                .positional = [<renpy.ast.PyExpr 
+                                    .filename = 'extra.rpy',
+                                    .linenumber = 6,
+                                    .py = None
+                                > = '"Affection: [affection]"'],
+                                .replaces = True,
+                                .scope = True,
+                                .serial = 0,
+                                .style = 'text',
+                                .variable = None
+                            >,
+                            <renpy.sl2.slast.SLDisplayable 
+                                .child_or_fixed = False,
+                                .children = [],
+                                .default_keywords = {},
+                                .displayable = <class renpy.ui._textbutton>,
+                                .imagemap = False,
+                                .keyword = [(
+                                    'action',
+                                    <renpy.ast.PyExpr 
+                                        .filename = 'extra.rpy',
+                                        .linenumber = 7,
+                                        .py = None
+                                    > = 'Jump("secret_ending")'
+                                )],
+                                .location = (
+                                    'extra.rpy',
+                                    7
+                                ),
+                                .pass_context = False,
+                                .positional = [<renpy.ast.PyExpr 
+                                    .filename = 'extra.rpy',
+                                    .linenumber = 7,
+                                    .py = None
+                                > = '"Secret"'],
+                                .replaces = False,
+                                .scope = True,
+                                .serial = 0,
+                                .style = 'button',
+                                .variable = None
+                            >
+                        ],
+                        .default_keywords = {'layout': 'vertical'},
+                        .displayable = <class renpy.display.layout.MultiBox>,
+                        .imagemap = False,
+                        .keyword = [],
+                        .location = (
+                            'extra.rpy',
+                            5
+                        ),
+                        .pass_context = False,
+                        .positional = [],
+                        .replaces = False,
+                        .scope = False,
+                        .serial = 0,
+                        .style = 'vbox',
+                        .variable = None
+                    >],
+                    .default_keywords = {},
+                    .displayable = <class renpy.display.layout.Window>,
+                    .imagemap = False,
+                    .keyword = [],
+                    .location = (
+                        'extra.rpy',
+                        4
+                    ),
+                    .pass_context = False,
+                    .positional = [],
+                    .replaces = False,
+                    .scope = False,
+                    .serial = 0,
+                    .style = 'frame',
+                    .variable = None
+                >],
+                .keyword = [],
+                .layer = "'screens'",
+                .location = (
+                    'extra.rpy',
+                    3
+                ),
+                .modal = 'False',
+                .name = 'hud',
+                .parameters = <renpy.ast.ParameterInfo 
+                    .extrakw = None,
+                    .extrapos = None,
+                    .parameters = [],
+                    .positional = []
+                >,
+                .predict = 'None',
+                .prepared = False,
+                .sensitive = 'True',
+                .serial = 0,
+                .tag = None,
+                .variant = 'None',
+                .zorder = '0'
+            >
+        >],
+        .filename = 'extra.rpy',
+        .linenumber = 3,
+        .name = (
+            b'extra.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = -500
+    >,
+    <renpy.ast.Label 
+        .block = [
+            <renpy.ast.Say 
+                .arguments = None,
+                .explicit_identifier = None,
+                .filename = 'extra.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 10,
+                .name = (
+                    b'extra.rpy',
+                    0,
+                    0
+                ),
+                .next = None,
+                .what = 'You found the secret ending!',
+                .who = 'e',
+                .who_fast = True,
+                .with_ = None
+            >,
+            <renpy.ast.Return 
+                .expression = None,
+                .filename = 'extra.rpy',
+                .linenumber = 11,
+                .name = (
+                    b'extra.rpy',
+                    0,
+                    0
+                ),
+                .next = None
+            >
+        ],
+        .filename = 'extra.rpy',
+        .linenumber = 9,
+        .name = 'secret_ending',
+        .next = None,
+        .parameters = None,
+        .translation_relevant = True
+    >,
+    <renpy.ast.Label 
+        .block = [
+            <renpy.ast.Say 
+                .arguments = None,
+                .explicit_identifier = None,
+                .filename = 'extra.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 14,
+                .name = (
+                    b'extra.rpy',
+                    0,
+                    0
+                ),
+                .next = None,
+                .what = 'Nobody ever sees this.',
+                .who = 'e',
+                .who_fast = True,
+                .with_ = None
+            >,
+            <renpy.ast.Jump 
+                .expression = False,
+                .filename = 'extra.rpy',
+                .global_label = '',
+                .linenumber = 15,
+                .name = (
+                    b'extra.rpy',
+                    0,
+                    0
+                ),
+                .next = None,
+                .target = 'missing_label'
+            >
+        ],
+        .filename = 'extra.rpy',
+        .linenumber = 13,
+        .name = 'unused_label',
+        .next = None,
+        .parameters = None,
+        .translation_relevant = True
+    >,
+    <renpy.ast.Return 
+        .expression = None,
+        .filename = 'extra.rpy',
+        .linenumber = 13,
+        .name = (
+            b'extra.rpy',
+            0,
+            0
+        ),
+        .next = None
+    >
+]

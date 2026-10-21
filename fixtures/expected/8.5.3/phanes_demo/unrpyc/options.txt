@@ -1,0 +1,194 @@
+[
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 779508863,
+                .location = (
+                    'options.rpy',
+                    3
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'options.rpy',
+                    .hashcode = 2926992511,
+                    .linenumber = 3,
+                    .py = 3
+                > = '_("Phanes Demo")'
+            >,
+            .col_offset = 0,
+            .filename = 'options.rpy',
+            .index = None,
+            .linenumber = 3,
+            .name_serial = 216,
+            .name_version = 1017778270,
+            .operator = '=',
+            .store = 'store.config',
+            .varname = 'name'
+        >],
+        .col_offset = 0,
+        .filename = 'options.rpy',
+        .linenumber = 3,
+        .name_serial = 207,
+        .name_version = 1017778487,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 1302762320,
+                .location = (
+                    'options.rpy',
+                    4
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'options.rpy',
+                    .hashcode = 1302762320,
+                    .linenumber = 4,
+                    .py = 3
+                > = '"1.0"'
+            >,
+            .col_offset = 0,
+            .filename = 'options.rpy',
+            .index = None,
+            .linenumber = 4,
+            .name_serial = 218,
+            .name_version = 1017778270,
+            .operator = '=',
+            .store = 'store.config',
+            .varname = 'version'
+        >],
+        .col_offset = 0,
+        .filename = 'options.rpy',
+        .linenumber = 4,
+        .name_serial = 208,
+        .name_version = 1017778487,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 564053625,
+                .location = (
+                    'options.rpy',
+                    5
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'options.rpy',
+                    .hashcode = 2711537273,
+                    .linenumber = 5,
+                    .py = 3
+                > = '"PhanesDemo"'
+            >,
+            .col_offset = 0,
+            .filename = 'options.rpy',
+            .index = None,
+            .linenumber = 5,
+            .name_serial = 220,
+            .name_version = 1017778270,
+            .operator = '=',
+            .store = 'store.build',
+            .varname = 'name'
+        >],
+        .col_offset = 0,
+        .filename = 'options.rpy',
+        .linenumber = 5,
+        .name_serial = 209,
+        .name_version = 1017778487,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 1523000638,
+                .location = (
+                    'options.rpy',
+                    6
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'options.rpy',
+                    .hashcode = 3670484286,
+                    .linenumber = 6,
+                    .py = 3
+                > = '"PhanesDemo-1700000000"'
+            >,
+            .col_offset = 0,
+            .filename = 'options.rpy',
+            .index = None,
+            .linenumber = 6,
+            .name_serial = 222,
+            .name_version = 1017778270,
+            .operator = '=',
+            .store = 'store.config',
+            .varname = 'save_directory'
+        >],
+        .col_offset = 0,
+        .filename = 'options.rpy',
+        .linenumber = 6,
+        .name_serial = 210,
+        .name_version = 1017778487,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Python 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 120423713,
+                .location = (
+                    'options.rpy',
+                    8
+                ),
+                .mode = 'exec',
+                .py = 3,
+                .source = """
+build.archive("scripts", "all")
+build.archive("images", "all")
+build.classify("game/**.rpy", None)
+build.classify("game/**.rpyc", "scripts")
+build.classify("game/images/**", "images")
+build.classify("game/cache/**", None)
+build.classify("game/saves/**", None)
+"""
+                
+            >,
+            .col_offset = 0,
+            .filename = 'options.rpy',
+            .linenumber = 8,
+            .name_serial = 224,
+            .name_version = 1017778270
+        >],
+        .col_offset = 0,
+        .filename = 'options.rpy',
+        .linenumber = 8,
+        .name_serial = 211,
+        .name_version = 1017778487,
+        .priority = 0
+    >,
+    <renpy.ast.Return 
+        .col_offset = 0,
+        .expression = None,
+        .filename = 'options.rpy',
+        .linenumber = 16,
+        .name_serial = 225,
+        .name_version = 1017778270
+    >
+]

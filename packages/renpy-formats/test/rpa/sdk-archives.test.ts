@@ -19,6 +19,7 @@ for (const [sdk, protocol] of SDKS) {
       expect(index.version).toBe('RPA-3.0');
       expect(index.key).toBe(0x42424242);
       expect(index.pickleProtocol).toBe(protocol);
+      expect(index.python2).toBe(protocol === 2);
       expect(index.problems).toEqual([]);
       expect(index.entries.map((e) => e.name).sort()).toEqual([
         'characters.rpyc',

@@ -29,3 +29,11 @@ Browser-only analyzer for Ren'Py games. pnpm monorepo, TypeScript strict, Vite +
 pinned Ren'Py SDKs (6.99.14.3, 7.4.11, 8.3.7, 8.5.3) into `tools/fixtures/.cache` (gitignored) and
 rebuilds `fixtures/build`. The 7.4.11 SDK ships a Python 2.7 interpreter
 (`lib/linux-x86_64/python`), used to generate Python 2 pickles.
+
+## Oracles
+
+- `tools/oracle/dump_json.py` decodes every fixture script with CPython's own unpickler and writes
+  the canonical JSON of `renpy-formats/src/dump/canonical.ts`; `test/rpyc/oracle.test.ts` requires
+  an exact match. Keep both implementations of the canonical form in sync.
+- `tools/oracle/unrpyc.sh` stores unrpyc's dumps and decompiled sources for human review.
+- Verified format facts (and surprises) are in `docs/formats.md`.

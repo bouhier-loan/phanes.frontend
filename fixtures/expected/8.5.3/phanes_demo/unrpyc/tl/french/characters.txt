@@ -1,0 +1,33 @@
+[
+    <renpy.ast.Init 
+        .block = [<renpy.ast.TranslateString 
+            .col_offset = 0,
+            .filename = 'characters.rpy',
+            .language = 'french',
+            .linenumber = 4,
+            .name_serial = 283,
+            .name_version = 1017778272,
+            .new = 'Lucie',
+            .newloc = (
+                'game/tl/french/characters.rpy',
+                5
+            ),
+            .old = 'Lucy',
+            .translation_relevant = True
+        >],
+        .col_offset = 0,
+        .filename = 'characters.rpy',
+        .linenumber = 1,
+        .name_serial = 217,
+        .name_version = 1017778490,
+        .priority = 0
+    >,
+    <renpy.ast.Return 
+        .col_offset = 0,
+        .expression = None,
+        .filename = 'characters.rpy',
+        .linenumber = 6,
+        .name_serial = 284,
+        .name_version = 1017778272
+    >
+]

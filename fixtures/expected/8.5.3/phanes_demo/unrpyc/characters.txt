@@ -1,0 +1,260 @@
+[
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 1835874218,
+                .location = (
+                    'characters.rpy',
+                    3
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'characters.rpy',
+                    .hashcode = 1835874218,
+                    .linenumber = 3,
+                    .py = 3
+                > = 'Character("Eileen", color="#c8ffc8")'
+            >,
+            .col_offset = 0,
+            .filename = 'characters.rpy',
+            .index = None,
+            .linenumber = 3,
+            .name_serial = 201,
+            .name_version = 1017778269,
+            .operator = '=',
+            .store = 'store',
+            .varname = 'e'
+        >],
+        .col_offset = 0,
+        .filename = 'characters.rpy',
+        .linenumber = 3,
+        .name_serial = 200,
+        .name_version = 1017778487,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 407940047,
+                .location = (
+                    'characters.rpy',
+                    4
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'characters.rpy',
+                    .hashcode = 407940047,
+                    .linenumber = 4,
+                    .py = 3
+                > = 'Character(_("Lucy"), image="lucy")'
+            >,
+            .col_offset = 0,
+            .filename = 'characters.rpy',
+            .index = None,
+            .linenumber = 4,
+            .name_serial = 203,
+            .name_version = 1017778269,
+            .operator = '=',
+            .store = 'store',
+            .varname = 'l'
+        >],
+        .col_offset = 0,
+        .filename = 'characters.rpy',
+        .linenumber = 4,
+        .name_serial = 201,
+        .name_version = 1017778487,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 1936306096,
+                .location = (
+                    'characters.rpy',
+                    5
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'characters.rpy',
+                    .hashcode = 4083789744,
+                    .linenumber = 5,
+                    .py = 3
+                > = 'Character(None, kind=nvl)'
+            >,
+            .col_offset = 0,
+            .filename = 'characters.rpy',
+            .index = None,
+            .linenumber = 5,
+            .name_serial = 205,
+            .name_version = 1017778269,
+            .operator = '=',
+            .store = 'store',
+            .varname = 'n'
+        >],
+        .col_offset = 0,
+        .filename = 'characters.rpy',
+        .linenumber = 5,
+        .name_serial = 202,
+        .name_version = 1017778487,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 2065920993,
+                .location = (
+                    'characters.rpy',
+                    6
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'characters.rpy',
+                    .hashcode = 2065920993,
+                    .linenumber = 6,
+                    .py = 3
+                > = 'DynamicCharacter("player_name")'
+            >,
+            .col_offset = 0,
+            .filename = 'characters.rpy',
+            .index = None,
+            .linenumber = 6,
+            .name_serial = 207,
+            .name_version = 1017778269,
+            .operator = '=',
+            .store = 'store',
+            .varname = 'p'
+        >],
+        .col_offset = 0,
+        .filename = 'characters.rpy',
+        .linenumber = 6,
+        .name_serial = 203,
+        .name_version = 1017778487,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 1385236059,
+                .location = (
+                    'characters.rpy',
+                    7
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'characters.rpy',
+                    .hashcode = 1385236059,
+                    .linenumber = 7,
+                    .py = 3
+                > = 'Character("[player_name]", color="#ffcccc")'
+            >,
+            .col_offset = 0,
+            .filename = 'characters.rpy',
+            .index = None,
+            .linenumber = 7,
+            .name_serial = 209,
+            .name_version = 1017778269,
+            .operator = '=',
+            .store = 'store',
+            .varname = 'm'
+        >],
+        .col_offset = 0,
+        .filename = 'characters.rpy',
+        .linenumber = 7,
+        .name_serial = 204,
+        .name_version = 1017778487,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Default 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 893261157,
+                .location = (
+                    'characters.rpy',
+                    9
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'characters.rpy',
+                    .hashcode = 3040744805,
+                    .linenumber = 9,
+                    .py = 3
+                > = '"Alex"'
+            >,
+            .col_offset = 0,
+            .filename = 'characters.rpy',
+            .linenumber = 9,
+            .name_serial = 211,
+            .name_version = 1017778269,
+            .store = 'store',
+            .varname = 'player_name'
+        >],
+        .col_offset = 0,
+        .filename = 'characters.rpy',
+        .linenumber = 9,
+        .name_serial = 205,
+        .name_version = 1017778487,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Python 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 36578107,
+                .location = (
+                    'characters.rpy',
+                    11
+                ),
+                .mode = 'exec',
+                .py = 3,
+                .source = """
+s = Character(\'Sylvie\', what_color="#ccccff")
+"""
+                
+            >,
+            .col_offset = 0,
+            .filename = 'characters.rpy',
+            .linenumber = 11,
+            .name_serial = 213,
+            .name_version = 1017778269
+        >],
+        .col_offset = 0,
+        .filename = 'characters.rpy',
+        .linenumber = 11,
+        .name_serial = 206,
+        .name_version = 1017778487,
+        .priority = 0
+    >,
+    <renpy.ast.Return 
+        .col_offset = 0,
+        .expression = None,
+        .filename = 'characters.rpy',
+        .linenumber = 13,
+        .name_serial = 214,
+        .name_version = 1017778269
+    >
+]

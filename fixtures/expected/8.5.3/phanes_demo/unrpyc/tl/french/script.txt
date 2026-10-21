@@ -1,0 +1,245 @@
+[
+    <renpy.ast.Translate 
+        .after = None,
+        .alternate = None,
+        .block = [<renpy.ast.Say 
+            .arguments = None,
+            .col_offset = 0,
+            .explicit_identifier = None,
+            .filename = 'script.rpy',
+            .identifier = None,
+            .interact = True,
+            .linenumber = 8,
+            .name_serial = 286,
+            .name_version = 1017778272,
+            .what = "C'était une matinée calme.",
+            .who = None,
+            .who_fast = False,
+            .with_ = None
+        >],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .identifier = 'start_c2dc35f4',
+        .language = 'french',
+        .linenumber = 5,
+        .name_serial = 285,
+        .name_version = 1017778272,
+        .rollback = 'never',
+        .translation_relevant = True
+    >,
+    <renpy.ast.EndTranslate 
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 5,
+        .name_serial = 287,
+        .name_version = 1017778272,
+        .rollback = 'never'
+    >,
+    <renpy.ast.Translate 
+        .after = None,
+        .alternate = None,
+        .block = [<renpy.ast.Say 
+            .arguments = None,
+            .col_offset = 0,
+            .explicit_identifier = None,
+            .filename = 'script.rpy',
+            .identifier = None,
+            .interact = True,
+            .linenumber = 14,
+            .name_serial = 289,
+            .name_version = 1017778272,
+            .what = 'Bonjour ! Bien dormi ?',
+            .who = 'e',
+            .who_fast = True,
+            .with_ = None
+        >],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .identifier = 'start_f9d2b1c6',
+        .language = 'french',
+        .linenumber = 11,
+        .name_serial = 288,
+        .name_version = 1017778272,
+        .rollback = 'never',
+        .translation_relevant = True
+    >,
+    <renpy.ast.EndTranslate 
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 11,
+        .name_serial = 290,
+        .name_version = 1017778272,
+        .rollback = 'never'
+    >,
+    <renpy.ast.Translate 
+        .after = None,
+        .alternate = None,
+        .block = [<renpy.ast.Say 
+            .arguments = None,
+            .col_offset = 0,
+            .explicit_identifier = None,
+            .filename = 'script.rpy',
+            .identifier = None,
+            .interact = True,
+            .linenumber = 20,
+            .name_serial = 292,
+            .name_version = 1017778272,
+            .what = " J'espère.",
+            .who = 'extend',
+            .who_fast = True,
+            .with_ = None
+        >],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .identifier = 'start_842c8915',
+        .language = 'french',
+        .linenumber = 17,
+        .name_serial = 291,
+        .name_version = 1017778272,
+        .rollback = 'never',
+        .translation_relevant = True
+    >,
+    <renpy.ast.EndTranslate 
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 17,
+        .name_serial = 293,
+        .name_version = 1017778272,
+        .rollback = 'never'
+    >,
+    <renpy.ast.Translate 
+        .after = None,
+        .alternate = None,
+        .block = [<renpy.ast.Say 
+            .arguments = None,
+            .col_offset = 0,
+            .explicit_identifier = None,
+            .filename = 'script.rpy',
+            .identifier = None,
+            .interact = True,
+            .linenumber = 26,
+            .name_serial = 295,
+            .name_version = 1017778272,
+            .what = 'Oui, merci.',
+            .who = 'p',
+            .who_fast = True,
+            .with_ = None
+        >],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .identifier = 'start_d6ab0810',
+        .language = 'french',
+        .linenumber = 23,
+        .name_serial = 294,
+        .name_version = 1017778272,
+        .rollback = 'never',
+        .translation_relevant = True
+    >,
+    <renpy.ast.EndTranslate 
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 23,
+        .name_serial = 296,
+        .name_version = 1017778272,
+        .rollback = 'never'
+    >,
+    <renpy.ast.Translate 
+        .after = None,
+        .alternate = None,
+        .block = [<renpy.ast.Say 
+            .arguments = None,
+            .col_offset = 0,
+            .explicit_identifier = None,
+            .filename = 'script.rpy',
+            .identifier = None,
+            .interact = True,
+            .linenumber = 32,
+            .name_serial = 298,
+            .name_version = 1017778272,
+            .what = 'Oh, bonjour !',
+            .who = 'l',
+            .who_fast = True,
+            .with_ = None
+        >],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .identifier = 'park_3feb0781',
+        .language = 'french',
+        .linenumber = 29,
+        .name_serial = 297,
+        .name_version = 1017778272,
+        .rollback = 'never',
+        .translation_relevant = True
+    >,
+    <renpy.ast.EndTranslate 
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 29,
+        .name_serial = 299,
+        .name_version = 1017778272,
+        .rollback = 'never'
+    >,
+    <renpy.ast.Init 
+        .block = [
+            <renpy.ast.TranslateString 
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .language = 'french',
+                .linenumber = 37,
+                .name_serial = 301,
+                .name_version = 1017778272,
+                .new = 'Où allons-nous ?',
+                .newloc = (
+                    'game/tl/french/script.rpy',
+                    38
+                ),
+                .old = 'Where should we go?',
+                .translation_relevant = True
+            >,
+            <renpy.ast.TranslateString 
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .language = 'french',
+                .linenumber = 41,
+                .name_serial = 302,
+                .name_version = 1017778272,
+                .new = 'Au parc',
+                .newloc = (
+                    'game/tl/french/script.rpy',
+                    42
+                ),
+                .old = 'To the park',
+                .translation_relevant = True
+            >,
+            <renpy.ast.TranslateString 
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .language = 'french',
+                .linenumber = 45,
+                .name_serial = 303,
+                .name_version = 1017778272,
+                .new = 'À la bibliothèque',
+                .newloc = (
+                    'game/tl/french/script.rpy',
+                    46
+                ),
+                .old = 'To the library',
+                .translation_relevant = True
+            >
+        ],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 34,
+        .name_serial = 218,
+        .name_version = 1017778490,
+        .priority = 0
+    >,
+    <renpy.ast.Return 
+        .col_offset = 0,
+        .expression = None,
+        .filename = 'script.rpy',
+        .linenumber = 47,
+        .name_serial = 304,
+        .name_version = 1017778272
+    >
+]

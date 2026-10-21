@@ -48,6 +48,12 @@ export interface UnpickleResult {
   readonly protocol: number;
   /** Offset just after the STOP opcode. */
   readonly end: number;
+  /**
+   * True if Python 2 `str` opcodes were seen. Python 3 never writes them, so
+   * this identifies pickles made by Python 2 (Ren'Py <= 7) even at protocol 2,
+   * which Ren'Py 8.0 to 8.3 also use.
+   */
+  readonly python2: boolean;
   /** Non-fatal oddities, e.g. a BUILD on a built-in container. */
   readonly warnings: readonly string[];
 }
@@ -118,6 +124,7 @@ export function unpickle(bytes: Uint8Array, options: UnpickleOptions = {}): Unpi
   const globals = new Map<string, PyGlobal>();
   let stack: PyValue[] = [];
   let protocol = 0;
+  let python2 = false;
   let budget = limits.maxItems;
   let opStart = 0;
 
@@ -168,8 +175,10 @@ export function unpickle(bytes: Uint8Array, options: UnpickleOptions = {}): Unpi
     if (value === undefined) fail(`memo key ${index} not found`);
     return value;
   };
-  const py2String = (raw: Uint8Array): PyValue =>
-    py2AsBytes ? new PyBytes(raw.slice()) : decodeUtf8(raw, 'surrogateescape');
+  const py2String = (raw: Uint8Array): PyValue => {
+    python2 = true;
+    return py2AsBytes ? new PyBytes(raw.slice()) : decodeUtf8(raw, 'surrogateescape');
+  };
   const global = (rawModule: string, rawName: string): PyGlobal => {
     const [module, name] = protocol < 3 ? fixImport(rawModule, rawName) : [rawModule, rawName];
     const key = `${module}\n${name}`;
@@ -258,7 +267,7 @@ export function unpickle(bytes: Uint8Array, options: UnpickleOptions = {}): Unpi
         break;
       case Op.STOP: {
         const value = pop();
-        return { value, protocol, end: reader.pos, warnings };
+        return { value, protocol, end: reader.pos, python2, warnings };
       }
       case Op.MARK:
         if (metastack.length >= limits.maxMarkDepth) {

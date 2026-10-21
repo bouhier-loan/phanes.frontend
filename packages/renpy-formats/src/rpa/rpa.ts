@@ -47,8 +47,10 @@ export interface RpaHeader {
 export interface RpaIndex extends RpaHeader {
   readonly entries: readonly RpaEntry[];
   readonly problems: readonly RpaProblem[];
-  /** Pickle protocol of the index: 2 means Python 2, so Ren'Py <= 7. */
+  /** Pickle protocol of the index (the launcher writes HIGHEST_PROTOCOL: 2 on Python 2, 5 on Python 3). */
   readonly pickleProtocol: number;
+  /** Index written by Python 2, hence by Ren'Py <= 7 or a Python 2 tool. */
+  readonly python2: boolean;
 }
 
 export interface RpaReadOptions {
@@ -217,7 +219,7 @@ function decodeIndex(
 ): RpaIndex {
   // Python 2 str stay bytes: names are decoded as UTF-8 below and prefixes
   // must keep their exact bytes.
-  const { value, protocol } = unpickle(pickled, {
+  const { value, protocol, python2 } = unpickle(pickled, {
     py2Strings: 'bytes',
     ...(options.pickleLimits ? { limits: options.pickleLimits } : {}),
   });
@@ -237,7 +239,7 @@ function decodeIndex(
     if (typeof parsed === 'string') problems.push({ name, message: parsed });
     else entries.push(parsed);
   }
-  return { ...header, entries, problems, pickleProtocol: protocol };
+  return { ...header, entries, problems, pickleProtocol: protocol, python2 };
 }
 
 /** Reads the index of an RPA-2.0 or RPA-3.0 archive. Only the index is read. */

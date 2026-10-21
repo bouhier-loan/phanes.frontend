@@ -7,6 +7,8 @@
 | `build/<sdk>/<jeu>/dist/`    | Distribution Linux du launcher (`.rpa`, fichiers libres, `renpy/vc_version.py`) | `tools/fixtures/build.sh`          |
 | `synthetic/pickle/`      | Cas de test pickle (protocoles 0 à 5) écrits par Python 2.7 et Python 3 | `tools/fixtures/gen_pickle_cases.py`         |
 | `synthetic/rpa/`         | Petites archives RPA 1.0/2.0/3.0, multi-segments, index > 4 Gio         | `tools/fixtures/gen_rpa_cases.py`            |
+| `expected/<sdk>/<jeu>/canonical/` | Dump JSON canonique de chaque script, décodé par le dépickleur de CPython | `tools/oracle/dump_json.py`        |
+| `expected/<sdk>/<jeu>/unrpyc/`    | `unrpyc --dump --comparable` et source décompilé, pour relecture         | `tools/oracle/unrpyc.sh`           |
 
 SDK épinglés (sha256 vérifiés contre les sommes officielles de renpy.org) : 6.99.14.3, 7.4.11
 (Python 2), 8.3.7 (dernier avant les cslots), 8.5.3 (cslots).
@@ -17,6 +19,15 @@ tools/fixtures/build.sh 8.5.3           # un seul
 python3 tools/fixtures/gen_pickle_cases.py fixtures/synthetic/pickle/py3.json
 tools/fixtures/.cache/renpy-7.4.11-sdk/lib/linux-x86_64/python \
   tools/fixtures/gen_pickle_cases.py fixtures/synthetic/pickle/py2.json
+```
+
+Après un rebuild des fixtures, régénérer les références :
+
+```sh
+for v in 6.99.14.3 7.4.11 8.3.7 8.5.3; do
+  python3 -I tools/oracle/dump_json.py fixtures/build/$v/phanes_demo fixtures/expected/$v/phanes_demo/canonical
+done
+tools/oracle/unrpyc.sh
 ```
 
 Les sorties sont commitées : la CI n'a pas besoin des SDK.

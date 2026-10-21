@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
+import { dumpCommand } from './commands/dump';
 import { inventoryCommand } from './commands/inventory';
 
 const USAGE = `Usage: phanes <command> <path> [--json]
 
 Commands:
-  inventory <dir>   List files, archives and their content`;
+  inventory <dir>                 List files, archives and their content
+  dump <file.rpyc | a.rpa:entry>  Canonical JSON of a compiled script`;
 
 async function main(argv: string[]): Promise<number> {
   const { values, positionals } = parseArgs({
@@ -21,6 +23,9 @@ async function main(argv: string[]): Promise<number> {
   switch (command) {
     case 'inventory':
       console.log(await inventoryCommand(path, values.json));
+      return 0;
+    case 'dump':
+      console.log(await dumpCommand(path));
       return 0;
     default:
       console.error(`Unknown command: ${command}\n\n${USAGE}`);

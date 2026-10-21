@@ -1,0 +1,903 @@
+[
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Image 
+            .atl = None,
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 354355115,
+                .location = (
+                    'script.rpy',
+                    3
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'script.rpy',
+                    .hashcode = 354355115,
+                    .linenumber = 3,
+                    .py = 3
+                > = '"images/bg room.png"'
+            >,
+            .col_offset = 0,
+            .filename = 'script.rpy',
+            .imgname = (
+                'bg',
+                'room'
+            ),
+            .linenumber = 3,
+            .name_serial = 227,
+            .name_version = 1017778271
+        >],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 3,
+        .name_serial = 212,
+        .name_version = 1017778489,
+        .priority = 500
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Image 
+            .atl = None,
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 1218973049,
+                .location = (
+                    'script.rpy',
+                    4
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'script.rpy',
+                    .hashcode = 3366456697,
+                    .linenumber = 4,
+                    .py = 3
+                > = '"images/eileen happy.png"'
+            >,
+            .col_offset = 0,
+            .filename = 'script.rpy',
+            .imgname = (
+                'eileen',
+                'happy'
+            ),
+            .linenumber = 4,
+            .name_serial = 229,
+            .name_version = 1017778271
+        >],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 4,
+        .name_serial = 213,
+        .name_version = 1017778489,
+        .priority = 500
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Default 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 890022063,
+                .location = (
+                    'script.rpy',
+                    6
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'script.rpy',
+                    .hashcode = 890022063,
+                    .linenumber = 6,
+                    .py = 3
+                > = '0'
+            >,
+            .col_offset = 0,
+            .filename = 'script.rpy',
+            .linenumber = 6,
+            .name_serial = 231,
+            .name_version = 1017778271,
+            .store = 'store',
+            .varname = 'affection'
+        >],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 6,
+        .name_serial = 214,
+        .name_version = 1017778489,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Default 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = 393565688,
+                .location = (
+                    'script.rpy',
+                    7
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'script.rpy',
+                    .hashcode = 2541049336,
+                    .linenumber = 7,
+                    .py = 3
+                > = 'False'
+            >,
+            .col_offset = 0,
+            .filename = 'script.rpy',
+            .linenumber = 7,
+            .name_serial = 233,
+            .name_version = 1017778271,
+            .store = 'store',
+            .varname = 'met_lucy'
+        >],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 7,
+        .name_serial = 215,
+        .name_version = 1017778489,
+        .priority = 0
+    >,
+    <renpy.ast.Label 
+        .block = [
+            <renpy.ast.Scene 
+                .atl = None,
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .imspec = (
+                    (
+                        'bg',
+                        'room'
+                    ),
+                    None,
+                    None,
+                    [],
+                    None,
+                    None,
+                    []
+                ),
+                .layer = None,
+                .linenumber = 10,
+                .name_serial = 234,
+                .name_version = 1017778271,
+                .warp = True
+            >,
+            <renpy.ast.Show 
+                .atl = None,
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .imspec = (
+                    (
+                        'eileen',
+                        'happy'
+                    ),
+                    None,
+                    None,
+                    [],
+                    None,
+                    None,
+                    []
+                ),
+                .linenumber = 11,
+                .name_serial = 235,
+                .name_version = 1017778271,
+                .warp = True
+            >,
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 12,
+                .name_serial = 236,
+                .name_version = 1017778271,
+                .what = 'It was a quiet morning.',
+                .who = None,
+                .who_fast = False,
+                .with_ = None
+            >,
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 13,
+                .name_serial = 237,
+                .name_version = 1017778271,
+                .what = 'Good morning! Did you sleep well?',
+                .who = 'e',
+                .who_fast = True,
+                .with_ = None
+            >,
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 14,
+                .name_serial = 238,
+                .name_version = 1017778271,
+                .what = ' I hope so.',
+                .who = 'extend',
+                .who_fast = True,
+                .with_ = None
+            >,
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 15,
+                .name_serial = 239,
+                .name_version = 1017778271,
+                .what = 'I did, thanks.',
+                .who = 'p',
+                .who_fast = True,
+                .with_ = None
+            >,
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 16,
+                .name_serial = 240,
+                .name_version = 1017778271,
+                .what = 'A literal speaker name works too.',
+                .who = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'script.rpy',
+                    .hashcode = 2227602771,
+                    .linenumber = 16,
+                    .py = 3
+                > = '"Eileen"',
+                .who_fast = False,
+                .with_ = None
+            >,
+            <renpy.ast.Python 
+                .code = <renpy.ast.PyCode 
+                    .bytecode = None,
+                    .col_offset = 0,
+                    .hashcode = 1598916109,
+                    .location = (
+                        'script.rpy',
+                        17
+                    ),
+                    .mode = 'exec',
+                    .py = 3,
+                    .source = <renpy.astsupport.PyExpr 
+                        .column = None,
+                        .filename = 'script.rpy',
+                        .hashcode = 1598916109,
+                        .linenumber = 17,
+                        .py = 3
+                    > = 'affection += 1'
+                >,
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .linenumber = 17,
+                .name_serial = 241,
+                .name_version = 1017778271
+            >,
+            <renpy.ast.Menu 
+                .arguments = None,
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .has_caption = True,
+                .item_arguments = [
+                    None,
+                    None,
+                    None,
+                    None
+                ],
+                .items = [
+                    (
+                        'Where should we go?',
+                        'True',
+                        None
+                    ),
+                    (
+                        'To the park',
+                        'True',
+                        [<renpy.ast.Jump 
+                            .col_offset = 0,
+                            .expression = False,
+                            .filename = 'script.rpy',
+                            .global_label = '',
+                            .linenumber = 21,
+                            .name_serial = 243,
+                            .name_version = 1017778271,
+                            .target = 'park'
+                        >]
+                    ),
+                    (
+                        'To the library',
+                        <renpy.astsupport.PyExpr 
+                            .column = None,
+                            .filename = 'script.rpy',
+                            .hashcode = 2289939260,
+                            .linenumber = 22,
+                            .py = 3
+                        > = 'affection > 0',
+                        [
+                            <renpy.ast.Call 
+                                .arguments = None,
+                                .col_offset = 0,
+                                .expression = False,
+                                .filename = 'script.rpy',
+                                .global_label = '',
+                                .label = 'library',
+                                .linenumber = 23,
+                                .name_serial = 244,
+                                .name_version = 1017778271
+                            >,
+                            <renpy.ast.Pass 
+                                .col_offset = 0,
+                                .filename = 'script.rpy',
+                                .linenumber = 23,
+                                .name_serial = 245,
+                                .name_version = 1017778271
+                            >,
+                            <renpy.ast.Jump 
+                                .col_offset = 0,
+                                .expression = False,
+                                .filename = 'script.rpy',
+                                .global_label = '',
+                                .linenumber = 24,
+                                .name_serial = 246,
+                                .name_version = 1017778271,
+                                .target = 'finale'
+                            >
+                        ]
+                    ),
+                    (
+                        'Stay home',
+                        'True',
+                        [
+                            <renpy.ast.Say 
+                                .arguments = None,
+                                .col_offset = 0,
+                                .explicit_identifier = None,
+                                .filename = 'script.rpy',
+                                .identifier = None,
+                                .interact = True,
+                                .linenumber = 26,
+                                .name_serial = 247,
+                                .name_version = 1017778271,
+                                .what = 'Fine by me.',
+                                .who = 'e',
+                                .who_fast = True,
+                                .with_ = None
+                            >,
+                            <renpy.ast.Jump 
+                                .col_offset = 0,
+                                .expression = False,
+                                .filename = 'script.rpy',
+                                .global_label = '',
+                                .linenumber = 27,
+                                .name_serial = 248,
+                                .name_version = 1017778271,
+                                .target = 'finale'
+                            >
+                        ]
+                    )
+                ],
+                .linenumber = 18,
+                .name_serial = 242,
+                .name_version = 1017778271,
+                .rollback = 'force',
+                .set = None,
+                .statement_start = <circular reference to object on line 299>,
+                .translation_relevant = True,
+                .with_ = None
+            >
+        ],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 9,
+        .name = 'start',
+        .parameters = None,
+        .translation_relevant = True
+    >,
+    <renpy.ast.Label 
+        .block = [
+            <renpy.ast.UserStatement 
+                .atl = None,
+                .code_block = None,
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .init_priority = 0,
+                .line = 'play music "audio/theme.ogg"',
+                .linenumber = 30,
+                .name_serial = 249,
+                .name_version = 1017778271,
+                .parsed = (
+                    (
+                        'play',
+                        'music'
+                    ),
+                    <class 'renpy.revertable.RevertableDict'>{
+                        'file': <renpy.astsupport.PyExpr 
+                            .column = None,
+                            .filename = 'script.rpy',
+                            .hashcode = 693954644,
+                            .linenumber = 30,
+                            .py = 3
+                        > = '"audio/theme.ogg"',
+                        'fadeout': 'None',
+                        'fadein': '0',
+                        'channel': None,
+                        'loop': None,
+                        'if_changed': False,
+                        'volume': '1.0'
+                    }
+                ),
+                .rollback = 'normal',
+                .subparses = [],
+                .translation_relevant = False
+            >,
+            <renpy.ast.Scene 
+                .atl = None,
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .imspec = (
+                    (
+                        'bg',
+                        'park'
+                    ),
+                    None,
+                    None,
+                    [],
+                    None,
+                    None,
+                    []
+                ),
+                .layer = None,
+                .linenumber = 31,
+                .name_serial = 250,
+                .name_version = 1017778271,
+                .warp = True
+            >,
+            <renpy.ast.Show 
+                .atl = None,
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .imspec = (
+                    (
+                        'lucy',
+                        'smile'
+                    ),
+                    None,
+                    None,
+                    [],
+                    None,
+                    None,
+                    []
+                ),
+                .linenumber = 32,
+                .name_serial = 251,
+                .name_version = 1017778271,
+                .warp = True
+            >,
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 33,
+                .name_serial = 252,
+                .name_version = 1017778271,
+                .what = 'Oh, hello there!',
+                .who = 'l',
+                .who_fast = True,
+                .with_ = None
+            >,
+            <renpy.ast.Python 
+                .code = <renpy.ast.PyCode 
+                    .bytecode = None,
+                    .col_offset = 0,
+                    .hashcode = 182138682,
+                    .location = (
+                        'script.rpy',
+                        34
+                    ),
+                    .mode = 'exec',
+                    .py = 3,
+                    .source = <renpy.astsupport.PyExpr 
+                        .column = None,
+                        .filename = 'script.rpy',
+                        .hashcode = 182138682,
+                        .linenumber = 34,
+                        .py = 3
+                    > = 'met_lucy = True'
+                >,
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .linenumber = 34,
+                .name_serial = 253,
+                .name_version = 1017778271
+            >,
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 35,
+                .name_serial = 254,
+                .name_version = 1017778271,
+                .what = 'Nice weather today.',
+                .who = 's',
+                .who_fast = True,
+                .with_ = None
+            >,
+            <renpy.ast.Jump 
+                .col_offset = 0,
+                .expression = False,
+                .filename = 'script.rpy',
+                .global_label = '',
+                .linenumber = 36,
+                .name_serial = 255,
+                .name_version = 1017778271,
+                .target = 'park.bench'
+            >
+        ],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 29,
+        .name = 'park',
+        .parameters = None,
+        .translation_relevant = True
+    >,
+    <renpy.ast.Label 
+        .block = [
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 39,
+                .name_serial = 256,
+                .name_version = 1017778271,
+                .what = 'They sat on a bench.',
+                .who = None,
+                .who_fast = False,
+                .with_ = None
+            >,
+            <renpy.ast.Jump 
+                .col_offset = 0,
+                .expression = False,
+                .filename = 'script.rpy',
+                .global_label = '',
+                .linenumber = 40,
+                .name_serial = 257,
+                .name_version = 1017778271,
+                .target = 'finale'
+            >
+        ],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 38,
+        .name = 'park.bench',
+        .parameters = None,
+        .translation_relevant = True
+    >,
+    <renpy.ast.Label 
+        .block = [
+            <renpy.ast.UserStatement 
+                .atl = None,
+                .code_block = None,
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .init_priority = 0,
+                .line = 'voice "audio/v1.ogg"',
+                .linenumber = 43,
+                .name_serial = 258,
+                .name_version = 1017778271,
+                .parsed = (
+                    ('voice'),
+                    <renpy.astsupport.PyExpr 
+                        .column = None,
+                        .filename = 'script.rpy',
+                        .hashcode = 1375292272,
+                        .linenumber = 43,
+                        .py = 3
+                    > = '"audio/v1.ogg"'
+                ),
+                .rollback = 'normal',
+                .subparses = [],
+                .translation_relevant = False
+            >,
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 44,
+                .name_serial = 259,
+                .name_version = 1017778271,
+                .what = 'Shh, this is a library.',
+                .who = 'm',
+                .who_fast = True,
+                .with_ = None
+            >,
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 45,
+                .name_serial = 260,
+                .name_version = 1017778271,
+                .what = 'Books everywhere.',
+                .who = None,
+                .who_fast = False,
+                .with_ = None
+            >,
+            <renpy.ast.Return 
+                .col_offset = 0,
+                .expression = None,
+                .filename = 'script.rpy',
+                .linenumber = 46,
+                .name_serial = 261,
+                .name_version = 1017778271
+            >
+        ],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 42,
+        .name = 'library',
+        .parameters = None,
+        .translation_relevant = True
+    >,
+    <renpy.ast.Label 
+        .block = [
+            <renpy.ast.Hide 
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .imspec = (
+                    ('eileen'),
+                    None,
+                    None,
+                    [],
+                    None,
+                    None,
+                    []
+                ),
+                .linenumber = 49,
+                .name_serial = 262,
+                .name_version = 1017778271,
+                .warp = True
+            >,
+            <renpy.ast.If 
+                .col_offset = 0,
+                .entries = [
+                    (
+                        <renpy.astsupport.PyExpr 
+                            .column = None,
+                            .filename = 'script.rpy',
+                            .hashcode = 1782579689,
+                            .linenumber = 50,
+                            .py = 3
+                        > = 'met_lucy',
+                        [<renpy.ast.Jump 
+                            .col_offset = 0,
+                            .expression = False,
+                            .filename = 'script.rpy',
+                            .global_label = '',
+                            .linenumber = 51,
+                            .name_serial = 264,
+                            .name_version = 1017778271,
+                            .target = 'good_ending'
+                        >]
+                    ),
+                    (
+                        'True',
+                        [<renpy.ast.Python 
+                            .code = <renpy.ast.PyCode 
+                                .bytecode = None,
+                                .col_offset = 0,
+                                .hashcode = 1710765115,
+                                .location = (
+                                    'script.rpy',
+                                    53
+                                ),
+                                .mode = 'exec',
+                                .py = 3,
+                                .source = <renpy.astsupport.PyExpr 
+                                    .column = None,
+                                    .filename = 'script.rpy',
+                                    .hashcode = 1710765115,
+                                    .linenumber = 53,
+                                    .py = 3
+                                > = 'affection -= 1'
+                            >,
+                            .col_offset = 0,
+                            .filename = 'script.rpy',
+                            .linenumber = 53,
+                            .name_serial = 265,
+                            .name_version = 1017778271
+                        >]
+                    )
+                ],
+                .filename = 'script.rpy',
+                .linenumber = 50,
+                .name_serial = 263,
+                .name_version = 1017778271
+            >,
+            <renpy.ast.Jump 
+                .col_offset = 0,
+                .expression = True,
+                .filename = 'script.rpy',
+                .global_label = 'finale',
+                .linenumber = 54,
+                .name_serial = 266,
+                .name_version = 1017778271,
+                .target = <renpy.astsupport.PyExpr 
+                    .column = None,
+                    .filename = 'script.rpy',
+                    .hashcode = 708944569,
+                    .linenumber = 54,
+                    .py = 3
+                > = '"bad" + "_ending"'
+            >
+        ],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 48,
+        .name = 'finale',
+        .parameters = None,
+        .translation_relevant = True
+    >,
+    <renpy.ast.Label 
+        .block = [
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 57,
+                .name_serial = 267,
+                .name_version = 1017778271,
+                .what = 'THE END',
+                .who = 'centered',
+                .who_fast = True,
+                .with_ = None
+            >,
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 58,
+                .name_serial = 268,
+                .name_version = 1017778271,
+                .what = 'This part is told in NVL mode.',
+                .who = 'n',
+                .who_fast = True,
+                .with_ = None
+            >,
+            <renpy.ast.UserStatement 
+                .atl = None,
+                .code_block = None,
+                .col_offset = 0,
+                .filename = 'script.rpy',
+                .init_priority = 0,
+                .line = 'nvl clear',
+                .linenumber = 59,
+                .name_serial = 269,
+                .name_version = 1017778271,
+                .parsed = (
+                    (
+                        'nvl',
+                        'clear'
+                    ),
+                    None
+                ),
+                .rollback = 'normal',
+                .subparses = [],
+                .translation_relevant = False
+            >,
+            <renpy.ast.Return 
+                .col_offset = 0,
+                .expression = None,
+                .filename = 'script.rpy',
+                .linenumber = 60,
+                .name_serial = 270,
+                .name_version = 1017778271
+            >
+        ],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 56,
+        .name = 'good_ending',
+        .parameters = None,
+        .translation_relevant = True
+    >,
+    <renpy.ast.Label 
+        .block = [
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 63,
+                .name_serial = 271,
+                .name_version = 1017778271,
+                .what = 'Nothing happened.',
+                .who = None,
+                .who_fast = False,
+                .with_ = None
+            >,
+            <renpy.ast.Say 
+                .arguments = None,
+                .col_offset = 0,
+                .explicit_identifier = None,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 64,
+                .name_serial = 272,
+                .name_version = 1017778271,
+                .what = '{b}The end{/b}, [player_name].',
+                .who = None,
+                .who_fast = False,
+                .with_ = None
+            >,
+            <renpy.ast.Return 
+                .col_offset = 0,
+                .expression = None,
+                .filename = 'script.rpy',
+                .linenumber = 65,
+                .name_serial = 273,
+                .name_version = 1017778271
+            >
+        ],
+        .col_offset = 0,
+        .filename = 'script.rpy',
+        .linenumber = 62,
+        .name = 'bad_ending',
+        .parameters = None,
+        .translation_relevant = True
+    >,
+    <renpy.ast.Return 
+        .col_offset = 0,
+        .expression = None,
+        .filename = 'script.rpy',
+        .linenumber = 66,
+        .name_serial = 274,
+        .name_version = 1017778271
+    >
+]

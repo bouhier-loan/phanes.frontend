@@ -1,0 +1,330 @@
+[
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'characters.rpy',
+                    3,
+                    <renpy.ast.PyExpr 
+                        .filename = 'characters.rpy',
+                        .linenumber = 3,
+                        .py = 3
+                    > = 'Character("Eileen", color="#c8ffc8")',
+                    0
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.ast.PyExpr 
+                    .filename = 'characters.rpy',
+                    .linenumber = 3,
+                    .py = 3
+                > = 'Character("Eileen", color="#c8ffc8")'
+            >,
+            .filename = 'characters.rpy',
+            .index = None,
+            .linenumber = 3,
+            .name = (
+                b'characters.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .operator = '=',
+            .store = 'store',
+            .varname = 'e'
+        >],
+        .filename = 'characters.rpy',
+        .linenumber = 3,
+        .name = (
+            b'characters.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'characters.rpy',
+                    4,
+                    <renpy.ast.PyExpr 
+                        .filename = 'characters.rpy',
+                        .linenumber = 4,
+                        .py = 3
+                    > = 'Character(_("Lucy"), image="lucy")',
+                    0
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.ast.PyExpr 
+                    .filename = 'characters.rpy',
+                    .linenumber = 4,
+                    .py = 3
+                > = 'Character(_("Lucy"), image="lucy")'
+            >,
+            .filename = 'characters.rpy',
+            .index = None,
+            .linenumber = 4,
+            .name = (
+                b'characters.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .operator = '=',
+            .store = 'store',
+            .varname = 'l'
+        >],
+        .filename = 'characters.rpy',
+        .linenumber = 4,
+        .name = (
+            b'characters.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'characters.rpy',
+                    5,
+                    <renpy.ast.PyExpr 
+                        .filename = 'characters.rpy',
+                        .linenumber = 5,
+                        .py = 3
+                    > = 'Character(None, kind=nvl)',
+                    0
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.ast.PyExpr 
+                    .filename = 'characters.rpy',
+                    .linenumber = 5,
+                    .py = 3
+                > = 'Character(None, kind=nvl)'
+            >,
+            .filename = 'characters.rpy',
+            .index = None,
+            .linenumber = 5,
+            .name = (
+                b'characters.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .operator = '=',
+            .store = 'store',
+            .varname = 'n'
+        >],
+        .filename = 'characters.rpy',
+        .linenumber = 5,
+        .name = (
+            b'characters.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'characters.rpy',
+                    6,
+                    <renpy.ast.PyExpr 
+                        .filename = 'characters.rpy',
+                        .linenumber = 6,
+                        .py = 3
+                    > = 'DynamicCharacter("player_name")',
+                    0
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.ast.PyExpr 
+                    .filename = 'characters.rpy',
+                    .linenumber = 6,
+                    .py = 3
+                > = 'DynamicCharacter("player_name")'
+            >,
+            .filename = 'characters.rpy',
+            .index = None,
+            .linenumber = 6,
+            .name = (
+                b'characters.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .operator = '=',
+            .store = 'store',
+            .varname = 'p'
+        >],
+        .filename = 'characters.rpy',
+        .linenumber = 6,
+        .name = (
+            b'characters.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'characters.rpy',
+                    7,
+                    <renpy.ast.PyExpr 
+                        .filename = 'characters.rpy',
+                        .linenumber = 7,
+                        .py = 3
+                    > = 'Character("[player_name]", color="#ffcccc")',
+                    0
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.ast.PyExpr 
+                    .filename = 'characters.rpy',
+                    .linenumber = 7,
+                    .py = 3
+                > = 'Character("[player_name]", color="#ffcccc")'
+            >,
+            .filename = 'characters.rpy',
+            .index = None,
+            .linenumber = 7,
+            .name = (
+                b'characters.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .operator = '=',
+            .store = 'store',
+            .varname = 'm'
+        >],
+        .filename = 'characters.rpy',
+        .linenumber = 7,
+        .name = (
+            b'characters.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Default 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'characters.rpy',
+                    9,
+                    <renpy.ast.PyExpr 
+                        .filename = 'characters.rpy',
+                        .linenumber = 9,
+                        .py = 3
+                    > = '"Alex"',
+                    0
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.ast.PyExpr 
+                    .filename = 'characters.rpy',
+                    .linenumber = 9,
+                    .py = 3
+                > = '"Alex"'
+            >,
+            .filename = 'characters.rpy',
+            .linenumber = 9,
+            .name = (
+                b'characters.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .store = 'store',
+            .varname = 'player_name'
+        >],
+        .filename = 'characters.rpy',
+        .linenumber = 9,
+        .name = (
+            b'characters.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Python 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'characters.rpy',
+                    11,
+                    0
+                ),
+                .mode = 'exec',
+                .py = 3,
+                .source = """
+s = Character(\'Sylvie\', what_color="#ccccff")
+"""
+                
+            >,
+            .filename = 'characters.rpy',
+            .linenumber = 11,
+            .name = (
+                b'characters.rpy',
+                0,
+                0
+            ),
+            .next = None
+        >],
+        .filename = 'characters.rpy',
+        .linenumber = 11,
+        .name = (
+            b'characters.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Return 
+        .expression = None,
+        .filename = 'characters.rpy',
+        .linenumber = 11,
+        .name = (
+            b'characters.rpy',
+            0,
+            0
+        ),
+        .next = None
+    >
+]
