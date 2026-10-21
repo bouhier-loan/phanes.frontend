@@ -9,10 +9,10 @@ import { type Diagnostic, diagnosticFromError } from '../model/diagnostic';
 import type { Json } from '../model/json';
 import type { Project } from '../model/project';
 import { buildVfs } from '../vfs/vfs';
-import { loadScripts, loadTexts } from './scripts';
+import { hasTranslations, loadScripts, loadTexts, loadTranslationIds } from './scripts';
 import { GENERATOR, type Report, REPORT_SCHEMA_VERSION } from './report';
 
-export type AnalyzePhase = 'archives' | 'scripts' | 'analyses' | 'done';
+export type AnalyzePhase = 'archives' | 'scripts' | 'translations' | 'analyses' | 'done';
 
 export interface AnalyzeProgress {
   readonly phase: AnalyzePhase;
@@ -26,6 +26,8 @@ export interface AnalyzeOptions {
   readonly rpa?: RpaReadOptions;
   readonly rpyc?: RpycOptions;
   readonly onProgress?: (progress: AnalyzeProgress) => void;
+  /** Called with the diagnostics of each loading phase as soon as it ends. */
+  readonly onDiagnostics?: (diagnostics: readonly Diagnostic[]) => void;
   /** Clock, injectable for reproducible reports. */
   readonly now?: () => Date;
   /** Polled between files; returning true stops the analysis with an AnalysisCancelled error. */
@@ -60,16 +62,28 @@ export async function loadProject(
     ...(options.rpa ? { rpa: options.rpa } : {}),
     onProgress: progress('archives'),
   });
-  const loaded = await loadScripts(built.vfs, {
-    ...(options.rpyc ? { rpyc: options.rpyc } : {}),
-    onProgress: progress('scripts'),
-  });
+  options.onDiagnostics?.(built.diagnostics);
+  const rpyc = options.rpyc ? { rpyc: options.rpyc } : {};
+  const loaded = await loadScripts(built.vfs, { ...rpyc, onProgress: progress('scripts') });
+  options.onDiagnostics?.(loaded.diagnostics);
+  const translations = hasTranslations(loaded.scripts)
+    ? await loadTranslationIds(built.vfs, loaded.scripts, {
+        ...rpyc,
+        onProgress: progress('translations'),
+      })
+    : null;
+  if (translations) options.onDiagnostics?.(translations.diagnostics);
   const texts = await loadTexts(built.vfs);
   return {
     vfs: built.vfs,
     scripts: loaded.scripts,
     texts,
-    diagnostics: [...built.diagnostics, ...loaded.diagnostics],
+    diagnostics: [
+      ...built.diagnostics,
+      ...loaded.diagnostics,
+      ...(translations?.diagnostics ?? []),
+    ],
+    translationIds: translations?.translationIds ?? null,
   };
 }
 
@@ -105,6 +119,7 @@ export async function analyzeFiles(
   const project = await loadProject(files, options);
   const analyses = options.analyses ?? DEFAULT_ANALYSES;
   const { results, diagnostics } = runAnalyses(project, analyses, options.onProgress);
+  if (diagnostics.length > 0) options.onDiagnostics?.(diagnostics);
   options.onProgress?.({ phase: 'done', done: analyses.length, total: analyses.length });
   const report: Report = {
     schemaVersion: REPORT_SCHEMA_VERSION,

@@ -8,10 +8,15 @@ import {
   type PyValue,
   readRange,
   readRpyc,
+  readRpycPayload,
   type RpycOptions,
+  sequenceItems,
 } from '@phanes/renpy-formats';
 import { mapStatements, newAclReport } from '../acl/map';
+import { walkStatements } from '../analyses/walk';
+import type { Stmt } from '../model/ast';
 import { type Diagnostic, diagnosticFromError } from '../model/diagnostic';
+import type { TranslationId, TranslationIds } from '../model/project';
 import type { ScriptFile, ScriptTraits } from '../model/script';
 import { versionFilePaths } from '../version/detect';
 import { effectiveGameEntries, type Vfs, type VfsEntry } from '../vfs/vfs';
@@ -128,4 +133,91 @@ export async function loadTexts(vfs: Vfs): Promise<Map<string, string>> {
     }
   }
   return texts;
+}
+
+/** True when the game ships translations: tl/ scripts or translate statements. */
+export function hasTranslations(scripts: readonly ScriptFile[]): boolean {
+  if (scripts.some((s) => s.gamePath.startsWith('tl/'))) return true;
+  let found = false;
+  walkStatements(scripts, (stmt) => {
+    if (found) return;
+    if (stmt.kind === 'translate-string') found = true;
+    else if (stmt.kind === 'translate' && stmt.language !== null) found = true;
+    else if (stmt.kind === 'say' && stmt.language !== null) found = true;
+  });
+  return found;
+}
+
+/**
+ * Default-language translation identifiers of statements: `translate None`
+ * wrappers (Ren'Py 6.99-7.x, and blocks with several statements) and
+ * TranslateSay nodes (Ren'Py 8), as found in slot 2.
+ */
+export function translationIdsOf(script: ScriptFile, statements: readonly Stmt[]): TranslationId[] {
+  const out: TranslationId[] = [];
+  const wrapped = new Set<Stmt>();
+  walkStatements([{ ...script, statements }], (stmt, ctx) => {
+    if (stmt.kind === 'translate' && stmt.language === null) {
+      for (const inner of stmt.block) wrapped.add(inner);
+      out.push({
+        id: stmt.identifier,
+        loc: stmt.loc,
+        label: ctx.label,
+        hasSay: stmt.block.some((s) => s.kind === 'say'),
+        script: script.path,
+      });
+    } else if (
+      stmt.kind === 'say' &&
+      stmt.language === null &&
+      stmt.identifier !== null &&
+      ctx.language === null &&
+      !wrapped.has(stmt)
+    ) {
+      out.push({
+        id: stmt.identifier,
+        loc: stmt.loc,
+        label: ctx.label,
+        hasSay: true,
+        script: script.path,
+      });
+    }
+  });
+  return out;
+}
+
+/**
+ * Reads the translation identifiers Ren'Py stored in slot 2 of every
+ * default-language script. Slot 1 (the one analyzed) has none, and recomputing
+ * them is not reliable across Ren'Py versions (docs/analyses.md).
+ */
+export async function loadTranslationIds(
+  vfs: Vfs,
+  scripts: readonly ScriptFile[],
+  options: { rpyc?: RpycOptions; onProgress?: (p: ScriptLoadProgress) => void } = {},
+): Promise<{ translationIds: TranslationIds; diagnostics: Diagnostic[] }> {
+  const ids: TranslationId[] = [];
+  const unavailable: string[] = [];
+  const diagnostics: Diagnostic[] = [];
+  const targets = scripts.filter((s) => !s.gamePath.startsWith('tl/'));
+  const sources = new Map(vfs.entries.map((e) => [e.path, e.source]));
+  for (const [i, script] of targets.entries()) {
+    options.onProgress?.({ done: i, total: targets.length, path: script.path });
+    if (script.slot === 2) {
+      ids.push(...translationIdsOf(script, script.statements));
+      continue;
+    }
+    const source = sources.get(script.path);
+    try {
+      if (!source) throw new Error('script source not found');
+      const payload = await readRpycPayload(source, { ...options.rpyc, slots: [2] });
+      const stmts = sequenceItems(payload.value)?.[1];
+      const { statements } = mapStatements(sequenceItems(stmts) ?? [], script.gamePath);
+      ids.push(...translationIdsOf(script, statements));
+    } catch (error) {
+      unavailable.push(script.path);
+      const d = diagnosticFromError(error, script.path, 'info');
+      diagnostics.push({ ...d, code: 'TL_IDS_UNAVAILABLE', details: { cause: d.code } });
+    }
+  }
+  return { translationIds: { ids, unavailable }, diagnostics };
 }

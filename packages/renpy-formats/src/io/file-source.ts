@@ -25,7 +25,7 @@ export function clampRange(size: number, start: number, end: number): [number, n
 export class BytesSource implements FileSource {
   constructor(
     readonly path: string,
-    private readonly bytes: Uint8Array,
+    readonly bytes: Uint8Array,
   ) {}
 
   get size(): number {
@@ -42,8 +42,8 @@ export class BytesSource implements FileSource {
 export class SliceSource implements FileSource {
   constructor(
     readonly path: string,
-    private readonly parent: FileSource,
-    private readonly offset: number,
+    readonly parent: FileSource,
+    readonly offset: number,
     readonly size: number,
   ) {
     if (offset < 0 || size < 0 || offset + size > parent.size) {
@@ -64,7 +64,7 @@ export class ConcatSource implements FileSource {
 
   constructor(
     readonly path: string,
-    private readonly parts: readonly FileSource[],
+    readonly parts: readonly FileSource[],
   ) {
     let total = 0;
     for (const part of parts) {

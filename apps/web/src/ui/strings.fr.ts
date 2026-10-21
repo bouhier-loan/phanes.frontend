@@ -26,6 +26,7 @@ export const t = {
     phase: {
       archives: 'Lecture des archives',
       scripts: 'Décodage des scripts',
+      translations: 'Lecture des identifiants de traduction',
       analyses: 'Analyses',
       done: 'Terminé',
     } satisfies Record<AnalyzePhase, string>,

@@ -16,6 +16,12 @@ export interface CharacterDefinition {
   readonly kind: 'adv' | 'nvl';
   readonly origin: 'define' | 'default' | 'python';
   readonly loc: Location;
+  /** `color=` argument, when it is a string literal. */
+  readonly color: string | null;
+  /** `image=` argument: the image tag of the character's sprites. */
+  readonly imageTag: string | null;
+  /** Source of the definition, e.g. `define e = Character("Eileen")`. */
+  readonly code: string;
 }
 
 export interface SpeakerStats {
@@ -29,6 +35,11 @@ export interface SpeakerStats {
   words: number;
   cjkChars: number;
   firstLine: Location | null;
+  firstText: string | null;
+  /** Labels where the speaker has a line. */
+  readonly labels: Set<string>;
+  /** Lines by source file. */
+  readonly byFile: Map<string, number>;
 }
 
 export interface LabelStats {
@@ -75,22 +86,31 @@ function characterFromCall(
   variable: string,
   origin: CharacterDefinition['origin'],
   loc: Location,
+  code: string,
 ): CharacterDefinition | null {
   const factory = call.callee.split('.').pop() ?? '';
   if (!CHARACTER_FACTORIES.has(factory)) return null;
   const arg = call.positional[0] ?? call.keywords.get('name');
   const kindArg = call.keywords.get('kind')?.source;
   const kind = factory === 'NVLCharacter' || kindArg === 'nvl' ? 'nvl' : 'adv';
+  const base = {
+    variable,
+    kind,
+    origin,
+    loc,
+    color: call.keywords.get('color')?.string ?? null,
+    imageTag: call.keywords.get('image')?.string ?? null,
+    code,
+  } as const;
   if (factory === 'DynamicCharacter') {
     const name = arg?.string ?? arg?.source ?? null;
-    return { variable, name: name === null ? null : `[${name}]`, dynamic: true, kind, origin, loc };
+    return { ...base, name: name === null ? null : `[${name}]`, dynamic: true };
   }
-  if (!arg || arg.source === 'None')
-    return { variable, name: null, dynamic: false, kind, origin, loc };
+  if (!arg || arg.source === 'None') return { ...base, name: null, dynamic: false };
   if (arg.string !== null) {
-    return { variable, name: arg.string, dynamic: arg.string.includes('['), kind, origin, loc };
+    return { ...base, name: arg.string, dynamic: arg.string.includes('[') };
   }
-  return { variable, name: arg.source, dynamic: true, kind, origin, loc };
+  return { ...base, name: arg.source, dynamic: true };
 }
 
 function storeQualified(store: string, name: string): string {
@@ -106,18 +126,23 @@ function collectDefinitions(project: Project): Map<string, CharacterDefinition> 
     if (ctx.language !== null) return;
     if (stmt.kind === 'define' && stmt.operator === '=' && stmt.index === null) {
       const call = parseCall(stmt.value);
+      const name = storeQualified(stmt.store, stmt.name);
       if (call)
-        add(characterFromCall(call, storeQualified(stmt.store, stmt.name), 'define', stmt.loc));
+        add(characterFromCall(call, name, 'define', stmt.loc, `define ${name} = ${stmt.value}`));
     } else if (stmt.kind === 'default') {
       const call = parseCall(stmt.value);
+      const name = storeQualified(stmt.store, stmt.name);
       if (call)
-        add(characterFromCall(call, storeQualified(stmt.store, stmt.name), 'default', stmt.loc));
+        add(characterFromCall(call, name, 'default', stmt.loc, `default ${name} = ${stmt.value}`));
     } else if (stmt.kind === 'python') {
       for (const m of stmt.code.matchAll(PYTHON_ASSIGNMENT)) {
         const variable = m[1];
         if (!variable) continue;
-        const call = parseCall(stmt.code.slice(m.index + m[0].length));
-        if (call) add(characterFromCall(call, variable, 'python', stmt.loc));
+        const start = m.index + m[0].length;
+        const call = parseCall(stmt.code.slice(start));
+        if (!call) continue;
+        const code = stmt.code.slice(m.index, start + call.end).trim();
+        add(characterFromCall(call, variable, 'python', stmt.loc, code));
       }
     }
   });
@@ -179,6 +204,9 @@ export const dialogueIndex = memo((project: Project): DialogueIndex => {
         words: 0,
         cjkChars: 0,
         firstLine: null,
+        firstText: null,
+        labels: new Set(),
+        byFile: new Map(),
       };
       speakers.set(id, stats);
     }
@@ -199,7 +227,12 @@ export const dialogueIndex = memo((project: Project): DialogueIndex => {
     if (isLine) {
       stats.lines++;
       totals.lines++;
-      stats.firstLine ??= loc;
+      if (stats.firstLine === null) {
+        stats.firstLine = loc;
+        stats.firstText = text;
+      }
+      if (label !== null) stats.labels.add(label);
+      stats.byFile.set(loc.file, (stats.byFile.get(loc.file) ?? 0) + 1);
     }
     if (label !== null) {
       let l = byLabel.get(label);

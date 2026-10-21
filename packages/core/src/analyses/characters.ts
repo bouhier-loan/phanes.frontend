@@ -16,6 +16,16 @@ export type CharacterEntry = {
   words: number;
   cjkChars: number;
   firstLine: Location | null;
+  firstText: string | null;
+  /** `color=` of the definition, when constant. */
+  color: string | null;
+  /** `image=` of the definition: the tag of the character's images. */
+  imageTag: string | null;
+  /** Source of the definition. */
+  definitionCode: string | null;
+  /** Number of labels where the character has a line. */
+  labels: number;
+  linesByFile: { file: string; lines: number }[];
 };
 
 export type CharactersResult = {
@@ -41,6 +51,14 @@ export const charactersAnalysis: Analysis<CharactersResult> = {
         words: s.words,
         cjkChars: s.cjkChars,
         firstLine: s.firstLine,
+        firstText: s.firstText,
+        color: def?.color ?? null,
+        imageTag: def?.imageTag ?? null,
+        definitionCode: def?.code ?? null,
+        labels: s.labels.size,
+        linesByFile: [...s.byFile.entries()]
+          .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+          .map(([file, lines]) => ({ file, lines })),
       };
     });
     characters.sort((a, b) => b.words - a.words || b.lines - a.lines || (a.id < b.id ? -1 : 1));
