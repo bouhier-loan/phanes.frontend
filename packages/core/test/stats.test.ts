@@ -23,6 +23,11 @@ interface ExpectedStats {
       dynamic?: boolean;
       lines: number;
       words: number;
+      color?: string;
+      imageTag?: string;
+      labels?: number;
+      linesByFile?: { file: string; lines: number }[];
+      firstText?: string;
     }
   >;
   labelStats: Record<string, { line: number; lines: number; words: number }>;

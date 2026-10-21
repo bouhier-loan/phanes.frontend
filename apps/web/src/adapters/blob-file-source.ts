@@ -4,7 +4,7 @@ import type { FileSource } from '@phanes/renpy-formats';
 export class BlobFileSource implements FileSource {
   constructor(
     readonly path: string,
-    private readonly blob: Blob,
+    readonly blob: Blob,
   ) {}
 
   get size(): number {

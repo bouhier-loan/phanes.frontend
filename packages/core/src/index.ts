@@ -1,7 +1,7 @@
 export type { Json } from './model/json';
 export * from './model/ast';
 export * from './model/diagnostic';
-export type { Project } from './model/project';
+export type { Project, TranslationId, TranslationIds } from './model/project';
 export type { ScriptFile, ScriptTraits } from './model/script';
 export * from './vfs';
 export * from './acl';
@@ -16,6 +16,19 @@ export * from './analyses/overview';
 export * from './analyses/characters';
 export * from './analyses/labels';
 export * from './analyses/diagnostics';
+export * from './analyses/graph';
+export * from './analyses/menus';
+export * from './analyses/variables';
+export * from './analyses/assets';
+export * from './analyses/translations';
+export { menuKey, scanFlow, type FlowContext, type FlowHandlers } from './analyses/flow';
 export * from './pipeline/report';
 export * from './pipeline/analyze';
-export { loadScripts, loadTexts } from './pipeline/scripts';
+export {
+  hasTranslations,
+  loadScripts,
+  loadTexts,
+  loadTranslationIds,
+  translationIdsOf,
+} from './pipeline/scripts';
+export * from './reader';

@@ -10,13 +10,26 @@ adapted, the relevant files say so in a header comment.
 Ren'Py — https://github.com/renpy/renpy
 Copyright 2004-2026 Tom Rothamel <pytom@bishoujo.us>
 MIT License. Referenced: renpy/loader.py, renpy/script.py, renpy/ast.py,
-renpy/compat/pickle.py, renpy/cslots.pyx, launcher/game/archiver.rpy.
+renpy/compat/pickle.py, renpy/cslots.pyx, launcher/game/archiver.rpy,
+renpy/translation/__init__.py, renpy/common/00images.rpy,
+renpy/common/00audio.rpy.
 
 -------------------------------------------------------------------------------
 unrpyc — https://github.com/CensoredUsername/unrpyc
 Copyright (c) 2012-2024 Yuri K. Schlesner, CensoredUsername, Jackmcbarn
 MIT License. Used as a test oracle (tools/oracle) and as a reference for the
 representation of Ren'Py AST classes.
+
+-------------------------------------------------------------------------------
+Fonts bundled with the web app (apps/web, through @fontsource-variable/*):
+- Bricolage Grotesque — Copyright 2022 The Bricolage Grotesque Project Authors
+- Geist and Geist Mono — Copyright 2024 The Geist Project Authors
+SIL Open Font License 1.1 (https://openfontlicense.org); the license texts
+ship with the packages in node_modules/@fontsource-variable/*/LICENSE.
+
+-------------------------------------------------------------------------------
+oauth4webapi — https://github.com/panva/oauth4webapi
+Copyright (c) 2022 Filip Skokan. MIT License. Used for the OIDC sign-in.
 
 -------------------------------------------------------------------------------
 No code from unrpa (GPL-3.0) is used in this project.

@@ -10,10 +10,14 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
     "@phanes/core": "workspace:*",
     "@phanes/renpy-formats": "workspace:*",
     "@tanstack/react-virtual": "^3.14.21",
     "comlink": "^4.4.2",
+    "oauth4webapi": "^3.8.8",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, type Page } from '@playwright/test';
+import { mockOidc, type OidcMock } from './oidc';
 
 export const REPO = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 export const FIXTURES = join(REPO, 'fixtures');
@@ -11,11 +12,16 @@ export interface Watch {
   readonly requests: string[];
   /** Console errors, page errors and CSP violations. */
   readonly errors: string[];
+  /** The fake OIDC provider the app signed in with. */
+  readonly oidc: OidcMock;
 }
 
-/** Opens the app, waits until it is fully loaded, then records every request. */
+/**
+ * Opens the app, signs in through the mocked OIDC provider, waits until the
+ * app is fully loaded, then records every request.
+ */
 export async function openApp(page: Page): Promise<Watch> {
-  const watch: Watch = { requests: [], errors: [] };
+  const watch: Watch = { requests: [], errors: [], oidc: await mockOidc(page) };
   let loaded = false;
   page.on('request', (request) => {
     if (loaded) watch.requests.push(request.url());
@@ -63,4 +69,12 @@ export async function waitForReport(page: Page, timeout = 15_000): Promise<void>
       cause: error,
     });
   }
+}
+
+/** Opens a report section from the side navigation. */
+export async function openSection(page: Page, name: string): Promise<void> {
+  await page
+    .getByRole('navigation', { name: 'Sections du rapport' })
+    .getByRole('link', { name: new RegExp(`^${name}`) })
+    .click();
 }

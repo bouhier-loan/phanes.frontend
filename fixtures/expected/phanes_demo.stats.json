@@ -7,12 +7,31 @@
   "readingTimeMinutes": 0.4,
   "languages": ["french"],
   "characters": {
-    "narrator": { "name": null, "origin": "builtin", "lines": 6, "words": 21 },
-    "e": { "name": "Eileen", "origin": "define", "lines": 4, "words": 21 },
+    "narrator": { "name": null, "origin": "builtin", "lines": 6, "words": 21, "labels": 4 },
+    "e": {
+      "name": "Eileen",
+      "origin": "define",
+      "lines": 4,
+      "words": 21,
+      "color": "#c8ffc8",
+      "labels": 3,
+      "linesByFile": [
+        { "file": "game/script.rpy", "lines": 2 },
+        { "file": "game/story/extra.rpy", "lines": 2 }
+      ],
+      "firstText": "Good morning! Did you sleep well?"
+    },
     "n": { "name": null, "origin": "define", "kind": "nvl", "lines": 1, "words": 7 },
     "\"Eileen\"": { "name": "Eileen", "origin": "literal", "lines": 1, "words": 6 },
-    "m": { "name": "[player_name]", "origin": "define", "dynamic": true, "lines": 1, "words": 5 },
-    "l": { "name": "Lucy", "origin": "define", "lines": 1, "words": 3 },
+    "m": {
+      "name": "[player_name]",
+      "origin": "define",
+      "dynamic": true,
+      "lines": 1,
+      "words": 5,
+      "color": "#ffcccc"
+    },
+    "l": { "name": "Lucy", "origin": "define", "lines": 1, "words": 3, "imageTag": "lucy" },
     "p": { "name": "[player_name]", "origin": "define", "dynamic": true, "lines": 1, "words": 3 },
     "s": { "name": "Sylvie", "origin": "python", "lines": 1, "words": 3 },
     "centered": { "name": null, "origin": "builtin", "lines": 1, "words": 2 }

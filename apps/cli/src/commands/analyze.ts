@@ -1,8 +1,13 @@
 import {
   analyzeFiles,
+  type AssetsResult,
   type CharactersResult,
   type LabelsResult,
+  type MenusResult,
   type OverviewResult,
+  type StoryGraphResult,
+  type TranslationsResult,
+  type VariablesResult,
 } from '@phanes/core';
 import { walkDirectory } from '@phanes/testkit';
 import { table } from '../format';
@@ -24,6 +29,35 @@ export async function analyzeCommand(path: string, json: boolean): Promise<strin
       `Reading time: ${overview.readingTimeMinutes} min, languages: ${overview.languages.join(', ') || '-'}`,
     );
   }
+  const graph = report.analyses.storyGraph as StoryGraphResult | undefined;
+  const menus = report.analyses.menus as MenusResult | undefined;
+  const variables = report.analyses.variables as VariablesResult | undefined;
+  const assets = report.analyses.assets as AssetsResult | undefined;
+  const translations = report.analyses.translations as TranslationsResult | undefined;
+  if (graph)
+    lines.push(
+      `Graph: entry ${graph.entry ?? '-'}, endings: ${graph.endings.join(', ') || '-'}, unreachable: ${graph.unreachable.join(', ') || '-'}, broken: ${graph.broken.map((b) => b.target).join(', ') || '-'}`,
+    );
+  if (menus)
+    lines.push(
+      `Menus: ${menus.totals.menus}, options: ${menus.totals.options}, conditional: ${menus.totals.conditional}`,
+    );
+  if (variables)
+    lines.push(
+      `Variables: ${variables.totals.variables} (${variables.totals.default} default, ${variables.totals.define} define), never read: ${variables.totals.neverRead}, never written: ${variables.totals.neverWritten}`,
+    );
+  if (assets) {
+    const i = assets.images.totals;
+    const a = assets.audio.totals;
+    lines.push(
+      `Images: ${i.declared} declared (${i.automatic} automatic), ${i.displayed} displayed, ${i.neverDisplayed} never, ${i.missing} missing; audio: ${a.files} files, ${a.played} played, ${a.missing} missing; video: ${assets.video.totals.files}`,
+    );
+  }
+  if (translations)
+    for (const l of translations.languages)
+      lines.push(
+        `Translation ${l.language}: ${l.dialogue.translated}/${l.dialogue.total} lines, ${l.strings.translated}/${l.strings.total} strings, ${l.orphans.length} orphans`,
+      );
   if (characters) {
     lines.push(
       '',

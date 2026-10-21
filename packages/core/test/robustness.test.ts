@@ -26,6 +26,24 @@ function node(className: string, attrs: Record<string, unknown>): PyObject {
 }
 
 describe('a broken file does not break the report', () => {
+  it('streams loading diagnostics as each phase ends', async () => {
+    const garbage = new BytesSource(
+      'dist/game/broken.rpyc',
+      new TextEncoder().encode('not a script'),
+    );
+    const streamed: string[] = [];
+    const phases: string[] = [];
+    const { report } = await analyzeFiles([...(await dist('8.5.3')), garbage], {
+      onDiagnostics: (ds) => streamed.push(...ds.map((d) => d.code)),
+      onProgress: (p) => {
+        if (phases.at(-1) !== p.phase) phases.push(p.phase);
+      },
+    });
+    expect(streamed).toEqual(report.diagnostics.map((d) => d.code));
+    expect(streamed).toContain('RPYC_BAD_HEADER');
+    expect(phases).toEqual(['archives', 'scripts', 'translations', 'analyses', 'done']);
+  });
+
   it('reports a corrupted compiled script and keeps the rest', async () => {
     const garbage = new BytesSource(
       'dist/game/broken.rpyc',

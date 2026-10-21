@@ -1,0 +1,107 @@
+{
+  "_comment": "Counted by hand from fixtures/games/phanes_demo/game/**/*.rpy, following docs/analyses.md. Identical for every SDK and layout.",
+  "storyGraph": {
+    "entry": "start",
+    "edges": [
+      ["start", "park", "jump", "To the park", false],
+      ["start", "library", "call", "To the library", true],
+      ["start", "finale", "jump", "To the library", true],
+      ["start", "finale", "jump", "Stay home", false],
+      ["park", "park.bench", "jump", null, false],
+      ["park.bench", "finale", "jump", null, false],
+      ["finale", "good_ending", "jump", null, true],
+      ["finale", "bad_ending", "jump", null, false],
+      [null, "secret_ending", "reference", null, false]
+    ],
+    "dynamic": [{ "expression": "\"bad\" + \"_ending\"", "resolved": "bad_ending", "line": 54 }],
+    "broken": [{ "target": "missing_label", "file": "game/story/extra.rpy", "line": 15, "label": "unused_label" }],
+    "unreachable": ["unused_label"],
+    "endings": ["good_ending", "bad_ending", "secret_ending"],
+    "returns": ["library", "good_ending", "bad_ending", "secret_ending"],
+    "speakers": {
+      "start": ["\"Eileen\"", "e", "narrator", "p"],
+      "park": ["l", "s"],
+      "finale": []
+    }
+  },
+  "menus": {
+    "totals": { "menus": 1, "options": 3, "conditional": 1, "withPrompt": 1 },
+    "menu": {
+      "id": "game/script.rpy:18",
+      "label": "start",
+      "prompt": { "who": null, "text": "Where should we go?" },
+      "options": [
+        { "text": "To the park", "condition": null, "targets": ["jump park"], "lines": 0 },
+        {
+          "text": "To the library",
+          "condition": "affection > 0",
+          "targets": ["call library", "jump finale"],
+          "lines": 0
+        },
+        { "text": "Stay home", "condition": null, "targets": ["jump finale"], "lines": 1 }
+      ]
+    }
+  },
+  "variables": {
+    "totals": {
+      "variables": 12,
+      "default": 3,
+      "define": 9,
+      "characters": 5,
+      "engine": 4,
+      "neverRead": 0,
+      "neverWritten": 1
+    },
+    "sites": {
+      "affection": {
+        "writes": ["game/script.rpy:17", "game/script.rpy:53"],
+        "reads": ["game/script.rpy:18", "game/story/extra.rpy:3"]
+      },
+      "met_lucy": { "writes": ["game/script.rpy:34"], "reads": ["game/script.rpy:50"] },
+      "player_name": {
+        "writes": [],
+        "reads": ["game/characters.rpy:6", "game/characters.rpy:7", "game/script.rpy:64"]
+      }
+    }
+  },
+  "assets": {
+    "images": {
+      "totals": {
+        "declared": 5,
+        "statement": 2,
+        "automatic": 3,
+        "displayed": 4,
+        "neverDisplayed": 1,
+        "missing": 0
+      },
+      "entries": {
+        "bg park": ["automatic", "background", 1],
+        "bg room": ["statement", "background", 1],
+        "eileen happy": ["statement", "sprite", 1],
+        "lucy smile": ["automatic", "sprite", 1],
+        "unused": ["automatic", "other", 0]
+      }
+    },
+    "audio": {
+      "totals": { "files": 3, "played": 2, "neverPlayed": 1, "missing": 0 },
+      "plays": { "audio/theme.ogg": ["music"], "audio/v1.ogg": ["voice"], "audio/unused.ogg": [] }
+    },
+    "video": { "totals": { "files": 0, "used": 0, "missing": 0 } }
+  },
+  "translations": {
+    "default": { "dialogue": 17, "blocks": 18, "strings": 6 },
+    "languages": [
+      {
+        "language": "french",
+        "files": 2,
+        "dialogue": { "translated": 5, "total": 17 },
+        "strings": { "translated": 4, "total": 6, "extra": 0 },
+        "orphans": [],
+        "missingByFile": [
+          { "file": "game/script.rpy", "missing": 10, "total": 15 },
+          { "file": "game/story/extra.rpy", "missing": 2, "total": 2 }
+        ]
+      }
+    ]
+  }
+}
