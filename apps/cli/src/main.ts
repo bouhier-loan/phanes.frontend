@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
+import { analyzeCommand } from './commands/analyze';
 import { dumpCommand } from './commands/dump';
 import { inventoryCommand } from './commands/inventory';
 
 const USAGE = `Usage: phanes <command> <path> [--json]
 
 Commands:
+  analyze <dir>                   Full report (overview, characters, labels...)
   inventory <dir>                 List files, archives and their content
   dump <file.rpyc | a.rpa:entry>  Canonical JSON of a compiled script`;
 
@@ -23,6 +25,9 @@ async function main(argv: string[]): Promise<number> {
   switch (command) {
     case 'inventory':
       console.log(await inventoryCommand(path, values.json));
+      return 0;
+    case 'analyze':
+      console.log(await analyzeCommand(path, values.json));
       return 0;
     case 'dump':
       console.log(await dumpCommand(path));

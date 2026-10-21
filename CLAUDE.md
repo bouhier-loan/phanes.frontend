@@ -36,4 +36,8 @@ rebuilds `fixtures/build`. The 7.4.11 SDK ships a Python 2.7 interpreter
   the canonical JSON of `renpy-formats/src/dump/canonical.ts`; `test/rpyc/oracle.test.ts` requires
   an exact match. Keep both implementations of the canonical form in sync.
 - `tools/oracle/unrpyc.sh` stores unrpyc's dumps and decompiled sources for human review.
+- `tools/oracle/semantic.py` projects unrpyc's view of each statement; `core/test/acl-oracle.test.ts`
+  requires the anti-corruption layer to produce the same projection for every SDK.
+- Dialogue statistics follow `docs/stats.md`; hand counts live in
+  `fixtures/expected/phanes_demo.stats.json`. Change both together.
 - Verified format facts (and surprises) are in `docs/formats.md`.

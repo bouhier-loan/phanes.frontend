@@ -1,0 +1,112 @@
+[
+[
+"translate",
+5,
+"start_c2dc35f4",
+"french"
+],
+[
+"say",
+8,
+null,
+"C'était une matinée calme."
+],
+[
+"end-translate",
+5
+],
+[
+"translate",
+11,
+"start_f9d2b1c6",
+"french"
+],
+[
+"say",
+14,
+"e",
+"Bonjour ! Bien dormi ?"
+],
+[
+"end-translate",
+11
+],
+[
+"translate",
+17,
+"start_842c8915",
+"french"
+],
+[
+"say",
+20,
+"extend",
+" J'espère."
+],
+[
+"end-translate",
+17
+],
+[
+"translate",
+23,
+"start_d6ab0810",
+"french"
+],
+[
+"say",
+26,
+"p",
+"Oui, merci."
+],
+[
+"end-translate",
+23
+],
+[
+"translate",
+29,
+"park_3feb0781",
+"french"
+],
+[
+"say",
+32,
+"l",
+"Oh, bonjour !"
+],
+[
+"end-translate",
+29
+],
+[
+"init",
+34,
+0
+],
+[
+"translate-string",
+37,
+"french",
+"Where should we go?",
+"Où allons-nous ?"
+],
+[
+"translate-string",
+41,
+"french",
+"To the park",
+"Au parc"
+],
+[
+"translate-string",
+45,
+"french",
+"To the library",
+"À la bibliothèque"
+],
+[
+"return",
+34
+]
+]

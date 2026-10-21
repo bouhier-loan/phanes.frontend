@@ -1,13 +1,18 @@
-import type { FileSource, RpaReadOptions } from '@phanes/renpy-formats';
+import type { FileSource, RpaReadOptions, RpycOptions } from '@phanes/renpy-formats';
 import type { Analysis } from '../analyses/analysis';
+import { charactersAnalysis } from '../analyses/characters';
+import { diagnosticsAnalysis } from '../analyses/diagnostics';
 import { inventoryAnalysis } from '../analyses/inventory';
+import { labelsAnalysis } from '../analyses/labels';
+import { overviewAnalysis } from '../analyses/overview';
 import { type Diagnostic, diagnosticFromError } from '../model/diagnostic';
 import type { Json } from '../model/json';
 import type { Project } from '../model/project';
 import { buildVfs } from '../vfs/vfs';
+import { loadScripts, loadTexts } from './scripts';
 import { GENERATOR, type Report, REPORT_SCHEMA_VERSION } from './report';
 
-export type AnalyzePhase = 'archives' | 'analyses' | 'done';
+export type AnalyzePhase = 'archives' | 'scripts' | 'analyses' | 'done';
 
 export interface AnalyzeProgress {
   readonly phase: AnalyzePhase;
@@ -19,24 +24,43 @@ export interface AnalyzeProgress {
 export interface AnalyzeOptions {
   readonly analyses?: readonly Analysis[];
   readonly rpa?: RpaReadOptions;
+  readonly rpyc?: RpycOptions;
   readonly onProgress?: (progress: AnalyzeProgress) => void;
   /** Clock, injectable for reproducible reports. */
   readonly now?: () => Date;
 }
 
-export const DEFAULT_ANALYSES: readonly Analysis[] = [inventoryAnalysis];
+export const DEFAULT_ANALYSES: readonly Analysis[] = [
+  overviewAnalysis,
+  inventoryAnalysis,
+  charactersAnalysis,
+  labelsAnalysis,
+  diagnosticsAnalysis,
+];
 
-/** Loads the project (file tree, archives) without running analyses. */
+/** Loads the project: file tree, archive indexes, compiled scripts, version files. */
 export async function loadProject(
   files: readonly FileSource[],
   options: AnalyzeOptions = {},
 ): Promise<Project> {
-  const { vfs, diagnostics } = await buildVfs(files, {
+  const progress = (phase: AnalyzePhase) => (p: { done: number; total: number; path: string }) => {
+    options.onProgress?.({ phase, done: p.done, total: p.total, current: p.path });
+  };
+  const built = await buildVfs(files, {
     ...(options.rpa ? { rpa: options.rpa } : {}),
-    onProgress: (p) =>
-      options.onProgress?.({ phase: 'archives', done: p.done, total: p.total, current: p.path }),
+    onProgress: progress('archives'),
   });
-  return { vfs, diagnostics };
+  const loaded = await loadScripts(built.vfs, {
+    ...(options.rpyc ? { rpyc: options.rpyc } : {}),
+    onProgress: progress('scripts'),
+  });
+  const texts = await loadTexts(built.vfs);
+  return {
+    vfs: built.vfs,
+    scripts: loaded.scripts,
+    texts,
+    diagnostics: [...built.diagnostics, ...loaded.diagnostics],
+  };
 }
 
 /** Runs analyses; each failure is isolated and reported as a diagnostic. */
