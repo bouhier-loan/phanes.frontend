@@ -1,5 +1,6 @@
 import * as oauth from 'oauth4webapi';
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import { loadFonts } from '../fonts';
 import { Logo } from '../ui/components/icons';
 import { t } from '../ui/strings.fr';
 import { completeSignIn, isCallback, signIn, signOut, StateMismatch } from './oidc';
@@ -7,6 +8,7 @@ import { type Session, StorageUnavailable, store } from './session';
 
 /** `VITE_AUTH=off` turns sign-in off, for local development only. */
 const DISABLED = import.meta.env.VITE_AUTH === 'off';
+if (DISABLED) loadFonts();
 
 type GateState =
   | { step: 'loading' }
@@ -78,7 +80,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
     let active = true;
     start().then(
       (session) => {
-        if (active && session) setState({ step: 'ready', session });
+        if (!session) return;
+        // Before the app mounts: its request counter starts after these.
+        loadFonts();
+        if (active) setState({ step: 'ready', session });
       },
       (error: unknown) => {
         if (active) setState({ step: 'error', message: messageOf(error) });
