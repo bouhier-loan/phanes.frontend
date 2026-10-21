@@ -9,5 +9,8 @@
   },
   "dependencies": {
     "@phanes/renpy-formats": "workspace:*"
+  },
+  "devDependencies": {
+    "@phanes/testkit": "workspace:*"
   }
 }

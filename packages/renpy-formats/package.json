@@ -9,5 +9,8 @@
   },
   "dependencies": {
     "fflate": "^0.8.3"
+  },
+  "devDependencies": {
+    "@phanes/testkit": "workspace:*"
   }
 }

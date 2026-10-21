@@ -1,0 +1,30 @@
+2026-10-21 13:27:41 UTC
+Linux-6.18.44-fc-v139-x86_64-with-glibc2.39
+Ren'Py 8.3.7.25031702
+
+Early init took 0.06s
+Loading error handling took 0.08s
+Loading script took 1.83s
+Loading save slot metadata took 0.02s
+Loading persistent took 0.00s
+Running init code took 0.10s
+Loading analysis data took 0.00s
+Analyze and compile ATL took 0.01s
+Reloading save slot metadata took 0.01s
+Index archives took 0.00s
+Backing up script files to '/root/.renpy/backups/phanes_demo':
+Dump and make backups took 0.07s
+Cleaning cache took 0.00s
+Making clean stores took 0.00s
+Initial gc took 0.05s
+DPI scale factor: 1.000000
+Creating interface object took 0.00s
+Cleaning stores took 0.00s
+Init translation took 0.00s
+Build styles took 0.00s
+Load screen analysis took 0.00s
+Analyze screens took 0.04s
+Save screen analysis took 0.02s
+Prepare screens took 0.19s
+Save pyanalysis. took 0.02s
+Save bytecode. took 0.03s

@@ -14,6 +14,7 @@ export default defineConfig(
       '**/playwright-report/**',
       '**/test-results/**',
       'fixtures/**',
+      'tools/fixtures/.cache/**',
     ],
   },
   js.configs.recommended,
@@ -27,6 +28,8 @@ export default defineConfig(
       },
     },
     rules: {
+      // Type aliases stay assignable to index signatures (Json); interfaces do not.
+      '@typescript-eslint/consistent-type-definitions': 'off',
       '@typescript-eslint/restrict-template-expressions': [
         'error',
         { allowNumber: true, allowBoolean: true },

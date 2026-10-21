@@ -22,3 +22,10 @@ Browser-only analyzer for Ren'Py games. pnpm monorepo, TypeScript strict, Vite +
   when adapting logic, and keep NOTICE up to date.
 - UI strings are French and live in `apps/web/src/ui/strings.fr.ts`; code, comments and commits are
   English.
+
+## Fixtures
+
+`fixtures/README.md` explains how fixtures are produced. `tools/fixtures/build.sh` downloads the
+pinned Ren'Py SDKs (6.99.14.3, 7.4.11, 8.3.7, 8.5.3) into `tools/fixtures/.cache` (gitignored) and
+rebuilds `fixtures/build`. The 7.4.11 SDK ships a Python 2.7 interpreter
+(`lib/linux-x86_64/python`), used to generate Python 2 pickles.

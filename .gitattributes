@@ -7,3 +7,6 @@
 *.bin binary
 *.png binary
 *.ogg binary
+
+# Fixtures must stay byte-exact (no line-ending normalization).
+fixtures/** -text

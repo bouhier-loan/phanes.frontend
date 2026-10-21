@@ -26,6 +26,9 @@ importers:
       fast-check:
         specifier: ^4.10.2
         version: 4.10.2
+      fflate:
+        specifier: ^0.8.3
+        version: 0.8.3
       globals:
         specifier: ^17.13.0
         version: 17.13.0
@@ -99,12 +102,20 @@ importers:
       '@phanes/renpy-formats':
         specifier: workspace:*
         version: link:../renpy-formats
+    devDependencies:
+      '@phanes/testkit':
+        specifier: workspace:*
+        version: link:../testkit
 
   packages/renpy-formats:
     dependencies:
       fflate:
         specifier: ^0.8.3
         version: 0.8.3
+    devDependencies:
+      '@phanes/testkit':
+        specifier: workspace:*
+        version: link:../testkit
 
   packages/testkit:
     dependencies:

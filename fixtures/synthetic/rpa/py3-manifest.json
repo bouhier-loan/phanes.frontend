@@ -1,0 +1,48 @@
+{
+ "archives": {
+  "py3-v1.rpa": {
+   "key": null,
+   "rpi": "py3-v1.rpi",
+   "version": "RPA-1.0"
+  },
+  "py3-v2.rpa": {
+   "key": null,
+   "version": "RPA-2.0"
+  },
+  "py3-v3-prefix.rpa": {
+   "key": 464367618,
+   "version": "RPA-3.0"
+  },
+  "py3-v3.rpa": {
+   "key": 1111638594,
+   "version": "RPA-3.0"
+  }
+ },
+ "bigIndex": {
+  "entries": {
+   "edge.ogg": [
+    6442450844,
+    100
+   ],
+   "far/away.png": [
+    5368709243,
+    4096
+   ],
+   "near.rpyc": [
+    40,
+    10
+   ]
+  },
+  "key": 1111638594
+ },
+ "files": {
+  "audio/théme.ogg": "4f6767532066616b6520617564696f",
+  "empty.txt": "",
+  "images/bg room.png": "89504e472066616b6520696d616765",
+  "script.rpyc": "52454e505920525043322066616b6520636f6d70696c656420736372697074"
+ },
+ "multipart": {
+  "split.bin": "30313233343536373839616263646566"
+ },
+ "python": "3.13"
+}
