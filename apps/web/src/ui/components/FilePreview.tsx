@@ -1,5 +1,6 @@
 import type { InventoryEntry, ScriptOutline } from '@phanes/core';
 import { useEffect, useRef, useState } from 'react';
+import { looksLikeFont } from '../../adapters/font-header';
 import { mediaType } from '../../adapters/media-type';
 import { workerQueries } from '../../worker/client';
 import { useAssetUrl } from '../assets';
@@ -280,9 +281,12 @@ function FontPreview({ entry }: { entry: InventoryEntry }) {
           if (active) setState({ kind: 'large' });
           return;
         }
+        const buffer = await blob.arrayBuffer();
+        // A stub or truncated file would make the browser's sanitizer log errors.
+        if (!looksLikeFont(new Uint8Array(buffer), blob.size)) throw new Error('not a font');
         // An ArrayBuffer source: nothing is fetched, the CSP's font-src does not apply.
         const family = `phanes-preview-${++fontCounter}`;
-        const loaded = await new FontFace(family, await blob.arrayBuffer()).load();
+        const loaded = await new FontFace(family, buffer).load();
         if (!active) return;
         face = loaded;
         document.fonts.add(loaded);
