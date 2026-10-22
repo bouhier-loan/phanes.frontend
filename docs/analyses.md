@@ -98,7 +98,9 @@ peut atteindre sa fin.
   `renpy.music.play` / `renpy.sound.play` en Python. Les fichiers audio du jeu sont joués ou
   jamais joués ; un chemin introuvable est manquant.
 - **Vidéo** : `Movie(play="…")` dans une image ou une déclaration, `renpy.movie_cutscene("…")`
-  en Python.
+  en Python. Une image `Movie(play="…")` porte sa vidéo (`movie` : chemin écrit, fichier du jeu
+  cherché comme les vidéos, `loop` vrai sauf `loop=False`, `keep_last_frame`, `side_mask`) ; les
+  autres images ont `movie: null`.
 
 ## Traductions (`translations`)
 

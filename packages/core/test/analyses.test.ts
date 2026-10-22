@@ -213,6 +213,40 @@ describe('assets', () => {
     expect(a.audio.missing.map((p) => p.file)).toEqual(['sfx/door.ogg']);
     expect(a.audio.totals).toMatchObject({ files: 1, neverPlayed: 1 });
   });
+
+  it('describes the movies of Movie images', () => {
+    const a = assets(
+      project(
+        [
+          script([
+            s.image(1, 'intro', 'Movie(play="movies/intro.webm")'),
+            s.image(2, 'rain', 'Movie(play="rain.webm", loop=False, keep_last_frame=True)'),
+            s.image(3, 'ghost', 'Movie(size=(640, 360), play="ghost.webm", side_mask=True)'),
+            s.image(4, 'bg park', '"park.png"'),
+          ]),
+        ],
+        ['movies/intro.webm', 'ghost.webm', 'park.png'],
+      ),
+    );
+    const byName = Object.fromEntries(a.images.entries.map((i) => [i.name, i]));
+    expect(byName.intro?.movie).toEqual({
+      play: 'movies/intro.webm',
+      file: {
+        path: 'G/game/movies/intro.webm',
+        gamePath: 'movies/intro.webm',
+        size: 10,
+        archive: null,
+      },
+      loop: true,
+      keepLastFrame: false,
+      sideMask: false,
+    });
+    expect(byName.intro?.file).toBeNull();
+    expect(byName.rain?.movie).toMatchObject({ file: null, loop: false, keepLastFrame: true });
+    expect(byName.ghost?.movie).toMatchObject({ loop: true, sideMask: true });
+    expect(byName['bg park']?.movie).toBeNull();
+    expect(a.video.missing.map((m) => m.file)).toEqual(['rain.webm']);
+  });
 });
 
 describe('translations', () => {

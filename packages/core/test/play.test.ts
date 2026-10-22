@@ -168,6 +168,77 @@ describe('scene player', () => {
     expect(readUntilChoice(a, continueAt(a, loop.index))).toEqual(['after', 'inner', 'end']);
   });
 
+  it('stops at movie cutscenes with their arguments', () => {
+    const p = synthetic([
+      script([
+        s.label(1, 'a', [
+          s.python(2, 'renpy.movie_cutscene("intro.webm")'),
+          s.python(3, "renpy.movie_cutscene('loop.webm', loops=-1, stop_music=False)"),
+          s.python(4, 'renpy.movie_cutscene("short.webm", 5.0, 2)'),
+          s.python(5, 'renpy.movie_cutscene(movie_file, delay=-1)'),
+          s.python(6, 'x = 1\nrenpy.movie_cutscene("a.webm")\nrenpy.movie_cutscene("b.webm")'),
+          s.say(7, null, 'after'),
+        ]),
+      ]),
+    ]);
+    const a = content(p, 'a');
+    const movies: unknown[] = [];
+    let step = nextStop(a, 0);
+    while (step.stop.kind === 'movie') {
+      expect(step.passed).toEqual([]);
+      movies.push(step.stop.movies);
+      step = nextStop(a, continueAt(a, step.stop.index));
+    }
+    expect(show(a, step.stop)).toBe('after');
+    const movie = (
+      file: string | null,
+      loops = 0,
+      delay: number | null = null,
+      stopMusic = true,
+    ) => ({
+      file,
+      loops,
+      delay,
+      stopMusic,
+    });
+    expect(movies).toEqual([
+      [movie('intro.webm')],
+      [movie('loop.webm', -1, null, false)],
+      [movie('short.webm', 2, 5)],
+      [movie(null)],
+      [movie('a.webm'), movie('b.webm')],
+    ]);
+  });
+
+  it('stops at pauses, and runs past pauses of no time', () => {
+    const p = synthetic([
+      script([
+        s.label(1, 'a', [
+          s.user(2, 'pause'),
+          s.user(3, 'pause 2.5'),
+          s.user(4, 'pause 0'),
+          s.python(5, 'renpy.pause(1.0, hard=True)'),
+          s.python(6, 'renpy.pause(delay=wait)'),
+          s.python(7, 'renpy.pause(0)'),
+          s.python(8, 'x = renpy.pause()'),
+          s.say(9, null, 'after'),
+        ]),
+      ]),
+    ]);
+    const a = content(p, 'a');
+    const pauses: (number | null)[] = [];
+    let step = nextStop(a, 0);
+    while (step.stop.kind === 'pause') {
+      pauses.push(step.stop.delay);
+      step = nextStop(a, continueAt(a, step.stop.index));
+    }
+    expect(pauses).toEqual([null, 2.5, 1, null]);
+    expect(step.passed.map((l) => l.code)).toEqual(['$ renpy.pause(0)', '$ x = renpy.pause()']);
+    expect(show(a, step.stop)).toBe('after');
+    // `pause 0` ran past on the way to the python pause.
+    expect(nextStop(a, 2).passed.map((l) => l.code)).toEqual(['pause 0']);
+  });
+
   it('reads the screen size', () => {
     expect(screenSize(demo)).toBeNull();
     const gui = synthetic([

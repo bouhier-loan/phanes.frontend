@@ -1,6 +1,7 @@
 /*
  * Automatic image names follow Ren'Py's renpy/common/00images.rpy
- * (_scan_images_directory) and the audio namespace renpy/common/00audio.rpy.
+ * (_scan_images_directory) and the audio namespace renpy/common/00audio.rpy;
+ * Movie arguments follow renpy/display/video.py.
  * Ren'Py is MIT licensed (see NOTICE).
  */
 import type { ImageSpec, Location, Stmt } from '../model/ast';
@@ -26,6 +27,20 @@ export type AssetSite = { loc: Location; label: string | null; code: string };
 
 export type ImageCategory = 'background' | 'cg' | 'sprite' | 'other';
 
+/** An image defined as `Movie(play="…")`: a video that plays while it is shown. */
+export type ImageMovie = {
+  /** `play=` as written. */
+  play: string;
+  /** The video file, null when the game does not contain it. */
+  file: AssetFile | null;
+  /** `loop=` (true by default; a second file to loop counts as true). */
+  loop: boolean;
+  /** `keep_last_frame=`: once ended, the last frame stays instead of vanishing. */
+  keepLastFrame: boolean;
+  /** `side_mask=`: the right half of each frame is the alpha mask of the left half. */
+  sideMask: boolean;
+};
+
 export type ImageAsset = {
   /** Image name, e.g. "eileen happy". */
   name: string;
@@ -39,6 +54,7 @@ export type ImageAsset = {
   file: AssetFile | null;
   /** A file named by the definition but absent from the game. */
   missingFile: string | null;
+  movie: ImageMovie | null;
   /** scene/show statements that display it (or may, for a bare tag). */
   displays: AssetSite[];
 };
@@ -206,9 +222,24 @@ export function assets(project: Project): AssetsResult {
     let path = value === null ? null : stringLiteralValue(value);
     const call = value === null ? null : parseCall(value);
     const site = { loc: stmt.loc, label: ctx.label, code: `image ${name} = ${value ?? '…'}` };
+    let movie: ImageMovie | null = null;
     if (call && (call.callee.split('.').pop() ?? '') === 'Movie') {
       const play = call.keywords.get('play')?.string ?? call.positional[0]?.string;
-      if (play) videoUse(play, site);
+      if (play) {
+        videoUse(play, site);
+        const video = resolve(play, ['']);
+        const flag = (name: string) => {
+          const source = call.keywords.get(name)?.source;
+          return source !== undefined && source !== 'False' && source !== 'None' && source !== '0';
+        };
+        movie = {
+          play,
+          file: video ? fileOf(video) : null,
+          loop: call.keywords.has('loop') ? flag('loop') : true,
+          keepLastFrame: flag('keep_last_frame'),
+          sideMask: flag('side_mask'),
+        };
+      }
     } else if (path === null && call) {
       const first = call.positional[0]?.string ?? null;
       if (first !== null && /\.\w{2,5}$/.test(first)) path = first;
@@ -225,6 +256,7 @@ export function assets(project: Project): AssetsResult {
       value,
       file: entry ? fileOf(entry) : null,
       missingFile: path !== null && !entry ? path : null,
+      movie,
       displays: [],
     });
   });
@@ -247,6 +279,7 @@ export function assets(project: Project): AssetsResult {
       value: null,
       file: fileOf(entry),
       missingFile: null,
+      movie: null,
       displays: [],
     });
   }
