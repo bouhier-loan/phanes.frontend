@@ -59,7 +59,14 @@ describe('script reader', () => {
       id: 'e',
       name: 'Eileen',
       color: '#c8ffc8',
+      kind: 'adv',
+      image: null,
     });
+    expect(say?.kind === 'say' && [say.extend, say.interact, say.attributes]).toEqual([
+      true,
+      true,
+      [],
+    ]);
     const menu = start?.content[8];
     expect(menu?.kind === 'menu' && menu.prompt).toEqual({
       speaker: null,
@@ -74,6 +81,20 @@ describe('script reader', () => {
       [{ kind: 'jump', target: 'finale' }],
     ]);
     expect(readLabel(project, 'missing')).toBeNull();
+  });
+
+  it('resolves local and constant jump targets', () => {
+    const targets = (name: string) =>
+      readLabel(project, name)
+        ?.content.filter((l) => l.kind === 'jump' || l.kind === 'call')
+        .map((l) => (l.kind === 'jump' || l.kind === 'call' ? [l.target, l.resolved] : null));
+    expect(targets('park')).toEqual([['park.bench', 'park.bench']]);
+    expect(targets('finale')).toEqual([
+      ['good_ending', 'good_ending'],
+      ['"bad" + "_ending"', 'bad_ending'],
+    ]);
+    const lucy = readLabel(project, 'park')?.content.find((l) => l.kind === 'say');
+    expect(lucy?.kind === 'say' && lucy.speaker).toMatchObject({ id: 'l', image: 'lucy' });
   });
 
   it('replays the staging up to a line', () => {

@@ -4,8 +4,17 @@ import { walkStatements } from '../analyses/walk';
 import type { ImageSpec, LabelStmt, Stmt } from '../model/ast';
 import type { Project } from '../model/project';
 import { stringLiteralValue } from '../python-lite/literal';
+import { foldStringExpression } from '../python-lite/names';
 
-export type ReaderSpeaker = { id: string; name: string | null; color: string | null };
+export type ReaderSpeaker = {
+  id: string;
+  name: string | null;
+  color: string | null;
+  /** NVL or ADV mode of the definition; null without a definition. */
+  kind: 'adv' | 'nvl' | null;
+  /** `image=` of the definition: the tag that say attributes apply to. */
+  image: string | null;
+};
 
 export type ReaderOption = {
   text: string;
@@ -21,7 +30,16 @@ export type ReaderLine = {
   /** Reconstructed Ren'Py source (comments and formatting are lost). */
   code: string;
 } & (
-  | { kind: 'say'; speaker: ReaderSpeaker | null; text: string; extend: boolean }
+  | {
+      kind: 'say';
+      speaker: ReaderSpeaker | null;
+      text: string;
+      extend: boolean;
+      /** Image attributes of the line, e.g. `e happy "…"`. */
+      attributes: string[];
+      /** False for `nointeract` lines, shown with the following menu. */
+      interact: boolean;
+    }
   | { kind: 'scene' | 'show' | 'hide'; image: string; tag: string; at: string[]; dynamic: boolean }
   | { kind: 'audio'; action: string; channel: string; file: string | null }
   | {
@@ -31,7 +49,13 @@ export type ReaderLine = {
       options: ReaderOption[];
     }
   | { kind: 'choice'; text: string; condition: string | null }
-  | { kind: 'jump' | 'call'; target: string; expression: boolean }
+  | {
+      kind: 'jump' | 'call';
+      target: string;
+      expression: boolean;
+      /** Label reached: local names made global, constant expressions folded; else null. */
+      resolved: string | null;
+    }
   | { kind: 'branch'; keyword: 'if' | 'elif' | 'else' | 'while'; condition: string | null }
   | { kind: 'label'; name: string }
   | { kind: 'return' | 'python' | 'with' | 'other' }
@@ -113,9 +137,16 @@ function speakerResolver(project: Project) {
   return (who: string | null): ReaderSpeaker | null => {
     if (who === null || who === 'narrator') return null;
     const literal = stringLiteralValue(who);
-    if (literal !== null) return { id: JSON.stringify(literal), name: literal, color: null };
+    if (literal !== null)
+      return { id: JSON.stringify(literal), name: literal, color: null, kind: null, image: null };
     const def = definitions.get(who);
-    return { id: who, name: def ? def.name : who, color: def?.color ?? null };
+    return {
+      id: who,
+      name: def ? def.name : who,
+      color: def?.color ?? null,
+      kind: def?.kind ?? null,
+      image: def?.imageTag ?? null,
+    };
   };
 }
 
@@ -129,6 +160,8 @@ export function readLabel(project: Project, name: string): ReaderLabel | null {
   if (!label) return null;
   const speaker = speakerResolver(project);
   const content: ReaderLine[] = [];
+  // Local targets (`jump .x`) belong to the enclosing global label.
+  const global = label.name.split('.')[0] ?? label.name;
   let previousSpeaker: ReaderSpeaker | null = null;
 
   const push = (stmt: Stmt, depth: number, line: Body<ReaderLine>) => {
@@ -149,6 +182,8 @@ export function readLabel(project: Project, name: string): ReaderLabel | null {
             speaker: who,
             text: stmt.what,
             extend,
+            attributes: [...stmt.attributes],
+            interact: stmt.interact,
             code: `${prefix}${quote(stmt.what)}${stmt.interact ? '' : ' nointeract'}`,
           });
           break;
@@ -210,7 +245,7 @@ export function readLabel(project: Project, name: string): ReaderLabel | null {
             .map((i) => ({
               text: i.text,
               condition: i.condition.trim() === 'True' ? null : i.condition.trim(),
-              targets: targetsOf(i.block ?? []),
+              targets: targetsOf(i.block ?? [], global),
             }));
           push(stmt, depth, {
             kind: 'menu',
@@ -233,14 +268,18 @@ export function readLabel(project: Project, name: string): ReaderLabel | null {
           break;
         }
         case 'jump':
-        case 'call':
+        case 'call': {
+          let resolved = stmt.expression ? foldStringExpression(stmt.target) : stmt.target;
+          if (resolved?.startsWith('.')) resolved = `${global}${resolved}`;
           push(stmt, depth, {
             kind: stmt.kind,
             target: stmt.target,
             expression: stmt.expression,
+            resolved,
             code: `${stmt.kind} ${stmt.expression ? 'expression ' : ''}${stmt.target}`,
           });
           break;
+        }
         case 'return':
           push(stmt, depth, {
             kind: 'return',
@@ -322,13 +361,19 @@ export function readLabel(project: Project, name: string): ReaderLabel | null {
   };
 }
 
-function targetsOf(block: readonly Stmt[]): { kind: 'jump' | 'call'; target: string }[] {
+function targetsOf(
+  block: readonly Stmt[],
+  global: string,
+): { kind: 'jump' | 'call'; target: string }[] {
   const out: { kind: 'jump' | 'call'; target: string }[] = [];
   const visit = (stmts: readonly Stmt[], depth: number) => {
     if (depth > 200) return;
     for (const stmt of stmts) {
       if (stmt.kind === 'jump' || stmt.kind === 'call')
-        out.push({ kind: stmt.kind, target: stmt.target });
+        out.push({
+          kind: stmt.kind,
+          target: stmt.target.startsWith('.') ? `${global}${stmt.target}` : stmt.target,
+        });
       if (stmt.kind === 'if') for (const b of stmt.branches) visit(b.block, depth + 1);
     }
   };
@@ -336,28 +381,46 @@ function targetsOf(block: readonly Stmt[]): { kind: 'jump' | 'call'; target: str
   return out;
 }
 
+/** The stage once `line` has run: scene, show, hide, say attributes and music. */
+export function applyStage(stage: Stage, line: ReaderLine): Stage {
+  if (line.kind === 'scene') return { ...stage, background: line.image, shown: [] };
+  if (line.kind === 'show') {
+    const entry = { tag: line.tag, image: line.image, at: line.at };
+    const at = stage.shown.findIndex((s) => s.tag === line.tag);
+    // A shown tag keeps its place (and its position unless a new one is given).
+    if (at < 0) return { ...stage, shown: [...stage.shown, entry] };
+    const shown = [...stage.shown];
+    const previous = shown[at];
+    shown[at] = { ...entry, at: entry.at.length > 0 ? entry.at : (previous?.at ?? []) };
+    return { ...stage, shown };
+  }
+  if (line.kind === 'hide')
+    return { ...stage, shown: stage.shown.filter((s) => s.tag !== line.tag) };
+  if (line.kind === 'say') {
+    // `e happy "…"` changes the attributes of the speaker's image, when it is shown.
+    const tag = line.speaker?.image;
+    const attributes = line.attributes.filter((a) => !a.startsWith('-') && !a.startsWith('@'));
+    const at = tag ? stage.shown.findIndex((s) => s.tag === tag) : -1;
+    const previous = stage.shown[at];
+    if (!tag || attributes.length === 0 || !previous) return stage;
+    const shown = [...stage.shown];
+    shown[at] = { ...previous, image: [tag, ...attributes].join(' ') };
+    return { ...stage, shown };
+  }
+  if (line.kind === 'audio' && line.channel === 'music')
+    return { ...stage, music: line.action === 'stop' ? null : (line.file ?? stage.music) };
+  return stage;
+}
+
+export const EMPTY_STAGE: Stage = { background: null, shown: [], music: null };
+
 /**
  * What is on screen after `content[index]`, replaying the scene, show, hide
  * and music statements before it in reading order (approximate: branches are
  * all replayed, ATL is ignored).
  */
 export function stageAt(content: readonly ReaderLine[], index: number): Stage {
-  let background: string | null = null;
-  let music: string | null = null;
-  const shown = new Map<string, { tag: string; image: string; at: string[] }>();
-  for (const line of content.slice(0, index + 1)) {
-    if (line.kind === 'scene') {
-      shown.clear();
-      background = line.image;
-    } else if (line.kind === 'show') {
-      shown.set(line.tag, { tag: line.tag, image: line.image, at: line.at });
-    } else if (line.kind === 'hide') {
-      shown.delete(line.tag);
-    } else if (line.kind === 'audio' && line.channel === 'music') {
-      music = line.action === 'stop' ? null : (line.file ?? music);
-    }
-  }
-  return { background, shown: [...shown.values()], music };
+  return content.slice(0, index + 1).reduce(applyStage, EMPTY_STAGE);
 }
 
 /** Every line of dialogue of the default language, with its speaker's name. */
