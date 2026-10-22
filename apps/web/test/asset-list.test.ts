@@ -24,6 +24,7 @@ function image(name: string, size: number, displays: number, file = true): Image
       ? { path: `G/game/images/${name}.png`, gamePath: `images/${name}.png`, size, archive: null }
       : null,
     missingFile: null,
+    movie: null,
     displays: Array.from({ length: displays }, () => ({
       loc: { file: 'game/script.rpy', line: 1 },
       label: null,

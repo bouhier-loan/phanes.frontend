@@ -12,7 +12,8 @@ Copyright 2004-2026 Tom Rothamel <pytom@bishoujo.us>
 MIT License. Referenced: renpy/loader.py, renpy/script.py, renpy/ast.py,
 renpy/compat/pickle.py, renpy/cslots.pyx, launcher/game/archiver.rpy,
 renpy/translation/__init__.py, renpy/common/00images.rpy,
-renpy/common/00audio.rpy.
+renpy/common/00audio.rpy, renpy/common/000statements.rpy,
+renpy/display/video.py, renpy/exports/mediaexports.py.
 
 -------------------------------------------------------------------------------
 unrpyc — https://github.com/CensoredUsername/unrpyc
