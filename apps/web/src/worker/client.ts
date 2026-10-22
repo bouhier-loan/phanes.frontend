@@ -35,5 +35,6 @@ export const workerQueries = {
   readLabel: (name: string) => remote.readLabel(name),
   dialogue: () => remote.dialogue(),
   search: (query: string, limit = 200) => remote.search(query, limit),
-  openAsset: (path: string) => remote.openAsset(path),
+  screenSize: () => remote.screenSize(),
+  openAsset: (path: string, archive?: string | null) => remote.openAsset(path, archive),
 };

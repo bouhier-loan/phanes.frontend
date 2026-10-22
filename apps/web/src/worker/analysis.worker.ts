@@ -6,6 +6,7 @@ import {
   dialogueDump,
   type Project,
   readLabel,
+  screenSize,
   scriptOutline,
   searchText,
 } from '@phanes/core';
@@ -71,8 +72,16 @@ const api: AnalysisWorkerApi = {
   search(query, limit) {
     return searchText(api.dialogue(), query, limit);
   },
-  openAsset(path) {
-    const entry = project?.vfs.entries.find((e) => e.path === path);
+  screenSize() {
+    return project ? screenSize(project) : null;
+  },
+  openAsset(path, archive) {
+    const entry = project?.vfs.entries.find(
+      (e) =>
+        e.path === path &&
+        (archive === undefined ||
+          (e.origin.type === 'archive' ? e.origin.archive : null) === archive),
+    );
     return entry ? blobOf(entry.source, path) : null;
   },
 };

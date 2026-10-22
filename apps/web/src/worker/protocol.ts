@@ -4,6 +4,7 @@ import type {
   DialogueLine,
   ReaderLabel,
   Report,
+  ScreenSize,
   ScriptOutline,
 } from '@phanes/core';
 import type { PickedFile } from '../adapters/collect';
@@ -22,6 +23,12 @@ export interface AnalysisWorkerApi {
   readLabel(name: string): ReaderLabel | null;
   dialogue(): DialogueLine[];
   search(query: string, limit: number): DialogueLine[];
-  /** A lazy Blob over a game file (VFS path), or null if unknown. */
-  openAsset(path: string): Blob | null;
+  /** The game's screen size, when the scripts set it. */
+  screenSize(): ScreenSize | null;
+  /**
+   * A lazy Blob over a game file (VFS path), or null if unknown. `archive`
+   * (an archive path, or null for a file on disk) picks one of two entries
+   * that share a path.
+   */
+  openAsset(path: string, archive?: string | null): Blob | null;
 }
