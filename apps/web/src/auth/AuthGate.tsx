@@ -3,12 +3,16 @@ import { createContext, type ReactNode, useContext, useEffect, useState } from '
 import { loadFonts } from '../fonts';
 import { Logo } from '../ui/components/icons';
 import { t } from '../ui/strings.fr';
+import { startWorker } from '../worker/client';
 import { completeSignIn, isCallback, signIn, signOut, StateMismatch } from './oidc';
 import { type Session, StorageUnavailable, store } from './session';
 
 /** `VITE_AUTH=off` turns sign-in off, for local development only. */
 const DISABLED = import.meta.env.VITE_AUTH === 'off';
-if (DISABLED) loadFonts();
+if (DISABLED) {
+  loadFonts();
+  startWorker();
+}
 
 type GateState =
   | { step: 'loading' }
@@ -83,6 +87,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
         if (!session) return;
         // Before the app mounts: its request counter starts after these.
         loadFonts();
+        startWorker();
         if (active) setState({ step: 'ready', session });
       },
       (error: unknown) => {
