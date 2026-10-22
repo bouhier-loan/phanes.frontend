@@ -27,3 +27,13 @@ export function mediaType(path: string): string {
   const ext = path.slice(path.lastIndexOf('.') + 1).toLowerCase();
   return TYPES[ext] ?? '';
 }
+
+/** True when this browser can play the video file, from its extension. */
+export function canPlayVideo(path: string): boolean {
+  const type = mediaType(path);
+  return (
+    typeof document !== 'undefined' &&
+    type !== '' &&
+    document.createElement('video').canPlayType(type) !== ''
+  );
+}

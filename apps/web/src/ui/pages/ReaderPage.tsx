@@ -332,6 +332,20 @@ export function ReaderPage({ label }: { label: string | null }) {
     (file: string) => audioPaths.get(file) ?? audioPaths.get(`audio/${file}`) ?? null,
     [audioPaths],
   );
+  // Ren'Py finds movies relative to game/, like the assets analysis (any case).
+  const videoPaths = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const v of r.assets?.video.files ?? []) {
+      map.set(v.file.gamePath, v.file.path);
+      if (!map.has(v.file.gamePath.toLowerCase()))
+        map.set(v.file.gamePath.toLowerCase(), v.file.path);
+    }
+    return map;
+  }, [r.assets]);
+  const videoPath = useCallback(
+    (file: string) => videoPaths.get(file) ?? videoPaths.get(file.toLowerCase()) ?? null,
+    [videoPaths],
+  );
   const colors = useMemo(
     () => new Map((r.characters?.characters ?? []).map((c, i) => [c.id, characterColor(c, i)])),
     [r.characters],
@@ -472,6 +486,7 @@ export function ReaderPage({ label }: { label: string | null }) {
               start={current}
               colors={colors}
               audioPath={audioPath}
+              videoPath={videoPath}
               onRead={(name) => {
                 setMode('read');
                 navigate('lecteur', name);

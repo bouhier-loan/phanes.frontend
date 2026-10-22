@@ -1,6 +1,6 @@
 import type { VideoAsset } from '@phanes/core';
 import { useState } from 'react';
-import { mediaType } from '../../../adapters/media-type';
+import { canPlayVideo } from '../../../adapters/media-type';
 import { useAssetUrl } from '../../assets';
 import { FilmIcon } from '../../components/icons';
 import { SearchField, Select, StatCard } from '../../components/ui';
@@ -15,12 +15,7 @@ function VideoPlayer({ video }: { video: VideoAsset }) {
   const url = useAssetUrl(video.file.path);
   const [meta, setMeta] = useState<{ w: number; h: number; duration: number } | null>(null);
   const [failed, setFailed] = useState(false);
-  const type = mediaType(video.file.gamePath);
-  const supported =
-    typeof document !== 'undefined' &&
-    type !== '' &&
-    document.createElement('video').canPlayType(type) !== '';
-  const playable = supported && !failed;
+  const playable = canPlayVideo(video.file.gamePath) && !failed;
   const duration = meta ? formatMediaTime(meta.duration) : null;
   return (
     <section aria-labelledby="titre-video" className="card card-pad split-main">
@@ -101,10 +96,7 @@ export function VideoTab({ focus }: { focus: string | null }) {
   const videos = assets.video.files;
   const shown = sortVideo(filterVideo(videos, query), sort);
   const current = videos.find((v) => v.file.path === selected) ?? shown[0] ?? videos[0];
-  const playableCount = videos.filter((v) => {
-    const type = mediaType(v.file.gamePath);
-    return type !== '' && document.createElement('video').canPlayType(type) !== '';
-  }).length;
+  const playableCount = videos.filter((v) => canPlayVideo(v.file.gamePath)).length;
   const bytes = videos.reduce((n, v) => n + v.file.size, 0);
   return (
     <>

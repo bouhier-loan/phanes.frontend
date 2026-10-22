@@ -3,9 +3,11 @@ import {
   continueAt,
   EMPTY_STAGE,
   enterBlock,
+  type ImageAsset,
   nextStop,
   type PlayBranch,
   type PlayChoice,
+  type PlayMovie,
   type PlayStop,
   type ReaderLabel,
   type ReaderLine,
@@ -31,6 +33,7 @@ import { formatLocation } from '../format';
 import { useReport } from '../report';
 import { t } from '../strings.fr';
 import { parseRenpyText, plainText } from './text';
+import { Cutscene, StageVideo } from './video';
 
 type SayLine = Extract<ReaderLine, { kind: 'say' }>;
 type MenuLine = Extract<ReaderLine, { kind: 'menu' }>;
@@ -44,6 +47,9 @@ type View =
   | { kind: 'menu'; line: MenuLine; choices: PlayChoice[] }
   | { kind: 'branch'; stop: BranchStop }
   | { kind: 'dynamic'; expression: string; call: boolean; resume: number | null }
+  /** `previous`: the text an `extend` after the stop continues. */
+  | { kind: 'movie'; movies: PlayMovie[]; previous: string | null }
+  | { kind: 'pause'; delay: number | null; previous: string | null }
   | { kind: 'missing'; target: string }
   | { kind: 'end' }
   | { kind: 'loop' };
@@ -97,6 +103,24 @@ function position(at: readonly string[]): readonly [number, number] | null {
   return [0.5, 1];
 }
 
+/** The file shown for an image: its video for a `Movie`. */
+function stageFile(image: ImageAsset | undefined) {
+  return (image?.movie ? image.movie.file : image?.file) ?? null;
+}
+
+function cursorAt(s: Snapshot, index: number | null, previous: string | null = null): Cursor {
+  return { at: s.at, from: index, stage: s.stage, stack: s.stack, nvl: s.nvl, previous };
+}
+
+/** Where playing goes on once the reader is done with stop `s`; null if it waits for a choice. */
+function onwardFrom(s: Snapshot): Cursor | null {
+  if (s.index === null) return null;
+  const next = continueAt(s.at.content, s.index);
+  if (s.view.kind === 'say') return cursorAt(s, next, s.view.text);
+  if (s.view.kind === 'movie' || s.view.kind === 'pause') return cursorAt(s, next, s.view.previous);
+  return null;
+}
+
 function isNvlClear(line: ReaderLine): boolean {
   return line.kind === 'other' && /^nvl\s+clear\b/.test(line.code);
 }
@@ -141,11 +165,13 @@ export function ScenePlayer({
   start,
   colors,
   audioPath,
+  videoPath,
   onRead,
 }: {
   start: string;
   colors: ReadonlyMap<string, string>;
   audioPath: (file: string) => string | null;
+  videoPath: (file: string) => string | null;
   onRead: (label: string) => void;
 }) {
   const p = t.reader.play;
@@ -159,6 +185,10 @@ export function ScenePlayer({
     played.current = list;
     setSnapshots(list);
   }, []);
+  // The stop reached by playing on (not by going back): only it goes on by itself.
+  const [forward, setForward] = useState<number | null>(null);
+  // The movie of the current stop's line being played.
+  const [part, setPart] = useState({ id: -1, index: 0 });
   const [busy, setBusy] = useState(true);
   const [sound, setSound] = useState(true);
   const [history, setHistory] = useState(false);
@@ -244,6 +274,18 @@ export function ScenePlayer({
           }
           case 'branch':
             return snapshot(stop.index, { kind: 'branch', stop });
+          case 'movie':
+            return snapshot(stop.index, {
+              kind: 'movie',
+              movies: stop.movies,
+              previous: cursor.previous,
+            });
+          case 'pause':
+            return snapshot(stop.index, {
+              kind: 'pause',
+              delay: stop.delay,
+              previous: cursor.previous,
+            });
           case 'jump':
           case 'call': {
             const line = content[stop.index];
@@ -296,6 +338,7 @@ export function ScenePlayer({
           const cursor = await make(current);
           if (!cursor) return;
           const next = await run(cursor);
+          setForward(next.id);
           commit([...played.current, next]);
         } finally {
           running.current = false;
@@ -319,6 +362,7 @@ export function ScenePlayer({
       running.current = false;
       if (!active) return;
       setBusy(false);
+      if (first) setForward(first.id);
       commit(
         first
           ? [first]
@@ -373,22 +417,38 @@ export function ScenePlayer({
       screenRef.current?.focus({ preventScroll: true });
   }, [currentId]);
 
-  const cursorAt = (s: Snapshot, index: number | null, previous: string | null = null): Cursor => ({
-    at: s.at,
-    from: index,
-    stage: s.stage,
-    stack: s.stack,
-    nvl: s.nvl,
-    previous,
-  });
+  const movieIndex = part.id === current?.id ? part.index : 0;
 
+  /** Goes on from stop `s`: its next movie, else the following stop (if `s` is still shown). */
+  const onward = useCallback(
+    (s: Snapshot, index: number) => {
+      if (s.view.kind === 'movie' && index + 1 < s.view.movies.length) {
+        if (played.current[played.current.length - 1]?.id === s.id)
+          setPart({ id: s.id, index: index + 1 });
+        return;
+      }
+      go((c) => (c.id === s.id ? onwardFrom(c) : null));
+    },
+    [go],
+  );
   const advance = () => {
-    go((s) =>
-      s.view.kind === 'say' && s.index !== null
-        ? cursorAt(s, continueAt(s.at.content, s.index), s.view.text)
-        : null,
-    );
+    if (current) onward(current, movieIndex);
   };
+  // End of a cutscene or of a timed pause, for a stop reached by playing on.
+  const live = current?.id === forward;
+  const endMovie = useCallback(() => {
+    if (current) onward(current, movieIndex);
+  }, [current, movieIndex, onward]);
+  const pauseDelay = current?.view.kind === 'pause' ? current.view.delay : null;
+  useEffect(() => {
+    if (!live || pauseDelay === null) return;
+    const timer = setTimeout(() => {
+      onward(current, 0);
+    }, pauseDelay * 1000);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [current, live, onward, pauseDelay]);
   const choose = (index: number) => {
     go((s) => cursorAt(s, enterBlock(s.at.content, index)));
   };
@@ -408,10 +468,14 @@ export function ScenePlayer({
   };
   const back = () => {
     if (running.current) return;
+    setForward(null);
+    setPart({ id: -1, index: 0 });
     if (played.current.length > 1) commit(played.current.slice(0, -1));
   };
   const restart = () => {
     if (running.current) return;
+    setForward(played.current[0]?.id ?? null);
+    setPart({ id: -1, index: 0 });
     commit(played.current.slice(0, 1));
   };
   const toggleFullscreen = () => {
@@ -461,20 +525,24 @@ export function ScenePlayer({
   const side = speakerTag
     ? (image(`side ${shownName ?? speakerTag}`) ?? image(`side ${speakerTag}`))
     : undefined;
+  const backgroundFile = stageFile(background);
   const urls = useAssetUrls(
-    [background?.file?.path, side?.file?.path, ...sprites.map((s) => s.asset?.file?.path)].filter(
-      (x): x is string => !!x,
-    ),
+    [
+      backgroundFile?.path,
+      side?.file?.path,
+      ...sprites.map((s) => stageFile(s.asset)?.path),
+    ].filter((x): x is string => !!x),
   );
-  const backgroundUrl = background?.file ? urls.get(background.file.path) : undefined;
-  const backgroundSize = background?.file ? sizes.get(background.file.path) : undefined;
+  const backgroundUrl = backgroundFile ? urls.get(backgroundFile.path) : undefined;
+  const backgroundSize = backgroundFile ? sizes.get(backgroundFile.path) : undefined;
   const reference = screen?.height ?? backgroundSize?.h ?? 1080;
   const ratio = screen ? screen.width / screen.height : 16 / 9;
-  const remember = (path: string, img: HTMLImageElement) => {
+  const remember = (path: string, w: number, h: number) => {
     if (sizes.has(path)) return;
-    setSizes((m) => new Map(m).set(path, { w: img.naturalWidth, h: img.naturalHeight }));
+    setSizes((m) => new Map(m).set(path, { w, h }));
   };
-  const musicPath = stage.music ? audioPath(stage.music) : null;
+  const movie = current?.view.kind === 'movie' ? current.view.movies[movieIndex] : undefined;
+  const musicPath = stage.music && !movie?.stopMusic ? audioPath(stage.music) : null;
   const centered =
     say !== null && (say.line.speaker?.id === 'centered' || say.line.speaker?.id === 'vcentered');
   const nvlMode = say?.line.speaker?.kind === 'nvl';
@@ -519,14 +587,29 @@ export function ScenePlayer({
         }}
       >
         <div className="vn-layer vn-clickable">
-          {background && backgroundUrl ? (
+          {background?.movie && backgroundFile && backgroundUrl ? (
+            <StageVideo
+              key={background.name}
+              className="vn-bg"
+              url={backgroundUrl}
+              movie={background.movie}
+              sound={sound}
+              onSize={(w, h) => {
+                remember(backgroundFile.path, w, h);
+              }}
+            />
+          ) : background && backgroundFile && backgroundUrl ? (
             <img
               key={background.name}
               className="vn-bg"
               src={backgroundUrl}
               alt=""
               onLoad={(e) => {
-                if (background.file) remember(background.file.path, e.currentTarget);
+                remember(
+                  backgroundFile.path,
+                  e.currentTarget.naturalWidth,
+                  e.currentTarget.naturalHeight,
+                );
               }}
             />
           ) : stage.background ? (
@@ -537,7 +620,7 @@ export function ScenePlayer({
           {sprites.map((s) => {
             const pos = position(s.at);
             if (!pos) return null;
-            const path = s.asset?.file?.path;
+            const path = stageFile(s.asset)?.path;
             const url = path ? urls.get(path) : undefined;
             const size = path ? sizes.get(path) : undefined;
             const height = size ? Math.min(1, Math.max(0.05, size.h / reference)) : null;
@@ -547,15 +630,30 @@ export function ScenePlayer({
               ...(pos[1] === 1 ? { bottom: 0 } : { top: `${pos[1] * 100}%` }),
               height: height === null ? '100%' : `${height * 100}%`,
             };
+            const className = size ? 'vn-sprite' : 'vn-sprite vn-loading';
+            if (url && path && s.asset?.movie)
+              return (
+                <StageVideo
+                  key={`${s.tag} ${path}`}
+                  className={className}
+                  url={url}
+                  movie={s.asset.movie}
+                  style={style}
+                  sound={sound}
+                  onSize={(w, h) => {
+                    remember(path, w, h);
+                  }}
+                />
+              );
             return url && path ? (
               <img
                 key={s.tag}
-                className={size ? 'vn-sprite' : 'vn-sprite vn-loading'}
+                className={className}
                 src={url}
                 alt=""
                 style={style}
                 onLoad={(e) => {
-                  remember(path, e.currentTarget);
+                  remember(path, e.currentTarget.naturalWidth, e.currentTarget.naturalHeight);
                 }}
               />
             ) : (
@@ -602,6 +700,21 @@ export function ScenePlayer({
               </p>
             </div>
           </div>
+        )}
+
+        {current?.view.kind === 'pause' && (
+          <p className="vn-pause small" aria-live="polite">
+            {current.view.delay === null ? p.pause : p.pauseFor(current.view.delay)}
+          </p>
+        )}
+        {current && movie && (
+          <Cutscene
+            key={`${current.id}:${movieIndex}`}
+            movie={movie}
+            path={movie.file ? videoPath(movie.file) : null}
+            sound={sound}
+            onEnd={live ? endMovie : null}
+          />
         )}
 
         {current?.view.kind === 'menu' && (
@@ -768,7 +881,12 @@ export function ScenePlayer({
           type="button"
           className="btn btn-small"
           onClick={advance}
-          disabled={busy || current?.view.kind !== 'say'}
+          disabled={
+            busy ||
+            (current?.view.kind !== 'say' &&
+              current?.view.kind !== 'movie' &&
+              current?.view.kind !== 'pause')
+          }
         >
           {p.next}
           <ChevronRightIcon size={14} />
