@@ -20,6 +20,7 @@ export * from './analyses/graph';
 export * from './analyses/menus';
 export * from './analyses/variables';
 export * from './analyses/assets';
+export * from './analyses/character-images';
 export * from './analyses/translations';
 export { menuKey, scanFlow, type FlowContext, type FlowHandlers } from './analyses/flow';
 export * from './pipeline/report';

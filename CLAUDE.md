@@ -29,9 +29,12 @@ Browser-only analyzer for Ren'Py games. pnpm monorepo, TypeScript strict, Vite +
 - Sign-in (OIDC, Pocket ID) happens in `apps/web/src/auth/AuthGate.tsx`, before the app renders;
   nothing may contact the provider afterwards. E2E tests mock it (`apps/web/e2e/oidc.ts`).
 - Script reader data and asset blobs come from the worker on demand (`worker/protocol.ts`);
-  asset previews are lazy `Blob` slices of the dropped files, never full reads.
-- The analysis worker is created at startup (`apps/web/src/worker/client.ts`); never add lazy
-  imports to the analysis path, or the network tab would show requests during an analysis.
+  asset previews are lazy `Blob` slices of the dropped files, never full reads (the inventory's
+  `FilePreview` only reads bounded heads: 64 KiB of text, a font up to 10 MiB for `FontFace`).
+- The analysis worker is created once signed in, before the app renders (`startWorker` in
+  `apps/web/src/worker/client.ts`, called by `AuthGate`; earlier, the sign-in redirect would abort
+  its download); never add lazy imports to the analysis path, or the network tab would show
+  requests during an analysis.
 - UI strings are French and live in `apps/web/src/ui/strings.fr.ts`; code, comments and commits are
   English.
 

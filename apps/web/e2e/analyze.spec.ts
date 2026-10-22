@@ -1,7 +1,15 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
-import { FIXTURES, networkRequests, openApp, openSection, payload, waitForReport } from './helpers';
+import {
+  FIXTURES,
+  networkRequests,
+  openApp,
+  openSection,
+  payload,
+  REPO,
+  waitForReport,
+} from './helpers';
 
 const DIST = join(FIXTURES, 'build', '8.5.3', 'phanes_demo', 'dist');
 
@@ -26,6 +34,13 @@ test('analyzes a game folder without any network request', async ({ page }) => {
   await openSection(page, 'Personnages');
   await expect(page.getByTestId('characters')).toContainText('Eileen');
   await expect(page.getByTestId('characters')).toContainText('Narrateur');
+  // Eileen's sheet shows her sprite, found by her name.
+  const portrait = page.getByTestId('portrait');
+  await portrait.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() => portrait.locator('img').evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBe(1);
+  await expect(page.getByTestId('character-images')).toContainText('eileen happy');
 
   await openSection(page, 'Labels');
   await expect(page.getByTestId('labels')).toContainText('park.bench');
@@ -35,6 +50,22 @@ test('analyzes a game folder without any network request', async ({ page }) => {
   await expect(page.getByTestId('inventory')).toContainText('scripts.rpa');
   await page.getByPlaceholder('Filtrer par nom ou chemin').fill('lucy');
   await expect(page.getByTestId('inventory')).toContainText('dist/game/images/lucy smile.png');
+  // Selected files are previewed from a slice of the dropped archive.
+  await page.getByRole('button', { name: 'dist/game/images/lucy smile.png' }).click();
+  const filePreview = page.getByTestId('file-preview');
+  await expect
+    .poll(() => filePreview.locator('img').evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBe(1);
+  await page.getByPlaceholder('Filtrer par nom ou chemin').fill('theme.ogg');
+  await page.getByRole('button', { name: /theme\.ogg$/ }).click();
+  await expect(filePreview.locator('audio, p')).not.toHaveCount(0);
+  // The fixture's font is a stub: its preview falls back to the bytes.
+  await page.getByPlaceholder('Filtrer par nom ou chemin').fill('demo.ttf');
+  await page.getByRole('button', { name: /demo\.ttf$/ }).click();
+  await expect(filePreview).toContainText('Contenu binaire');
+  await page.getByPlaceholder('Filtrer par nom ou chemin').fill('script.rpyc');
+  await page.getByRole('button', { name: 'dist/game/script.rpyc' }).click();
+  await expect(filePreview.getByRole('link', { name: 'park.bench' })).toBeVisible();
 
   await openSection(page, 'Graphe');
   const graph = page.getByTestId('graph');
@@ -52,6 +83,29 @@ test('analyzes a game folder without any network request', async ({ page }) => {
   await expect(page.getByTestId('reader')).toContainText('Good morning! Did you sleep well?');
   await page.getByRole('link', { name: 'park ›' }).click();
   await expect(page.getByTestId('reader')).toContainText('Oh, hello there!');
+  // Game mode: from start, through a menu choice and a branch picked by the reader.
+  await page.getByRole('link', { name: '‹ start' }).click();
+  await page.getByRole('button', { name: 'Jeu', exact: true }).click();
+  const player = page.getByTestId('player');
+  await expect(player.locator('.vn-textbox')).toContainText('It was a quiet morning.');
+  await expect
+    .poll(() => player.locator('img.vn-bg').evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBe(1);
+  await player.locator('.vn-textbox').click();
+  await expect(player.locator('.vn-textbox')).toContainText('Good morning! Did you sleep well?');
+  await page.keyboard.press('Space');
+  await expect(player.locator('.vn-textbox')).toContainText('Did you sleep well? I hope so.');
+  await page.keyboard.press('Space');
+  await page.keyboard.press('Space');
+  await page.keyboard.press('Space');
+  await player.getByRole('button', { name: /Stay home/ }).click();
+  await expect(player.locator('.vn-textbox')).toContainText('Fine by me.');
+  await page.keyboard.press('Space');
+  await expect(player).toContainText('Le jeu teste une condition');
+  await player.getByRole('button', { name: /sinon/ }).click();
+  await expect(player.locator('.vn-textbox')).toContainText('Nothing happened.');
+  await page.getByRole('button', { name: 'Retour' }).click();
+  await expect(player).toContainText('Le jeu teste une condition');
 
   await openSection(page, 'Ressources');
   const gallery = page.getByTestId('gallery');
@@ -60,6 +114,14 @@ test('analyzes a game folder without any network request', async ({ page }) => {
   const preview = page.locator('.viewer-stage img');
   await expect(preview).toBeVisible();
   await expect.poll(() => preview.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1);
+  await page.getByPlaceholder('Filtrer par nom ou chemin').fill('lucy');
+  await expect(gallery).toContainText('lucy smile');
+  await expect(gallery).not.toContainText('bg park');
+  await page.getByPlaceholder('Filtrer par nom ou chemin').fill('');
+  await page.getByRole('button', { name: /^État/ }).click();
+  await page.getByRole('button', { name: 'Jamais affichées' }).click();
+  await expect(gallery).toContainText('unused');
+  await expect(gallery).not.toContainText('bg park');
 
   await openSection(page, 'Traductions');
   await expect(page.getByTestId('translations')).toContainText('french');
@@ -106,6 +168,24 @@ test('shows the rest of the report when files are corrupted', async ({ page }) =
   await expect(diagnostics).toContainText('Archive dans un format non pris en charge');
   await expect(diagnostics).toContainText('RPA-4.0');
   await expect(diagnostics).toContainText('Script compilé illisible');
+  expect(networkRequests(watch)).toEqual([]);
+  expect(watch.errors).toEqual([]);
+});
+
+test('previews a font from its bytes, within the CSP', async ({ page }) => {
+  const watch = await openApp(page);
+  const font = join(
+    REPO,
+    'apps/web/node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2',
+  );
+  await page
+    .getByTestId('files-input')
+    .setInputFiles([payload(join(DIST, 'game', 'scripts.rpa')), payload(font, 'demo.woff2')]);
+  await waitForReport(page);
+  await openSection(page, 'Inventaire');
+  await page.getByPlaceholder('Filtrer par nom ou chemin').fill('woff2');
+  await page.getByTestId('inventory').getByRole('button', { name: 'demo.woff2' }).click();
+  await expect(page.getByTestId('font-preview')).toBeVisible();
   expect(networkRequests(watch)).toEqual([]);
   expect(watch.errors).toEqual([]);
 });

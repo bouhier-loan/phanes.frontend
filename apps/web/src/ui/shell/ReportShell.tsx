@@ -30,7 +30,9 @@ export function ReportShell({ onReset }: { onReset: () => void }) {
       <SideNav current={route.section} onReset={onReset} />
       <main className="main" ref={main} tabIndex={-1}>
         {route.section === 'vue-ensemble' && <OverviewPage />}
-        {route.section === 'inventaire' && <InventoryPage />}
+        {route.section === 'inventaire' && (
+          <InventoryPage key={route.param ?? ''} focus={route.param} />
+        )}
         {route.section === 'personnages' && <CharactersPage />}
         {route.section === 'labels' && <LabelsPage />}
         {route.section === 'diagnostics' && <DiagnosticsPage />}

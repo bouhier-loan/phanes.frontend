@@ -75,8 +75,18 @@ peut atteindre sa fin.
   `images/`. S'y ajoutent les **images automatiques** de Ren'Py : chaque fichier `.png`,
   `.jpg`, `.jpeg`, `.webp`, `.avif` ou `.svg` sous `images/`, nommé d'après son nom de fichier
   sans extension, en minuscules, découpé aux espaces ; une déclaration explicite l'emporte.
-- **Catégorie** : étiquette `bg` → décor, `cg` → CG, étiquette égale à l'`image=` ou au nom en
-  minuscules d'un personnage → sprite, sinon autre.
+- **Catégorie** : étiquette `bg` → décor, `cg` → CG, étiquette d'un personnage (voir plus bas)
+  → sprite, sinon autre.
+- **Images d'un personnage** (`character-images.ts`, fiches des personnages) : ses étiquettes
+  sont, dans l'ordre, l'`image=` de sa définition, son nom (minuscules, sans accents, espaces
+  remplacés par `_` ou supprimés, premier mot d'un nom composé s'il a trois lettres ou plus) et
+  sa variable (deux caractères ou plus) ; un nom dynamique n'en donne aucune. Ses images sont
+  celles de ces étiquettes, ses portraits latéraux les images `side <étiquette> …`, et ses
+  fichiers associés les fichiers d'image qui ne sont le fichier d'aucune image déclarée et dont
+  un dossier porte une de ces étiquettes, ou dont le nom commence par l'une d'elles suivie
+  d'une espace, de `_`, `-` ou `.` (parties d'une `layeredimage`, dont le bloc n'est pas dans
+  l'AST). Le portrait est l'image la plus affichée, sinon un portrait latéral, sinon le premier
+  fichier associé.
 - **Affichage** : `scene` et `show`. Un nom exact désigne son image ; sinon toutes les images de
   la même étiquette qui portent les attributs demandés comptent comme affichées (un `show`
   d'étiquette seule les compte toutes, par prudence). Rien ne correspond → image

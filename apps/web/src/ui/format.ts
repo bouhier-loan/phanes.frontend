@@ -57,3 +57,10 @@ export function formatLocation(loc: { file: string; line: number }): string {
 export function basename(path: string): string {
   return path.slice(path.lastIndexOf('/') + 1);
 }
+
+/** A media duration as "m:ss" ('' when unknown). */
+export function formatMediaTime(seconds: number): string {
+  if (!Number.isFinite(seconds)) return '';
+  const m = Math.floor(seconds / 60);
+  return `${m}:${String(Math.round(seconds % 60)).padStart(2, '0')}`;
+}

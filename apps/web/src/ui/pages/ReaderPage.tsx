@@ -6,58 +6,24 @@ import {
   type ScriptOutline,
   stageAt,
 } from '@phanes/core';
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { workerQueries } from '../../worker/client';
 import { useAssetUrl } from '../assets';
-import { ChevronDownIcon, ChevronRightIcon, ImageIcon, PlayIcon } from '../components/icons';
+import { ChevronDownIcon, ChevronRightIcon, PlayIcon } from '../components/icons';
+import { LazyThumb, useImageLookup } from '../components/thumbs';
 import { PageHeader, SearchField } from '../components/ui';
 import { basename, formatLocation } from '../format';
 import { useReport } from '../report';
-import { href } from '../route';
+import { href, navigate } from '../route';
+import { ScenePlayer } from '../player/ScenePlayer';
 import { t } from '../strings.fr';
 import { characterColor } from './characters-shared';
+
+type Mode = 'read' | 'source' | 'play';
 
 const FOLD_AFTER = 150;
 const HEAD = 80;
 const TAIL = 40;
-
-/** Image displayed by a scene/show name: the exact image, else the first of its tag. */
-function useImageLookup(): (name: string) => ImageAsset | undefined {
-  const { assets } = useReport();
-  return useMemo(() => {
-    const byName = new Map((assets?.images.entries ?? []).map((i) => [i.name, i]));
-    return (name: string) => {
-      const exact = byName.get(name);
-      if (exact) return exact;
-      const [tag = '', ...attrs] = name.split(' ');
-      return assets?.images.entries.find(
-        (i) => i.tag === tag && attrs.every((a) => i.attributes.includes(a)),
-      );
-    };
-  }, [assets]);
-}
-
-function LazyThumb({ path, label }: { path: string | null; label: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const node = ref.current;
-    if (!node || visible) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.some((e) => e.isIntersecting)) setVisible(true);
-    });
-    observer.observe(node);
-    return () => {
-      observer.disconnect();
-    };
-  }, [visible]);
-  const url = useAssetUrl(path, visible);
-  return (
-    <span ref={ref} className="mini-thumb" aria-hidden="true" title={label}>
-      {url ? <img src={url} alt="" decoding="async" /> : <ImageIcon size={16} />}
-    </span>
-  );
-}
 
 function Listen({ path, name }: { path: string; name: string }) {
   const [play, setPlay] = useState(false);
@@ -132,7 +98,7 @@ function Line({
   audioPath,
 }: {
   line: ReaderLine;
-  mode: 'read' | 'source';
+  mode: Mode;
   staging: boolean;
   thumbs: boolean;
   colors: ReadonlyMap<string, string>;
@@ -224,8 +190,8 @@ function Line({
         )}
         <code>{line.code}</code>
         {audio && audioFile && <Listen path={audio} name={basename(audioFile)} />}
-        {(line.kind === 'jump' || line.kind === 'call') && !line.expression && (
-          <a href={href('lecteur', line.target)} className="small">
+        {(line.kind === 'jump' || line.kind === 'call') && line.resolved !== null && (
+          <a href={href('lecteur', line.resolved)} className="small">
             {t.reader.open}
           </a>
         )}
@@ -348,7 +314,7 @@ export function ReaderPage({ label }: { label: string | null }) {
   const rd = t.reader;
   const [outline, setOutline] = useState<ScriptOutline | null>(null);
   const [data, setData] = useState<{ name: string; label: ReaderLabel | null } | null>(null);
-  const [mode, setMode] = useState<'read' | 'source'>('read');
+  const [mode, setMode] = useState<Mode>('read');
   const [staging, setStaging] = useState(true);
   const [thumbs, setThumbs] = useState(true);
   const [unfolded, setUnfolded] = useState<string | null>(null);
@@ -362,8 +328,10 @@ export function ReaderPage({ label }: { label: string | null }) {
     for (const a of r.assets?.audio.files ?? []) map.set(a.file.gamePath, a.file.path);
     return map;
   }, [r.assets]);
-  const audioPath = (file: string) =>
-    audioPaths.get(file) ?? audioPaths.get(`audio/${file}`) ?? null;
+  const audioPath = useCallback(
+    (file: string) => audioPaths.get(file) ?? audioPaths.get(`audio/${file}`) ?? null,
+    [audioPaths],
+  );
   const colors = useMemo(
     () => new Map((r.characters?.characters ?? []).map((c, i) => [c.id, characterColor(c, i)])),
     [r.characters],
@@ -440,49 +408,45 @@ export function ReaderPage({ label }: { label: string | null }) {
 
       <div className="toolbar">
         <div role="group" aria-label={rd.modeLabel} className="segmented">
-          <button
-            type="button"
-            aria-pressed={mode === 'read'}
-            onClick={() => {
-              setMode('read');
-            }}
-          >
-            {rd.modes.read}
-          </button>
-          <button
-            type="button"
-            aria-pressed={mode === 'source'}
-            onClick={() => {
-              setMode('source');
-            }}
-          >
-            {rd.modes.source}
-          </button>
-        </div>
-        <div className="toolbar-checks">
-          <div className="check">
-            <input
-              id={stagingId}
-              type="checkbox"
-              checked={staging}
-              onChange={(e) => {
-                setStaging(e.currentTarget.checked);
+          {(['read', 'source', 'play'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              aria-pressed={mode === m}
+              onClick={() => {
+                setMode(m);
               }}
-            />
-            <label htmlFor={stagingId}>{rd.staging}</label>
-          </div>
-          <div className="check">
-            <input
-              id={thumbsId}
-              type="checkbox"
-              checked={thumbs}
-              onChange={(e) => {
-                setThumbs(e.currentTarget.checked);
-              }}
-            />
-            <label htmlFor={thumbsId}>{rd.thumbs}</label>
-          </div>
+            >
+              {rd.modes[m]}
+            </button>
+          ))}
         </div>
+        {mode !== 'play' && (
+          <div className="toolbar-checks">
+            <div className="check">
+              <input
+                id={stagingId}
+                type="checkbox"
+                checked={staging}
+                onChange={(e) => {
+                  setStaging(e.currentTarget.checked);
+                }}
+              />
+              <label htmlFor={stagingId}>{rd.staging}</label>
+            </div>
+            <div className="check">
+              <input
+                id={thumbsId}
+                type="checkbox"
+                checked={thumbs}
+                onChange={(e) => {
+                  setThumbs(e.currentTarget.checked);
+                }}
+              />
+              <label htmlFor={thumbsId}>{rd.thumbs}</label>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="split reader">
@@ -502,6 +466,17 @@ export function ReaderPage({ label }: { label: string | null }) {
             <p className="muted">{rd.loading}</p>
           ) : article === null ? (
             <p className="muted">{rd.notFound(current)}</p>
+          ) : mode === 'play' ? (
+            <ScenePlayer
+              key={current}
+              start={current}
+              colors={colors}
+              audioPath={audioPath}
+              onRead={(name) => {
+                setMode('read');
+                navigate('lecteur', name);
+              }}
+            />
           ) : (
             <article
               aria-labelledby="titre-label"
@@ -518,6 +493,16 @@ export function ReaderPage({ label }: { label: string | null }) {
                   </span>
                 </div>
                 <div className="reader-steps">
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-small"
+                    onClick={() => {
+                      setMode('play');
+                    }}
+                  >
+                    <PlayIcon size={12} />
+                    {rd.playFrom}
+                  </button>
                   {article.previous && (
                     <a href={href('lecteur', article.previous)} className="mono small">
                       ‹ {article.previous}

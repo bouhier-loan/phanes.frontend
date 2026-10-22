@@ -10,6 +10,7 @@ import { stringLiteralValue } from '../python-lite/literal';
 import { tokenize } from '../python-lite/tokens';
 import { effectiveGameEntries, type VfsEntry } from '../vfs/vfs';
 import type { Analysis } from './analysis';
+import { characterImageKeys } from './character-images';
 import { dialogueIndex } from './dialogue';
 import { walkStatements } from './walk';
 
@@ -174,12 +175,16 @@ export function assets(project: Project): AssetsResult {
   };
 
   const spriteTags = new Set<string>();
-  for (const def of index.definitions.values()) {
-    if (def.imageTag) spriteTags.add(def.imageTag.toLowerCase());
-    if (def.name && !def.dynamic) spriteTags.add(def.name.toLowerCase());
-  }
+  for (const def of index.definitions.values())
+    for (const { key } of characterImageKeys(def)) spriteTags.add(key);
   const category = (tag: string): ImageCategory =>
-    tag === 'bg' ? 'background' : tag === 'cg' ? 'cg' : spriteTags.has(tag) ? 'sprite' : 'other';
+    tag === 'bg'
+      ? 'background'
+      : tag === 'cg'
+        ? 'cg'
+        : spriteTags.has(tag.toLowerCase())
+          ? 'sprite'
+          : 'other';
 
   const images = new Map<string, ImageAsset>();
   const videoUses = new Map<string, AssetSite[]>();

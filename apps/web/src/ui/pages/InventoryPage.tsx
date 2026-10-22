@@ -1,6 +1,7 @@
 import type { ArchiveInfo, Diagnostic, FileKind, InventoryEntry } from '@phanes/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useId, useMemo, useRef, useState } from 'react';
+import { type KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { FilePreview } from '../components/FilePreview';
 import { ChevronDownIcon, ChevronRightIcon } from '../components/icons';
 import { ChipGroup, PageHeader, SearchField } from '../components/ui';
 import { basename, formatBytes } from '../format';
@@ -25,14 +26,9 @@ const FILTER_KINDS: Readonly<Record<Exclude<KindFilter, 'all'>, readonly FileKin
 
 const LIMIT_CODES = new Set(['ZLIB_LIMIT', 'TOO_LARGE', 'PICKLE_LIMIT']);
 
-function mediaTab(kind: FileKind): string | null {
-  return kind === 'image'
-    ? 'images'
-    : kind === 'audio'
-      ? 'audio'
-      : kind === 'video'
-        ? 'video'
-        : null;
+/** Disk files and archive entries may share a path. */
+function entryKey(entry: InventoryEntry): string {
+  return `${entry.path}\u0000${entry.archive ?? ''}`;
 }
 
 function Badge({
@@ -63,16 +59,43 @@ function Badge({
   return null;
 }
 
+/** The Resources page showing a game file, if any. */
+function useResourceLink(): (entry: InventoryEntry) => string | null {
+  const { assets } = useReport();
+  return useMemo(() => {
+    const same = (file: { path: string; archive: string | null }, entry: InventoryEntry) =>
+      file.path === entry.path && file.archive === entry.archive;
+    return (entry: InventoryEntry) => {
+      if (!assets) return null;
+      if (entry.kind === 'image') {
+        const image = assets.images.entries.find((i) => i.file && same(i.file, entry));
+        return image ? href('ressources', `images:${image.name}`) : null;
+      }
+      if (entry.kind === 'audio') {
+        const audio = assets.audio.files.find((a) => same(a.file, entry));
+        return audio ? href('ressources', `audio:${audio.file.path}`) : null;
+      }
+      if (entry.kind === 'video') {
+        const video = assets.video.files.find((v) => same(v.file, entry));
+        return video ? href('ressources', `video:${video.file.path}`) : null;
+      }
+      return null;
+    };
+  }, [assets]);
+}
+
 function Details({
   entry,
   archive,
   scripts,
   failed,
+  resource,
 }: {
   entry: InventoryEntry;
   archive: ArchiveInfo | undefined;
   scripts: number;
   failed: number;
+  resource: string | null;
 }) {
   const i = t.inventory;
   return (
@@ -152,25 +175,57 @@ function Details({
           </>
         )}
       </dl>
-      <p className="selection-note">{i.archiveNote}</p>
+      {archive ? (
+        <p className="selection-note">{i.archiveNote}</p>
+      ) : (
+        <div className="selection-preview">
+          <div className="card-title-row">
+            <h3 className="small-title">{i.preview.title}</h3>
+            {resource && (
+              <a href={resource} className="small">
+                {i.seeInResources}
+              </a>
+            )}
+          </div>
+          <FilePreview key={entryKey(entry)} entry={entry} />
+        </div>
+      )}
     </section>
   );
 }
 
-export function InventoryPage() {
+/** `focus` is the path of a file to select, e.g. from a character sheet. */
+export function InventoryPage({ focus = null }: { focus?: string | null }) {
   const r = useReport();
   const inventory = r.inventory;
   const i = t.inventory;
   const checkboxId = useId();
   const tree = useMemo(() => buildTree(inventory?.entries ?? []), [inventory]);
-  const [expanded, setExpanded] = useState(() => initialExpanded(tree, inventory?.gameDir ?? ''));
+  const focused = useMemo(
+    () =>
+      focus === null
+        ? undefined
+        : (inventory?.entries.find((e) => e.path === focus && e.shadowedBy === null) ??
+          inventory?.entries.find((e) => e.path === focus)),
+    [focus, inventory],
+  );
+  const [expanded, setExpanded] = useState(() => {
+    const open = initialExpanded(tree, inventory?.gameDir ?? '');
+    // The folders down to the focused file.
+    const parts = focused?.path.split('/').slice(0, -1) ?? [];
+    for (let n = 1; n <= parts.length; n++) open.add(parts.slice(0, n).join('/'));
+    return open;
+  });
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<KindFilter>('all');
   const [withArchives, setWithArchives] = useState(true);
-  const [selected, setSelected] = useState<string | null>(
-    () => inventory?.archives[0]?.path ?? null,
-  );
+  const [selected, setSelected] = useState<string | null>(() => {
+    if (focused) return entryKey(focused);
+    const first = inventory?.archives[0]?.path;
+    return first === undefined ? null : `${first}\u0000`;
+  });
   const scroller = useRef<HTMLDivElement>(null);
+  const resourceLink = useResourceLink();
 
   const archives = useMemo(
     () => new Map((inventory?.archives ?? []).map((a) => [a.path, a])),
@@ -215,6 +270,17 @@ export function InventoryPage() {
     overscan: 20,
   });
 
+  // Scrolls the focused file into view, once.
+  const scrolled = useRef(false);
+  useEffect(() => {
+    if (scrolled.current || !focused) return;
+    scrolled.current = true;
+    const index = rows.findIndex(
+      (row) => row.type === 'file' && entryKey(row.entry) === entryKey(focused),
+    );
+    if (index > 0) virtualizer.scrollToIndex(index, { align: 'center' });
+  }, [focused, rows, virtualizer]);
+
   if (!inventory) return <p className="empty">{t.unavailable}</p>;
   const toggle = (path: string) => {
     setExpanded((current) => {
@@ -229,8 +295,9 @@ export function InventoryPage() {
   const chips = (Object.keys(FILTER_KINDS) as Exclude<KindFilter, 'all'>[])
     .map((k) => ({ value: k, label: i.kinds[k], count: countOf(k) }))
     .filter((c) => c.count > 0);
-  const selectedEntry = inventory.entries.find((e) => e.path === selected);
-  const selectedArchive = selected ? archives.get(selected) : undefined;
+  const selectedEntry = inventory.entries.find((e) => entryKey(e) === selected);
+  const selectedArchive =
+    selectedEntry?.archive === null ? archives.get(selectedEntry.path) : undefined;
   const inSelected = selectedArchive
     ? inventory.entries.filter(
         (e) => e.archive === selectedArchive.path && e.kind === 'compiled-script',
@@ -243,6 +310,27 @@ export function InventoryPage() {
     .filter((e) => e.kind !== 'archive')
     .sort((a, b) => b.size - a.size)
     .slice(0, 5);
+
+  // Up and down arrows move the selection from file to file.
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    const step = event.key === 'ArrowDown' ? 1 : -1;
+    const at = rows.findIndex((row) => row.type === 'file' && entryKey(row.entry) === selected);
+    for (let n = at + step; n >= 0 && n < rows.length; n += step) {
+      const row = rows[n];
+      if (row?.type !== 'file') continue;
+      event.preventDefault();
+      const key = entryKey(row.entry);
+      setSelected(key);
+      virtualizer.scrollToIndex(n);
+      requestAnimationFrame(() => {
+        scroller.current
+          ?.querySelector<HTMLButtonElement>(`[data-row="${CSS.escape(key)}"] .file-button`)
+          ?.focus();
+      });
+      return;
+    }
+  };
 
   const typeOf = (entry: InventoryEntry) => {
     const archive = archives.get(entry.path);
@@ -294,7 +382,13 @@ export function InventoryPage() {
             <span>{i.columns.type}</span>
             <span className="right">{i.columns.size}</span>
           </div>
-          <div className="scroller" ref={scroller} role="tree" aria-label={i.tree}>
+          <div
+            className="scroller"
+            ref={scroller}
+            role="tree"
+            aria-label={i.tree}
+            onKeyDown={onKeyDown}
+          >
             <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
               {virtualizer.getVirtualItems().map((item) => {
                 const row = rows[item.index];
@@ -336,7 +430,7 @@ export function InventoryPage() {
                 }
                 const entry = row.entry;
                 const label = flat ? entry.path : basename(entry.path);
-                const isSelected = entry.path === selected;
+                const isSelected = entryKey(entry) === selected;
                 return (
                   <div
                     key={row.key}
@@ -344,13 +438,14 @@ export function InventoryPage() {
                     style={style}
                     role="treeitem"
                     aria-selected={isSelected}
+                    data-row={entryKey(entry)}
                   >
                     <span className="cell name" style={indent}>
                       <button
                         type="button"
                         className="file-button mono"
                         onClick={() => {
-                          setSelected(entry.path);
+                          setSelected(entryKey(entry));
                         }}
                         title={entry.path}
                       >
@@ -374,13 +469,14 @@ export function InventoryPage() {
           )}
         </section>
 
-        <aside aria-label={i.detailsLabel} className="split-aside">
+        <aside aria-label={i.detailsLabel} className="split-aside inventory-aside">
           {selectedEntry ? (
             <Details
               entry={selectedEntry}
               archive={selectedArchive}
               scripts={inSelected.length}
               failed={failedInSelected}
+              resource={resourceLink(selectedEntry)}
             />
           ) : (
             <p className="card card-pad muted">{i.selectHint}</p>
@@ -391,19 +487,21 @@ export function InventoryPage() {
             </h2>
             <ol className="list">
               {heaviest.map((e) => {
-                const tab = mediaTab(e.kind);
                 const name = e.archive
                   ? `${basename(e.archive)} › ${e.gamePath ?? e.path}`
                   : (e.gamePath ?? e.path);
                 return (
-                  <li key={`${e.path}:${e.archive ?? ''}`} className="list-row">
-                    {tab ? (
-                      <a href={href('ressources', tab)} className="mono plain-link">
-                        {name}
-                      </a>
-                    ) : (
-                      <span className="mono">{name}</span>
-                    )}
+                  <li key={entryKey(e)} className="list-row">
+                    <button
+                      type="button"
+                      className="link-button mono plain-link"
+                      aria-pressed={entryKey(e) === selected}
+                      onClick={() => {
+                        setSelected(entryKey(e));
+                      }}
+                    >
+                      {name}
+                    </button>
                     <span className="mono muted">{formatBytes(e.size)}</span>
                   </li>
                 );

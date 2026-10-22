@@ -3,26 +3,34 @@ import * as Comlink from 'comlink';
 import type { PickedFile } from '../adapters/collect';
 import type { AnalysisWorkerApi } from './protocol';
 
+let remote: Comlink.Remote<AnalysisWorkerApi> | null = null;
+
 /**
- * The worker is created once, when the app starts: all the analysis code is
- * loaded before the user drops anything, so analyzing makes no request.
+ * Creates the worker, once: AuthGate calls this as soon as the user is
+ * signed in, before the app renders, so all the analysis code is loaded
+ * before the user drops anything and analyzing makes no request. Not
+ * earlier: the sign-in redirect would abort the download of its script.
  */
-const worker = new Worker(new URL('./analysis.worker.ts', import.meta.url), {
-  type: 'module',
-  name: 'phanes-analysis',
-});
-const remote = Comlink.wrap<AnalysisWorkerApi>(worker);
+export function startWorker(): Comlink.Remote<AnalysisWorkerApi> {
+  remote ??= Comlink.wrap<AnalysisWorkerApi>(
+    new Worker(new URL('./analysis.worker.ts', import.meta.url), {
+      type: 'module',
+      name: 'phanes-analysis',
+    }),
+  );
+  return remote;
+}
 
 export function analyzeInWorker(
   files: readonly PickedFile[],
   onProgress: (p: AnalyzeProgress) => void,
   onDiagnostics: (d: readonly Diagnostic[]) => void,
 ): Promise<Report> {
-  return remote.analyze(files, Comlink.proxy(onProgress), Comlink.proxy(onDiagnostics));
+  return startWorker().analyze(files, Comlink.proxy(onProgress), Comlink.proxy(onDiagnostics));
 }
 
 export function cancelAnalysis(): void {
-  void remote.cancel();
+  void startWorker().cancel();
 }
 
 export function isCancellation(error: unknown): boolean {
@@ -31,9 +39,10 @@ export function isCancellation(error: unknown): boolean {
 
 /** Queries on the last analyzed project (reader, dialogue, assets). */
 export const workerQueries = {
-  outline: () => remote.outline(),
-  readLabel: (name: string) => remote.readLabel(name),
-  dialogue: () => remote.dialogue(),
-  search: (query: string, limit = 200) => remote.search(query, limit),
-  openAsset: (path: string) => remote.openAsset(path),
+  outline: () => startWorker().outline(),
+  readLabel: (name: string) => startWorker().readLabel(name),
+  dialogue: () => startWorker().dialogue(),
+  search: (query: string, limit = 200) => startWorker().search(query, limit),
+  screenSize: () => startWorker().screenSize(),
+  openAsset: (path: string, archive?: string | null) => startWorker().openAsset(path, archive),
 };
