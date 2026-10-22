@@ -152,6 +152,13 @@ export function ScenePlayer({
   const r = useReport();
   const image = useImageLookup();
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
+  // The same list, up to date between renders: two quick key presses must not both
+  // play on from the same stop.
+  const played = useRef<Snapshot[]>([]);
+  const commit = useCallback((list: Snapshot[]) => {
+    played.current = list;
+    setSnapshots(list);
+  }, []);
   const [busy, setBusy] = useState(true);
   const [sound, setSound] = useState(true);
   const [history, setHistory] = useState(false);
@@ -280,7 +287,7 @@ export function ScenePlayer({
   /** Plays on from the current stop, to a cursor `make` derives from it. */
   const go = useCallback(
     (make: (current: Snapshot) => Cursor | null | Promise<Cursor | null>) => {
-      const current = snapshots[snapshots.length - 1];
+      const current = played.current[played.current.length - 1];
       if (running.current || !current) return;
       running.current = true;
       setBusy(true);
@@ -289,14 +296,14 @@ export function ScenePlayer({
           const cursor = await make(current);
           if (!cursor) return;
           const next = await run(cursor);
-          setSnapshots((list) => [...list, next]);
+          commit([...played.current, next]);
         } finally {
           running.current = false;
           setBusy(false);
         }
       })();
     },
-    [run, snapshots],
+    [commit, run],
   );
 
   const begin = useCallback(async (): Promise<Snapshot | null> => {
@@ -312,7 +319,7 @@ export function ScenePlayer({
       running.current = false;
       if (!active) return;
       setBusy(false);
-      setSnapshots(
+      commit(
         first
           ? [first]
           : [
@@ -340,7 +347,7 @@ export function ScenePlayer({
     return () => {
       active = false;
     };
-  }, [begin, start]);
+  }, [begin, commit, start]);
 
   useEffect(() => {
     let active = true;
@@ -401,11 +408,11 @@ export function ScenePlayer({
   };
   const back = () => {
     if (running.current) return;
-    setSnapshots((list) => (list.length > 1 ? list.slice(0, -1) : list));
+    if (played.current.length > 1) commit(played.current.slice(0, -1));
   };
   const restart = () => {
     if (running.current) return;
-    setSnapshots((list) => list.slice(0, 1));
+    commit(played.current.slice(0, 1));
   };
   const toggleFullscreen = () => {
     if (document.fullscreenElement) void document.exitFullscreen();
@@ -505,6 +512,8 @@ export function ScenePlayer({
         tabIndex={0}
         style={{ aspectRatio: `${ratio}` }}
         onClick={(e) => {
+          // Not every browser focuses a clicked element: the keys must keep working.
+          e.currentTarget.focus({ preventScroll: true });
           if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.vn-clickable'))
             advance();
         }}

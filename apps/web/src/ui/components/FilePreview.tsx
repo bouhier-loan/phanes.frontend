@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { mediaType } from '../../adapters/media-type';
 import { workerQueries } from '../../worker/client';
 import { useAssetUrl } from '../assets';
-import { basename, formatBytes } from '../format';
+import { basename, formatBytes, formatMediaTime } from '../format';
 import { href } from '../route';
 import { t } from '../strings.fr';
 
@@ -227,12 +227,6 @@ function ImagePreview({ entry }: { entry: InventoryEntry }) {
   );
 }
 
-function formatDuration(seconds: number): string {
-  if (!Number.isFinite(seconds)) return '';
-  const m = Math.floor(seconds / 60);
-  return `${m}:${String(Math.round(seconds % 60)).padStart(2, '0')}`;
-}
-
 function MediaPreview({ entry, video }: { entry: InventoryEntry; video: boolean }) {
   const p = t.inventory.preview;
   const url = useAssetUrl(entry.path, true, entry.archive);
@@ -261,8 +255,8 @@ function MediaPreview({ entry, video }: { entry: InventoryEntry; video: boolean 
       ) : (
         <audio className="preview-audio" {...props} />
       )}
-      {duration !== null && formatDuration(duration) !== '' && (
-        <p className="small muted">{p.duration(formatDuration(duration))}</p>
+      {duration !== null && formatMediaTime(duration) !== '' && (
+        <p className="small muted">{p.duration(formatMediaTime(duration))}</p>
       )}
     </>
   );

@@ -1,6 +1,6 @@
 import type { ArchiveInfo, Diagnostic, FileKind, InventoryEntry } from '@phanes/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { type KeyboardEvent, useId, useMemo, useRef, useState } from 'react';
+import { type KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { FilePreview } from '../components/FilePreview';
 import { ChevronDownIcon, ChevronRightIcon } from '../components/icons';
 import { ChipGroup, PageHeader, SearchField } from '../components/ui';
@@ -194,17 +194,33 @@ function Details({
   );
 }
 
-export function InventoryPage() {
+/** `focus` is the path of a file to select, e.g. from a character sheet. */
+export function InventoryPage({ focus = null }: { focus?: string | null }) {
   const r = useReport();
   const inventory = r.inventory;
   const i = t.inventory;
   const checkboxId = useId();
   const tree = useMemo(() => buildTree(inventory?.entries ?? []), [inventory]);
-  const [expanded, setExpanded] = useState(() => initialExpanded(tree, inventory?.gameDir ?? ''));
+  const focused = useMemo(
+    () =>
+      focus === null
+        ? undefined
+        : (inventory?.entries.find((e) => e.path === focus && e.shadowedBy === null) ??
+          inventory?.entries.find((e) => e.path === focus)),
+    [focus, inventory],
+  );
+  const [expanded, setExpanded] = useState(() => {
+    const open = initialExpanded(tree, inventory?.gameDir ?? '');
+    // The folders down to the focused file.
+    const parts = focused?.path.split('/').slice(0, -1) ?? [];
+    for (let n = 1; n <= parts.length; n++) open.add(parts.slice(0, n).join('/'));
+    return open;
+  });
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState<KindFilter>('all');
   const [withArchives, setWithArchives] = useState(true);
   const [selected, setSelected] = useState<string | null>(() => {
+    if (focused) return entryKey(focused);
     const first = inventory?.archives[0]?.path;
     return first === undefined ? null : `${first}\u0000`;
   });
@@ -253,6 +269,17 @@ export function InventoryPage() {
     estimateSize: () => ROW_HEIGHT,
     overscan: 20,
   });
+
+  // Scrolls the focused file into view, once.
+  const scrolled = useRef(false);
+  useEffect(() => {
+    if (scrolled.current || !focused) return;
+    scrolled.current = true;
+    const index = rows.findIndex(
+      (row) => row.type === 'file' && entryKey(row.entry) === entryKey(focused),
+    );
+    if (index > 0) virtualizer.scrollToIndex(index, { align: 'center' });
+  }, [focused, rows, virtualizer]);
 
   if (!inventory) return <p className="empty">{t.unavailable}</p>;
   const toggle = (path: string) => {
