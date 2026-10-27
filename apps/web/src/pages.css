@@ -1461,7 +1461,7 @@
 }
 
 .reader-side {
-  flex: 1 1 220px;
+  flex: 1 1 280px;
   min-width: 0;
 }
 
@@ -1476,7 +1476,24 @@
   flex-direction: column;
   gap: 2px;
   max-height: 80vh;
-  overflow: auto;
+  overflow: hidden auto;
+}
+
+.reader-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reader-group + .reader-group {
+  margin-top: 8px;
+}
+
+.reader-dir {
+  padding: 8px 10px 2px;
+  font-size: 12px;
+  color: var(--text-4);
+  overflow-wrap: anywhere;
 }
 
 .reader-file,
@@ -1485,7 +1502,7 @@
   align-items: center;
   gap: 6px;
   min-height: 36px;
-  padding: 0 10px;
+  padding: 6px 10px;
   border: 0;
   border-radius: 8px;
   background: transparent;
@@ -1494,6 +1511,11 @@
   text-decoration: none;
   width: 100%;
   text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.reader-file svg {
+  flex-shrink: 0;
 }
 
 .reader-label {

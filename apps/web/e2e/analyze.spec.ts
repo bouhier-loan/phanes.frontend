@@ -81,6 +81,10 @@ test('analyzes a game folder without any network request', async ({ page }) => {
 
   await openSection(page, 'Lecteur de script');
   await expect(page.getByTestId('reader')).toContainText('Good morning! Did you sleep well?');
+  // Files are listed by folder, by their name only.
+  const outline = page.getByRole('navigation', { name: 'Fichiers et labels' });
+  await expect(outline.locator('.reader-dir')).toHaveText(['story/']);
+  await expect(outline.getByRole('button', { name: 'extra.rpy' })).toBeVisible();
   await page.getByRole('link', { name: 'park ›' }).click();
   await expect(page.getByTestId('reader')).toContainText('Oh, hello there!');
   // Game mode: from start, through a menu choice and a branch picked by the reader.
@@ -98,14 +102,23 @@ test('analyzes a game folder without any network request', async ({ page }) => {
   await page.keyboard.press('Space');
   await page.keyboard.press('Space');
   await page.keyboard.press('Space');
+  const playedLabel = outline.locator('[aria-current="page"]');
   await player.getByRole('button', { name: /Stay home/ }).click();
   await expect(player.locator('.vn-textbox')).toContainText('Fine by me.');
+  await expect(playedLabel).toHaveText('start');
   await page.keyboard.press('Space');
   await expect(player).toContainText('Le jeu teste une condition');
+  // The list follows the label being played.
+  await expect(playedLabel).toHaveText('finale');
   await player.getByRole('button', { name: /sinon/ }).click();
   await expect(player.locator('.vn-textbox')).toContainText('Nothing happened.');
+  await expect(playedLabel).toHaveText('bad_ending');
   await page.getByRole('button', { name: 'Retour' }).click();
   await expect(player).toContainText('Le jeu teste une condition');
+  await expect(playedLabel).toHaveText('finale');
+  // Back to reading: the label where playing was.
+  await page.getByRole('button', { name: 'Lecture', exact: true }).click();
+  await expect(page.locator('#titre-label')).toHaveText('finale');
 
   await openSection(page, 'Ressources');
   const gallery = page.getByTestId('gallery');
