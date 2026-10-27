@@ -6,7 +6,7 @@ import {
   type ScriptOutline,
   stageAt,
 } from '@phanes/core';
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { workerQueries } from '../../worker/client';
 import { useAssetUrl } from '../assets';
 import { ChevronDownIcon, ChevronRightIcon, PlayIcon } from '../components/icons';
@@ -16,6 +16,7 @@ import { basename, formatLocation } from '../format';
 import { useReport } from '../report';
 import { href, navigate } from '../route';
 import { ScenePlayer } from '../player/ScenePlayer';
+import { outlineFolders } from '../sections/outline';
 import { t } from '../strings.fr';
 import { characterColor } from './characters-shared';
 
@@ -45,45 +46,73 @@ function Listen({ path, name }: { path: string; name: string }) {
 }
 
 function Outline({ outline, current }: { outline: ScriptOutline; current: string | null }) {
-  const initial =
-    outline.find((f) => f.labels.some((l) => l.name === current))?.file ?? outline[0]?.file;
-  const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set(initial ? [initial] : []));
+  const folders = useMemo(() => outlineFolders(outline), [outline]);
+  const fileOf = (name: string | null) =>
+    outline.find((f) => f.labels.some((l) => l.name === name))?.file;
+  const nav = useRef<HTMLElement>(null);
+  const [open, setOpen] = useState<ReadonlySet<string>>(() => {
+    const initial = fileOf(current) ?? outline[0]?.file;
+    return new Set(initial ? [initial] : []);
+  });
+  // A label reached by a link or by the player: open its file.
+  const [revealed, setRevealed] = useState(current);
+  if (current !== revealed) {
+    setRevealed(current);
+    const file = fileOf(current);
+    if (file && !open.has(file)) setOpen(new Set(open).add(file));
+  }
+  // Shows it in the list, without scrolling the page.
+  useEffect(() => {
+    const box = nav.current;
+    const item = box?.querySelector('[aria-current="page"]');
+    if (!box || !item) return;
+    const outer = box.getBoundingClientRect();
+    const inner = item.getBoundingClientRect();
+    if (inner.top < outer.top) box.scrollTop -= outer.top - inner.top;
+    else if (inner.bottom > outer.bottom) box.scrollTop += inner.bottom - outer.bottom;
+  }, [current]);
   return (
-    <nav aria-label={t.reader.nav} className="card reader-nav">
-      {outline.map((f) => {
-        const expanded = open.has(f.file);
-        return (
-          <div key={f.file}>
-            <button
-              type="button"
-              className="reader-file mono"
-              aria-expanded={expanded}
-              onClick={() => {
-                setOpen((s) => {
-                  const next = new Set(s);
-                  if (next.has(f.file)) next.delete(f.file);
-                  else next.add(f.file);
-                  return next;
-                });
-              }}
-            >
-              {expanded ? <ChevronDownIcon size={12} /> : <ChevronRightIcon size={12} />}
-              {f.file.replace(/^game\//, '')}
-            </button>
-            {expanded &&
-              f.labels.map((l) => (
-                <a
-                  key={l.name}
-                  href={href('lecteur', l.name)}
-                  className="reader-label mono"
-                  aria-current={l.name === current ? 'page' : undefined}
+    <nav ref={nav} aria-label={t.reader.nav} className="card reader-nav">
+      {folders.map((folder) => (
+        <div key={folder.dir} className="reader-group">
+          {folder.dir && <div className="reader-dir mono">{folder.dir}/</div>}
+          {folder.files.map((f) => {
+            const expanded = open.has(f.file);
+            return (
+              <div key={f.file}>
+                <button
+                  type="button"
+                  className="reader-file mono"
+                  aria-expanded={expanded}
+                  title={f.file}
+                  onClick={() => {
+                    setOpen((s) => {
+                      const next = new Set(s);
+                      if (next.has(f.file)) next.delete(f.file);
+                      else next.add(f.file);
+                      return next;
+                    });
+                  }}
                 >
-                  {l.name}
-                </a>
-              ))}
-          </div>
-        );
-      })}
+                  {expanded ? <ChevronDownIcon size={12} /> : <ChevronRightIcon size={12} />}
+                  <span>{basename(f.file)}</span>
+                </button>
+                {expanded &&
+                  f.labels.map((l) => (
+                    <a
+                      key={l.name}
+                      href={href('lecteur', l.name)}
+                      className="reader-label mono"
+                      aria-current={l.name === current ? 'page' : undefined}
+                    >
+                      {l.name}
+                    </a>
+                  ))}
+              </div>
+            );
+          })}
+        </div>
+      ))}
     </nav>
   );
 }
@@ -320,6 +349,7 @@ export function ReaderPage({ label }: { label: string | null }) {
   const [unfolded, setUnfolded] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<DialogueLine[] | null>(null);
+  const [playing, setPlaying] = useState<{ start: string; label: string } | null>(null);
   const stagingId = useId();
   const thumbsId = useId();
   const image = useImageLookup();
@@ -351,6 +381,8 @@ export function ReaderPage({ label }: { label: string | null }) {
     [r.characters],
   );
   const current = label ?? r.graph?.entry ?? outline?.[0]?.labels[0]?.name ?? null;
+  // In game mode, the label being played: the URL keeps the one playing started from.
+  const shown = mode === 'play' && playing?.start === current ? playing.label : current;
 
   useEffect(() => {
     let active = true;
@@ -428,6 +460,10 @@ export function ReaderPage({ label }: { label: string | null }) {
               type="button"
               aria-pressed={mode === m}
               onClick={() => {
+                if (m !== 'play') {
+                  if (shown && shown !== current) navigate('lecteur', shown);
+                  setPlaying(null);
+                }
                 setMode(m);
               }}
             >
@@ -466,7 +502,7 @@ export function ReaderPage({ label }: { label: string | null }) {
       <div className="split reader">
         <div className="reader-side">
           {outline ? (
-            <Outline outline={outline} current={current} />
+            <Outline outline={outline} current={shown} />
           ) : (
             <p className="muted">{rd.loading}</p>
           )}
@@ -487,6 +523,7 @@ export function ReaderPage({ label }: { label: string | null }) {
               colors={colors}
               audioPath={audioPath}
               videoPath={videoPath}
+              onPlace={setPlaying}
               onRead={(name) => {
                 setMode('read');
                 navigate('lecteur', name);

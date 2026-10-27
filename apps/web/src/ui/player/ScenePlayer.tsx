@@ -166,12 +166,15 @@ export function ScenePlayer({
   colors,
   audioPath,
   videoPath,
+  onPlace,
   onRead,
 }: {
   start: string;
   colors: ReadonlyMap<string, string>;
   audioPath: (file: string) => string | null;
   videoPath: (file: string) => string | null;
+  /** The label being played, after each jump, call, return or step back. */
+  onPlace: (place: { start: string; label: string }) => void;
   onRead: (label: string) => void;
 }) {
   const p = t.reader.play;
@@ -416,6 +419,11 @@ export function ScenePlayer({
     if (active === null || active === document.body || active.closest('.segmented'))
       screenRef.current?.focus({ preventScroll: true });
   }, [currentId]);
+
+  const place = current?.at.name;
+  useEffect(() => {
+    if (place !== undefined) onPlace({ start, label: place });
+  }, [onPlace, place, start]);
 
   const movieIndex = part.id === current?.id ? part.index : 0;
 
