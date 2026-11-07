@@ -104,23 +104,20 @@
       "default": 19,
       "define": 185,
       "characters": 20,
-      "engine": 155,
-      "neverRead": 5,
-      "neverWritten": 14
+      "engine": 157,
+      "neverRead": 4,
+      "neverWritten": 12
     },
     "neverRead": [
       "director.show_tags",
       "stat_chutzpah",
       "stat_intelligence",
-      "stat_moxie",
-      "tutorials_adjustment"
+      "stat_moxie"
     ],
     "neverWritten": [
-      "day_plan",
       "eileen_hp",
       "eileen_hp_max",
       "eileen_lv",
-      "persistent.show_translation_marker",
       "player_hp_max",
       "player_lv",
       "preferences.afm_time",
@@ -137,22 +134,14 @@
       "declared": 88,
       "statement": 36,
       "automatic": 52,
-      "displayed": 77,
-      "neverDisplayed": 11,
+      "displayed": 85,
+      "neverDisplayed": 3,
       "missing": 0
     },
     "neverDisplayed": [
-      "_finaleimage",
-      "bg pong field",
       "bg red",
-      "concert2",
-      "concert3",
-      "imagemap ground",
-      "imagemap hover",
-      "logo bw",
       "overlay blue",
-      "overlay red",
-      "spotlight"
+      "overlay red"
     ],
     "missing": [],
     "dynamic": 0
@@ -173,15 +162,15 @@
     "missing": 0
   },
   "translations": [
-    "french: 818/824 lines, 88/89 strings (+484), 7 orphans",
-    "italian: 824/824 lines, 88/89 strings (+523), 118 orphans",
-    "japanese: 818/824 lines, 88/89 strings (+513), 12 orphans",
-    "korean: 816/824 lines, 88/89 strings (+424), 12 orphans",
-    "piglatin: 824/824 lines, 88/89 strings (+457), 0 orphans",
-    "portuguese: 818/824 lines, 88/89 strings (+457), 12 orphans",
-    "russian: 815/824 lines, 88/89 strings (+424), 13 orphans",
-    "schinese: 816/824 lines, 88/89 strings (+445), 13 orphans",
-    "spanish: 818/824 lines, 88/89 strings (+457), 12 orphans",
-    "ukrainian: 818/824 lines, 88/89 strings (+441), 7 orphans"
+    "french: 818/824 lines, 242/243 strings (+330), 7 orphans",
+    "italian: 824/824 lines, 241/243 strings (+370), 118 orphans",
+    "japanese: 818/824 lines, 242/243 strings (+359), 12 orphans",
+    "korean: 816/824 lines, 239/243 strings (+273), 12 orphans",
+    "piglatin: 824/824 lines, 242/243 strings (+303), 0 orphans",
+    "portuguese: 818/824 lines, 241/243 strings (+304), 12 orphans",
+    "russian: 815/824 lines, 241/243 strings (+271), 13 orphans",
+    "schinese: 816/824 lines, 241/243 strings (+292), 13 orphans",
+    "spanish: 818/824 lines, 242/243 strings (+303), 12 orphans",
+    "ukrainian: 818/824 lines, 240/243 strings (+289), 7 orphans"
   ]
 }

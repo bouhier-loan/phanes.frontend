@@ -4,6 +4,7 @@ import {
   kindOf,
   type MenuItem,
   type Project,
+  type ScreenElement,
   type ScriptFile,
   type Stmt,
   type TranslationId,
@@ -113,6 +114,7 @@ export const s = {
     name: name.split(' '),
     value,
     hasAtl: false,
+    atl: [],
   }),
   show: (line: number, name: string, expression: string | null = null): Stmt => ({
     kind: 'show',
@@ -139,11 +141,24 @@ export const s = {
     language,
     block,
   }),
-  screen: (line: number, name: string, strings: string[]): Stmt => ({
+  translateString: (line: number, language: string, old: string, value: string): Stmt => ({
+    kind: 'translate-string',
+    loc: loc(line, `game/tl/${language}/common.rpy`),
+    language,
+    old,
+    new: value,
+  }),
+  screen: (
+    line: number,
+    name: string,
+    strings: string[],
+    elements: ScreenElement[] = [],
+  ): Stmt => ({
     kind: 'screen',
     loc: loc(line),
     name,
     strings,
+    elements,
   }),
 };
 

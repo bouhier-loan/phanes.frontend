@@ -99,13 +99,13 @@
     "missing": 0
   },
   "translations": [
-    "french: 70/70 lines, 10/10 strings (+380), 0 orphans",
-    "japanese: 70/70 lines, 10/10 strings (+392), 0 orphans",
-    "korean: 70/70 lines, 10/10 strings (+372), 0 orphans",
-    "malay: 70/70 lines, 10/10 strings (+357), 0 orphans",
-    "russian: 70/70 lines, 10/10 strings (+369), 0 orphans",
-    "schinese: 70/70 lines, 10/10 strings (+380), 0 orphans",
-    "spanish: 70/70 lines, 10/10 strings (+405), 0 orphans",
-    "tchinese: 70/70 lines, 10/10 strings (+100), 0 orphans"
+    "french: 70/70 lines, 110/111 strings (+280), 0 orphans",
+    "japanese: 70/70 lines, 110/111 strings (+292), 0 orphans",
+    "korean: 70/70 lines, 110/111 strings (+272), 0 orphans",
+    "malay: 70/70 lines, 110/111 strings (+257), 0 orphans",
+    "russian: 70/70 lines, 110/111 strings (+269), 0 orphans",
+    "schinese: 70/70 lines, 110/111 strings (+280), 0 orphans",
+    "spanish: 70/70 lines, 111/111 strings (+304), 0 orphans",
+    "tchinese: 70/70 lines, 110/111 strings (+0), 0 orphans"
   ]
 }

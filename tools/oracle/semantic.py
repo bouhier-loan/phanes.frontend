@@ -14,7 +14,11 @@ Projection (one list per statement, pre-order, nested blocks included):
   scene/show/hide [line, [name...]]  image [line, [name...], value]
   user [line, line_text], then its code_block and subparse blocks
   translate [line, identifier, language]
-  translate-string [line, language, old, new]   screen [line, name]
+  translate-string [line, language, old, new]
+  screen [line, name, [element...]], its SL2 statements flattened:
+    displayable [line, name, [positional], [[keyword, value]]], condition [line, code],
+    for [line, variable, code], use [line, target, [args]], python [line, code],
+    default [line, variable, code]
   other statements: [kind, line]
 
 Usage: python3 tools/oracle/semantic.py UNRPYC_DIR ROOT OUT
@@ -112,12 +116,91 @@ def project(node, out):
         walk(get("block") or [], out)
     elif kind == "screen":
         screen = get("screen")
-        out.append(["screen", line, text(getattr(screen, "name", None))])
+        elements = []
+        screen_elements(screen, elements, 0)
+        out.append(["screen", line, text(getattr(screen, "name", None)), elements])
     else:
         out.append([kind, line])
         block = get("block")
         if isinstance(block, list):
             walk(block, out)
+
+
+# Statement names of SL2 displayables, for screens compiled before Ren'Py 8
+# stored them (renpy/sl2/sldisplayables.py).
+STATEMENTS = {
+    "renpy.display.layout.Null": "null", "renpy.text.text.Text": "text",
+    "renpy.display.layout.Grid": "grid", "renpy.display.layout.Side": "side",
+    "renpy.ui._key": "key", "renpy.display.behavior.Timer": "timer",
+    "renpy.display.behavior.Input": "input", "renpy.display.behavior.Button": "button",
+    "renpy.ui._imagebutton": "imagebutton", "renpy.ui._textbutton": "textbutton",
+    "renpy.ui._label": "label", "renpy.sl2.sldisplayables.sl2bar": "bar",
+    "renpy.sl2.sldisplayables.sl2vbar": "vbar", "renpy.sl2.sldisplayables.sl2viewport": "viewport",
+    "renpy.sl2.sldisplayables.sl2vpgrid": "vpgrid", "renpy.sl2.sldisplayables.sl2add": "add",
+    "renpy.ui._imagemap": "imagemap", "renpy.ui._hotspot": "hotspot", "renpy.ui._hotbar": "hotbar",
+    "renpy.display.motion.Transform": "transform", "renpy.display.dragdrop.Drag": "drag",
+    "renpy.display.dragdrop.DragGroup": "draggroup",
+    "renpy.display.behavior.MouseArea": "mousearea", "renpy.display.behavior.OnEvent": "on",
+}
+BY_STYLE = {
+    "renpy.display.layout.MultiBox": ("hbox", "vbox", "fixed"),
+    "renpy.display.layout.Window": ("frame", "window"),
+}
+
+
+def statement_name(node):
+    name = getattr(node, "name", None)
+    if name:
+        return text(name)
+    d = getattr(node, "displayable", None)
+    if d is None:
+        return ""
+    qualified = d.__module__ + "." + d.__name__ if hasattr(d, "__name__") else None
+    if qualified is None:
+        return ""
+    style = text(getattr(node, "style", None))
+    if qualified in BY_STYLE and style in BY_STYLE[qualified]:
+        return style
+    return STATEMENTS.get(qualified, qualified.rsplit(".", 1)[-1].lower())
+
+
+def screen_elements(node, out, depth):
+    """Flattened SL2 statements: same projection as acl-oracle.test.ts."""
+    if node is None or depth > 200:
+        return
+    cls = type(node).__name__
+    loc = getattr(node, "location", None)
+    line = loc[1] if loc else 0
+    children = lambda: [screen_elements(c, out, depth + 1) for c in getattr(node, "children", None) or []]  # noqa: E731
+    if cls in ("SLScreen", "SLBlock", "SLDisplayable"):
+        keywords = [[text(k), text(v)] for k, v in getattr(node, "keyword", None) or [] if v is not None]
+        positional = [text(p) for p in getattr(node, "positional", None) or []]
+        name = "screen" if cls == "SLScreen" else "" if cls == "SLBlock" else statement_name(node)
+        if cls == "SLDisplayable" or keywords:
+            out.append(["displayable", line, name, positional, keywords])
+        children()
+    elif cls in ("SLIf", "SLShowIf"):
+        for condition, block in node.entries:
+            if condition is not None:
+                out.append(["condition", line, text(condition)])
+            screen_elements(block, out, depth + 1)
+    elif cls == "SLFor":
+        out.append(["for", line, text(node.variable), text(node.expression)])
+        children()
+    elif cls in ("SLUse", "SLCustomUse"):
+        args = getattr(node, "args", None)
+        if args is not None:
+            sources = [text(e) for _, e in args.arguments]
+        else:
+            sources = [text(p) for p in getattr(node, "positional", None) or []]
+        out.append(["use", line, text(node.target), sources])
+        screen_elements(getattr(node, "block", None), out, depth + 1)
+    elif cls == "SLPython":
+        out.append(["python", line, text(node.code)])
+    elif cls == "SLDefault":
+        out.append(["default", line, text(node.variable), text(node.expression)])
+    else:
+        children()
 
 
 def walk(block, out):

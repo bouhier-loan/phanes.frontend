@@ -103,17 +103,17 @@
     "missing": 0
   },
   "translations": [
-    "czech: 70/70 lines, 9/9 strings (+415), 0 orphans",
-    "danish: 70/70 lines, 9/9 strings (+397), 0 orphans",
-    "french: 70/70 lines, 9/9 strings (+391), 0 orphans",
-    "italian: 70/70 lines, 9/9 strings (+471), 0 orphans",
-    "japanese: 70/70 lines, 9/9 strings (+459), 0 orphans",
-    "korean: 70/70 lines, 9/9 strings (+373), 0 orphans",
-    "malay: 70/70 lines, 9/9 strings (+358), 0 orphans",
-    "russian: 70/70 lines, 9/9 strings (+370), 0 orphans",
-    "schinese: 70/70 lines, 9/9 strings (+381), 0 orphans",
-    "spanish: 70/70 lines, 9/9 strings (+406), 0 orphans",
-    "tchinese: 70/70 lines, 9/9 strings (+101), 0 orphans",
-    "ukrainian: 70/70 lines, 9/9 strings (+387), 0 orphans"
+    "czech: 70/70 lines, 108/108 strings (+316), 0 orphans",
+    "danish: 70/70 lines, 107/108 strings (+299), 0 orphans",
+    "french: 70/70 lines, 107/108 strings (+293), 0 orphans",
+    "italian: 70/70 lines, 107/108 strings (+373), 0 orphans",
+    "japanese: 70/70 lines, 108/108 strings (+360), 0 orphans",
+    "korean: 70/70 lines, 106/108 strings (+276), 0 orphans",
+    "malay: 70/70 lines, 106/108 strings (+261), 0 orphans",
+    "russian: 70/70 lines, 106/108 strings (+273), 0 orphans",
+    "schinese: 70/70 lines, 106/108 strings (+284), 0 orphans",
+    "spanish: 70/70 lines, 107/108 strings (+308), 0 orphans",
+    "tchinese: 70/70 lines, 106/108 strings (+4), 0 orphans",
+    "ukrainian: 70/70 lines, 108/108 strings (+288), 0 orphans"
   ]
 }

@@ -1,8 +1,13 @@
-import type { Location, Stmt } from '../model/ast';
+import { type Location, type ScreenElement, screenElementCode } from '../model/ast';
 import type { Project } from '../model/project';
 import { parseCall } from '../python-lite/call';
 import { stringLiteralValue } from '../python-lite/literal';
-import { interpolatedNames, pythonNames, stringConstants } from '../python-lite/names';
+import {
+  actionWrites,
+  interpolatedNames,
+  pythonNames,
+  stringConstants,
+} from '../python-lite/names';
 import type { Analysis } from './analysis';
 import { dialogueIndex } from './dialogue';
 import { walkStatements } from './walk';
@@ -69,17 +74,54 @@ const ENGINE_NAMESPACES = [
   'achievement',
 ];
 
+/** Store variables that Ren'Py itself reads (renpy/*.py, renpy/common: `store.<name>`). */
+const ENGINE_VARIABLES = new Set([
+  'menu',
+  'narrator',
+  'adv',
+  'nvl',
+  'save_name',
+  'main_menu',
+  'mouse_visible',
+  'suppress_overlay',
+  'predict_menu',
+]);
+
 function storeQualified(store: string, name: string): string {
   return store === 'store' ? name : `${store.replace(/^store\./, '')}.${name}`;
 }
 
 function isEngine(name: string): boolean {
   const head = name.split('.')[0] ?? name;
-  return head.startsWith('_') || ENGINE_NAMESPACES.includes(head);
+  return head.startsWith('_') || ENGINE_NAMESPACES.includes(head) || ENGINE_VARIABLES.has(name);
 }
 
 function lineOf(code: string, index: number): string {
   return (code.split('\n')[index] ?? code).trim();
+}
+
+/** A screen element as written, e.g. `textbutton "Go" action SetVariable("x", 1)`. */
+function shownElement(element: ScreenElement): string {
+  switch (element.kind) {
+    case 'displayable':
+      return [
+        element.name,
+        ...element.positional,
+        ...element.keywords.map(([key, value]) => `${key} ${value}`),
+      ]
+        .filter(Boolean)
+        .join(' ');
+    case 'condition':
+      return `if ${element.code}:`;
+    case 'for':
+      return `for ${element.variable} in ${element.code}:`;
+    case 'use':
+      return `use ${element.target}${element.args.length > 0 ? `(${element.args.join(', ')})` : ''}`;
+    case 'python':
+      return `$ ${element.code.trim()}`;
+    case 'default':
+      return `default ${element.variable} = ${element.code}`;
+  }
 }
 
 /**
@@ -110,7 +152,8 @@ export function variables(project: Project): VariablesResult {
 
   /** The declared variable a dotted chain refers to: its longest declared prefix. */
   const lookup = (chain: string): VariableEntry | undefined => {
-    const parts = chain.split('.');
+    // `store.x` is the store variable x.
+    const parts = chain.replace(/^store\./, '').split('.');
     for (let n = parts.length; n > 0; n--) {
       const hit = declared.get(parts.slice(0, n).join('.'));
       if (hit) return hit;
@@ -132,24 +175,30 @@ export function variables(project: Project): VariablesResult {
   };
   const python = (
     code: string,
-    stmt: Stmt,
+    loc: Location,
     label: string | null,
     context: VariableContext,
     shown: string,
+    globalWrites = true,
   ) => {
     const { reads, writes } = pythonNames(code);
     const block = code.includes('\n');
     const at = (line: number) => ({
-      file: stmt.loc.file,
-      line: stmt.loc.line + line + (block ? 1 : 0),
+      file: loc.file,
+      line: loc.line + line + (block ? 1 : 0),
     });
-    for (const w of writes)
+    for (const w of writes) {
+      // In a screen, a plain name is a screen variable; only store.x or persistent.x reach the store.
+      if (!globalWrites && !w.name.includes('.')) continue;
       site('writes', w.name, {
         loc: at(w.line),
         label,
         context,
         code: block ? lineOf(code, w.line) : shown,
       });
+    }
+    for (const name of actionWrites(code))
+      site('writes', name, { loc, label, context, code: shown });
     for (const r of reads)
       site('reads', r.name, {
         loc: at(r.line),
@@ -160,23 +209,25 @@ export function variables(project: Project): VariablesResult {
   };
   const expression = (
     code: string,
-    stmt: Stmt,
+    loc: Location,
     label: string | null,
     context: VariableContext,
     shown: string,
   ) => {
     for (const r of pythonNames(code).reads)
-      site('reads', r.name, { loc: stmt.loc, label, context, code: shown });
+      site('reads', r.name, { loc, label, context, code: shown });
+    for (const name of actionWrites(code))
+      site('writes', name, { loc, label, context, code: shown });
   };
   const text = (
     value: string,
-    stmt: Stmt,
+    loc: Location,
     label: string | null,
     context: VariableContext,
     shown: string,
   ) => {
     for (const name of interpolatedNames(value))
-      site('reads', name, { loc: stmt.loc, label, context, code: shown });
+      site('reads', name, { loc, label, context, code: shown });
   };
 
   walkStatements(project.scripts, (stmt, ctx) => {
@@ -184,7 +235,7 @@ export function variables(project: Project): VariablesResult {
     const label = ctx.label;
     switch (stmt.kind) {
       case 'python':
-        python(stmt.code, stmt, label, 'python', `$ ${stmt.code.trim()}`);
+        python(stmt.code, stmt.loc, label, 'python', `$ ${stmt.code.trim()}`);
         break;
       case 'define':
       case 'default': {
@@ -203,7 +254,7 @@ export function variables(project: Project): VariablesResult {
           if (arg) site('reads', arg, { loc: stmt.loc, label, context: 'character', code: shown });
         } else if (call && index.definitions.has(name)) {
           const nameArg = call.positional[0]?.string ?? call.keywords.get('name')?.string;
-          if (nameArg) text(nameArg, stmt, label, 'character', shown);
+          if (nameArg) text(nameArg, stmt.loc, label, 'character', shown);
         }
         for (const r of pythonNames(stmt.value).reads)
           if (r.name !== name)
@@ -215,7 +266,7 @@ export function variables(project: Project): VariablesResult {
           if (b.condition.trim() === 'True' && i > 0) continue;
           expression(
             b.condition,
-            stmt,
+            stmt.loc,
             label,
             'condition',
             `${i === 0 ? 'if' : 'elif'} ${b.condition}:`,
@@ -223,14 +274,14 @@ export function variables(project: Project): VariablesResult {
         }
         break;
       case 'while':
-        expression(stmt.condition, stmt, label, 'condition', `while ${stmt.condition}:`);
+        expression(stmt.condition, stmt.loc, label, 'condition', `while ${stmt.condition}:`);
         break;
       case 'menu':
         for (const item of stmt.items) {
           if (item.condition.trim() !== 'True')
             expression(
               item.condition,
-              stmt,
+              stmt.loc,
               label,
               'menu',
               `${JSON.stringify(item.text)} if ${item.condition}`,
@@ -250,7 +301,7 @@ export function variables(project: Project): VariablesResult {
         if (stmt.expression)
           expression(
             stmt.target,
-            stmt,
+            stmt.loc,
             label,
             'expression',
             `${stmt.kind} expression ${stmt.target}`,
@@ -258,48 +309,70 @@ export function variables(project: Project): VariablesResult {
         break;
       case 'say': {
         const shown = `${stmt.who ? `${stmt.who} ` : ''}${JSON.stringify(stmt.what)}`;
-        text(stmt.what, stmt, label, 'say', shown);
+        text(stmt.what, stmt.loc, label, 'say', shown);
         break;
       }
       case 'screen':
-        // Its strings are the sources of the screen's Python expressions.
-        for (const source of stmt.strings) {
-          const shown = `screen ${stmt.name}: ${source}`;
-          expression(source, stmt, null, 'screen', shown);
-          for (const value of stringConstants(source)) text(value, stmt, null, 'screen', shown);
+        if (stmt.elements.length === 0) {
+          // Older screens: their strings are the sources of their Python expressions.
+          for (const source of stmt.strings) {
+            const shown = `screen ${stmt.name}: ${source}`;
+            expression(source, stmt.loc, null, 'screen', shown);
+            for (const value of stringConstants(source))
+              text(value, stmt.loc, null, 'screen', shown);
+          }
+          break;
+        }
+        for (const element of stmt.elements) {
+          const shown = `screen ${stmt.name}: ${shownElement(element)}`;
+          if (element.kind === 'python') {
+            python(element.code, element.loc, null, 'screen', shown, false);
+            continue;
+          }
+          for (const source of screenElementCode(element)) {
+            expression(source, element.loc, null, 'screen', shown);
+            for (const value of stringConstants(source))
+              text(value, element.loc, null, 'screen', shown);
+          }
         }
         break;
       case 'with':
         if (stmt.expression)
-          expression(stmt.expression, stmt, label, 'expression', `with ${stmt.expression}`);
+          expression(stmt.expression, stmt.loc, label, 'expression', `with ${stmt.expression}`);
         break;
       case 'scene':
       case 'show': {
         const image = stmt.image;
         if (!image) break;
         const shown = `${stmt.kind} ${image.expression ? `expression ${image.expression}` : image.name.join(' ')}${image.atList.length ? ` at ${image.atList.join(', ')}` : ''}`;
-        if (image.expression) expression(image.expression, stmt, label, 'image', shown);
-        for (const at of image.atList) expression(at, stmt, label, 'image', shown);
+        if (image.expression) expression(image.expression, stmt.loc, label, 'image', shown);
+        for (const at of image.atList) expression(at, stmt.loc, label, 'image', shown);
         break;
       }
       case 'image':
         if (stmt.value)
           expression(
             stmt.value,
-            stmt,
+            stmt.loc,
             label,
             'image',
             `image ${stmt.name.join(' ')} = ${stmt.value}`,
           );
         break;
       case 'user': {
-        const m = /^(?:play|queue)\s+\w+\s+(.+)$/.exec(stmt.line.trim());
+        const line = stmt.line.trim();
+        const m = /^(?:play|queue)\s+\w+\s+(.+)$/.exec(line);
         const sound = m?.[1]?.split(/\s+(?:fadein|fadeout|loop|noloop|if_changed|volume)\b/)[0];
-        if (sound && stringLiteralValue(sound) === null) {
-          for (const r of pythonNames(sound).reads) {
-            const chain = lookup(`audio.${r.name}`) ? `audio.${r.name}` : r.name;
-            site('reads', chain, { loc: stmt.loc, label, context: 'audio', code: stmt.line });
+        if (m) {
+          if (sound && stringLiteralValue(sound) === null) {
+            for (const r of pythonNames(sound).reads) {
+              const chain = lookup(`audio.${r.name}`) ? `audio.${r.name}` : r.name;
+              site('reads', chain, { loc: stmt.loc, label, context: 'audio', code: stmt.line });
+            }
           }
+        } else if (line.startsWith(stmt.name)) {
+          // Other statements (`call screen x(a=b)`, `pause d`): the arguments after the name.
+          expression(line.slice(stmt.name.length), stmt.loc, label, 'expression', line);
         }
         break;
       }

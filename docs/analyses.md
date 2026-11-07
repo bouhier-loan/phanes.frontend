@@ -62,19 +62,26 @@ peut atteindre sa fin.
 - **Déclarées** : `default` et `define` avec `=`, nom qualifié par le store (`persistent.x`,
   `config.name`) ; la première déclaration fait foi.
 - **Modifiées** : cible d'une affectation Python (`=`, `+=`…, tuples, indices, attributs,
-  variable de `for`), `define` avec un autre opérateur ou un indice, toute autre déclaration
-  du même nom, et la variable `set` d'un menu.
+  variable de `for` ; `store.x` désigne `x`), `define` avec un autre opérateur ou un indice,
+  toute autre déclaration du même nom, la variable `set` d'un menu, et les actions et valeurs
+  d'écran : `SetVariable`, `ToggleVariable`, `VariableValue`, `VariableInputValue` (`"x"`),
+  `SetField`, `ToggleField`, `FieldValue`, `FieldInputValue` (`obj.f`), `SetDict`,
+  `ToggleDict`, `DictValue`, `DictInputValue` (le dictionnaire). Dans le code Python d'un
+  écran, un nom simple est une variable d'écran : seuls `store.x` ou `persistent.x` comptent.
 - **Lues** : tout autre nom du code Python, des conditions (`if`, `while`, choix de menu), des
   expressions (`jump expression`, `show expression`, `with`, `at`, valeur d'une image ou d'une
-  autre déclaration), des expressions d'écran, les interpolations `[nom]` des répliques, des
-  textes d'écran et des noms de personnages, l'argument de `DynamicCharacter("nom")`, et un
-  son nommé dans `play`/`queue` (cherché d'abord dans `audio.`).
+  autre déclaration, arguments d'une autre instruction comme `call screen x(a)`), des
+  expressions d'écran (à la ligne de chaque instruction de l'écran), les interpolations
+  `[nom]` des répliques, des textes d'écran et des noms de personnages, l'argument de
+  `DynamicCharacter("nom")`, et un son nommé dans `play`/`queue` (cherché d'abord dans
+  `audio.`).
 - Un nom pointé désigne la plus longue déclaration qui le préfixe (`persistent.seen.add` →
   `persistent.seen`). Les arguments nommés (`f(x=1)`) ne sont pas des lectures.
 - Les personnages (définis par une fabrique de `Character`) sont détaillés à part ; les
   réglages lus par Ren'Py lui-même (`config`, `build`, `gui`, `preferences`, `style`,
-  `renpy`, `layout`, `achievement`, ou un nom commençant par `_`) ne sont jamais
-  « jamais lus ». « Jamais modifiée » ne concerne que les `default`.
+  `renpy`, `layout`, `achievement`, un nom commençant par `_`, et les variables du store que
+  Ren'Py lit : `menu`, `narrator`, `adv`, `nvl`, `save_name`, `main_menu`, `mouse_visible`,
+  `suppress_overlay`, `predict_menu`) ne sont jamais « jamais lus ». « Jamais modifiée » ne concerne que les `default`.
 
 ## Ressources (`assets`)
 
@@ -104,12 +111,19 @@ peut atteindre sa fin.
   la longueur, deux au minimum), sauf pour les images de Ren'Py (`black`, et les étiquettes
   `text` et `vtext`). Une image déclarée vers un fichier absent est manquante aussi.
   `show expression` n'est pas résolu.
+- **Écrans** (langage d'écran 2, décodé instruction par instruction) : l'image ou le fichier
+  d'un `add`, et les mots-clés qui prennent un displayable (`background`, `foreground`,
+  `child`, `ground`, `idle`, `hover`, `insensitive` et leurs variantes `selected_…`, barres
+  `…_bar`, `thumb`, et les motifs `auto "bouton_%s.png"` développés pour chaque état) comptent
+  comme affichages ; les mots-clés `…_sound` et les actions `Play`/`Queue` comme sons joués ;
+  `Movie(play=…)` comme vidéo utilisée.
 - Comptent aussi comme affichages : les **attributs d'une réplique** (`e happy "…"`) pour les
   images de l'étiquette `image=` du personnage et ses portraits latéraux `side <étiquette> …`
-  (`renpy/character.py`) ; une **propriété de style** qui nomme une image ou un fichier
-  d'image ; un fichier d'image écrit dans du code Python ou une déclaration
+  (`renpy/character.py`) ; une **propriété de style** de ces mêmes noms qui désigne une image
+  ou un fichier d'image ; un fichier d'image écrit dans du code Python ou une déclaration
   (`ImageDissolve("x.png")`). Une image affichée affiche ce que sa définition nomme : la cible
-  d'un alias (manquante si elle n'existe pas), les images et fichiers d'un `Composite`…
+  d'un alias (manquante si elle n'existe pas), les images et fichiers d'un `Composite`, les
+  images d'un bloc ATL (`image eileen blink:`)…
 - **Audio** : `play <canal>`, `queue <canal>` et `voice` (chemin littéral, liste, ou nom
   `audio.x` défini par `define audio.x = "…"` ou par un fichier de `audio/`), et
   `renpy.music.play` / `renpy.sound.play` en Python. Les fichiers audio du jeu sont joués ou
@@ -135,6 +149,7 @@ peut atteindre sa fin.
   `tl/None`) personnalise les chaînes de la langue par défaut et n'est pas une traduction.
 - **Orphelines** : traductions dont l'identifiant n'existe pas dans le jeu (souvent une réplique
   modifiée après la traduction).
-- **Chaînes d'interface** : textes des menus et arguments constants de `_()`, `__()`, `_p()`
-  dans le code. Les textes des écrans ne sont pas comptés (leurs chaînes ne se distinguent pas
-  des expressions) ; les `old` traduits hors de cet ensemble sont comptés à part (`extra`).
+- **Chaînes d'interface** : comme Ren'Py (`renpy/translation/scanstrings.py`), les textes des
+  menus et les arguments constants de `_()`, `__()`, `_p()` partout : code, déclarations,
+  écrans, styles, images, autres instructions. Les `old` traduits hors de cet ensemble sont
+  comptés à part (`extra`) : surtout les chaînes de Ren'Py lui-même (`tl/<langue>/common.rpy`).

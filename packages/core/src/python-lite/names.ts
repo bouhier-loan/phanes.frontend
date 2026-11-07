@@ -223,3 +223,44 @@ export function translatableStrings(code: string): string[] {
   }
   return out;
 }
+
+/** Screen actions and bar or input values that set a variable, a field or a dict entry. */
+const VARIABLE_ACTIONS = new Set([
+  'SetVariable',
+  'ToggleVariable',
+  'VariableValue',
+  'VariableInputValue',
+]);
+const FIELD_ACTIONS = new Set(['SetField', 'ToggleField', 'FieldValue', 'FieldInputValue']);
+const DICT_ACTIONS = new Set(['SetDict', 'ToggleDict', 'DictValue', 'DictInputValue']);
+
+/**
+ * Variables that the actions and values of an expression set
+ * (renpy/common/00action_data.rpy, 00barvalues.rpy, 00inputvalues.rpy):
+ * `SetVariable("x", …)`, `ToggleVariable("x")`, `VariableValue("x", …)`;
+ * `SetField(obj, "f", …)` and friends as `obj.f` (`store.f` as `f`);
+ * `SetDict(d, key, …)` and friends as `d`. Screen-local ones
+ * (SetScreenVariable, SetLocalVariable…) are not store variables.
+ */
+export function actionWrites(code: string): string[] {
+  const tokens = tokenize(code);
+  const out: string[] = [];
+  for (let i = 0; i + 2 < tokens.length; i++) {
+    const t = tokens[i];
+    if (t?.type !== 'name' || isOp(tokens[i - 1], '.') || !isOp(tokens[i + 1], '(')) continue;
+    if (VARIABLE_ACTIONS.has(t.value)) {
+      const name = tokens[i + 2];
+      if (name?.type === 'string' && /^[A-Za-z_][\w.]*$/.test(name.value)) out.push(name.value);
+    } else if (DICT_ACTIONS.has(t.value)) {
+      const chain = chainAt(tokens, i + 2);
+      if (chain && isOp(tokens[chain.next], ',')) out.push(chain.name);
+    } else if (FIELD_ACTIONS.has(t.value)) {
+      const chain = chainAt(tokens, i + 2);
+      const field = chain ? tokens[chain.next + 1] : undefined;
+      if (chain && isOp(tokens[chain.next], ',') && field?.type === 'string') {
+        out.push(chain.name === 'store' ? field.value : `${chain.name}.${field.value}`);
+      }
+    }
+  }
+  return out;
+}

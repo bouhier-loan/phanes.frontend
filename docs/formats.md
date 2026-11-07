@@ -49,3 +49,14 @@ Ren'Py 8 décode ces chaînes en UTF-8 avec `surrogateescape` ; Phanes fait de m
 - `PyExpr` : sous-classe de `str`, `renpy.ast.PyExpr` jusqu'à 8.3 (`NEWOBJ`),
   `renpy.astsupport.PyExpr` ensuite (`REDUCE`, 6 arguments).
 - Les labels locaux sont stockés avec leur nom complet (`park.bench`).
+- `translate None strings` (dossier `tl/None`) a une langue `None` : il personnalise les chaînes
+  de la langue par défaut.
+- Une instruction créée par l'auteur (`UserStatement`) garde son bloc de script
+  (`block="script"`) dans `code_block` et ceux de ses `subparses` dans `subparses[i].block`.
+- Écrans (`renpy.sl2.slast`) : `SLScreen` → `children` de `SLDisplayable` (`positional` : liste
+  de `PyExpr`, `keyword` : liste de paires `(nom, PyExpr)`), `SLIf`/`SLShowIf` (`entries` :
+  `(condition | None, SLBlock)`), `SLFor`, `SLUse` (`target`, `args` : `ArgumentInfo`),
+  `SLPython`, `SLDefault`. Le nom de l'instruction (`text`, `add`…) n'est stocké (`name`) que
+  depuis Ren'Py 8 ; avant, il se déduit du displayable (`displayable` : référence globale,
+  `renpy.ui._imagebutton`…), et du style de base pour `hbox`/`vbox`/`fixed` (`MultiBox`) et
+  `frame`/`window` (`Window`).

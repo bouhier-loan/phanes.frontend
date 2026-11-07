@@ -7,7 +7,7 @@
  * renpy/character.py (resolve_say_attributes).
  * Ren'Py is MIT licensed (see NOTICE).
  */
-import type { ImageSpec, Location, Stmt } from '../model/ast';
+import { type ImageSpec, type Location, screenElementCode, type Stmt } from '../model/ast';
 import type { Project } from '../model/project';
 import { parseCall } from '../python-lite/call';
 import { stringLiteralValue } from '../python-lite/literal';
@@ -133,6 +133,56 @@ export function stringDisplayable(value: string): StringDisplayable | null {
   return name === '' ? null : { kind: 'image', name };
 }
 
+/**
+ * Style properties and screen keywords that take a displayable: backgrounds,
+ * bars and thumbs, imagebutton and imagemap states, `auto` patterns.
+ */
+const DISPLAYABLE_PROPERTY =
+  /(?:^|_)(?:background|foreground|child|ground|idle|hover|insensitive|bar|thumb|thumb_shadow|auto)$/;
+/** States an `auto` pattern ("button_%s.png") expands to (renpy/ui.py, _imagebutton). */
+const AUTO_STATES = [
+  'idle',
+  'hover',
+  'insensitive',
+  'selected_idle',
+  'selected_hover',
+  'selected_insensitive',
+];
+
+const MOVIE = /\bMovie\s*\(/g;
+
+/** Videos of `Movie(play="…")` (or a first positional string) calls in Python source. */
+function movieFiles(code: string): string[] {
+  const out: string[] = [];
+  for (const match of code.matchAll(MOVIE)) {
+    const call = parseCall(code.slice(match.index));
+    const play = call?.keywords.get('play')?.string ?? call?.positional[0]?.string;
+    if (play) out.push(play);
+  }
+  return out;
+}
+
+/** Files of `Play("channel", "file")` and `Queue(…)` screen actions. */
+function playActionFiles(code: string): string[] {
+  const tokens = tokenize(code);
+  const out: string[] = [];
+  for (let i = 0; i + 4 < tokens.length; i++) {
+    const [name, open, channel, comma, file] = tokens.slice(i, i + 5);
+    if (
+      name?.type === 'name' &&
+      (name.value === 'Play' || name.value === 'Queue') &&
+      open?.type === 'op' &&
+      open.value === '(' &&
+      channel?.type === 'string' &&
+      comma?.type === 'op' &&
+      comma.value === ',' &&
+      file?.type === 'string'
+    )
+      out.push(file.value);
+  }
+  return out;
+}
+
 /** Extensions Ren'Py turns into automatic images (renpy/common/00images.rpy). */
 const AUTOMATIC_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.avif', '.svg'];
 const AUDIO_STATEMENT = /^(play|queue)\s+(\w+)\s+([\s\S]+)$/;
@@ -245,8 +295,8 @@ export function assets(project: Project): AssetsResult {
     videoUses.set(entry.gamePath, [...(videoUses.get(entry.gamePath) ?? []), site]);
   };
 
-  /** Image statements whose value may name other images or image files. */
-  const definitions: { name: string; value: string; site: AssetSite }[] = [];
+  /** Image statements whose value or ATL block may name other images or image files. */
+  const definitions: { name: string; code: string[]; site: AssetSite }[] = [];
   walkStatements(project.scripts, (stmt, ctx) => {
     if (ctx.language !== null || stmt.kind !== 'image' || stmt.name.length === 0) return;
     const name = stmt.name.join(' ');
@@ -258,7 +308,8 @@ export function assets(project: Project): AssetsResult {
     const alias = meaning?.kind === 'image' ? meaning.name : null;
     const call = value === null ? null : parseCall(value);
     const site = { loc: stmt.loc, label: ctx.label, code: `image ${name} = ${value ?? '…'}` };
-    if (value !== null) definitions.push({ name, value, site });
+    const code = [...(value === null ? [] : [value]), ...stmt.atl];
+    if (code.length > 0) definitions.push({ name, code, site });
     let movie: ImageMovie | null = null;
     if (call && (call.callee.split('.').pop() ?? '') === 'Movie') {
       const play = call.keywords.get('play')?.string ?? call.positional[0]?.string;
@@ -382,7 +433,7 @@ export function assets(project: Project): AssetsResult {
       const target = images.get(image.alias);
       if (target) used.add(target);
     } else
-      for (const value of stringConstants(def.value))
+      for (const value of def.code.flatMap(stringConstants))
         for (const other of designated(value, true)) if (other !== image) used.add(other);
     dependencies.set(image, { site: def.site, images: [...used] });
   }
@@ -460,9 +511,39 @@ export function assets(project: Project): AssetsResult {
           display(img, site);
     } else if (stmt.kind === 'style') {
       for (const [property, code] of stmt.properties) {
+        if (!DISPLAYABLE_PROPERTY.test(property)) continue;
         const site = { loc: stmt.loc, label, code: `style ${stmt.name}: ${property} ${code}` };
         for (const value of stringConstants(code))
           for (const img of designated(value, true)) display(img, site);
+      }
+    } else if (stmt.kind === 'screen') {
+      for (const element of stmt.elements) {
+        const sources = screenElementCode(element);
+        const site = {
+          loc: element.loc,
+          label: null,
+          code: `screen ${stmt.name}: ${element.kind === 'displayable' ? element.name : element.kind} ${sources.join(' ')}`.trim(),
+        };
+        for (const source of sources) {
+          for (const path of movieFiles(source)) videoUse(path, site);
+          for (const file of playActionFiles(source))
+            audioPlays.push({ ...site, channel: 'screen', file });
+        }
+        if (element.kind !== 'displayable') continue;
+        const shown: string[] = element.name === 'add' ? element.positional.slice(0, 1) : [];
+        for (const [key, code] of element.keywords) {
+          if (DISPLAYABLE_PROPERTY.test(key)) shown.push(code);
+          if (key.endsWith('_sound'))
+            for (const file of stringConstants(code))
+              audioPlays.push({ ...site, channel: 'sound', file });
+        }
+        for (const code of shown)
+          for (const value of stringConstants(code)) {
+            const values = value.includes('%s')
+              ? AUTO_STATES.map((state) => value.replace('%s', state))
+              : [value];
+            for (const v of values) for (const img of designated(v, true)) display(img, site);
+          }
       }
     } else if (stmt.kind === 'user') {
       const line = stmt.line.trim();
@@ -485,7 +566,10 @@ export function assets(project: Project): AssetsResult {
         audioPlays.push({ loc: stmt.loc, label, code: line, channel, file });
     } else if (stmt.kind === 'python') {
       const site = { loc: stmt.loc, label, code: `$ ${stmt.code.trim()}` };
-      for (const path of callStrings(stmt.code, new Set(['renpy.movie_cutscene', 'Movie'])))
+      for (const path of [
+        ...callStrings(stmt.code, new Set(['renpy.movie_cutscene'])),
+        ...movieFiles(stmt.code),
+      ])
         videoUse(path, site);
       for (const path of callStrings(stmt.code, new Set(['renpy.music.play', 'renpy.sound.play'])))
         audioPlays.push({ ...site, channel: 'python', file: path });
@@ -493,7 +577,7 @@ export function assets(project: Project): AssetsResult {
         for (const img of designated(value, false)) display(img, site);
     } else if (stmt.kind === 'define' || stmt.kind === 'default') {
       const site = { loc: stmt.loc, label, code: `${stmt.kind} ${stmt.name} = ${stmt.value}` };
-      for (const path of callStrings(stmt.value, new Set(['Movie']))) videoUse(path, site);
+      for (const path of movieFiles(stmt.value)) videoUse(path, site);
       for (const value of stringConstants(stmt.value))
         for (const img of designated(value, false)) display(img, site);
     }

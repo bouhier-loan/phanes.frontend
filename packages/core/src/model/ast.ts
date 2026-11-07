@@ -132,6 +132,8 @@ export interface ImageStmt extends Node<'image'> {
   /** Python expression defining the image, null for an ATL-only image. */
   readonly value: string | null;
   readonly hasAtl: boolean;
+  /** Expression sources found in the ATL block, e.g. `"eileen blink"` frames. */
+  readonly atl: readonly string[];
 }
 
 export interface TransformStmt extends Node<'transform'> {
@@ -168,10 +170,60 @@ export interface TranslateBlockStmt extends Node<'translate-block'> {
   readonly block: readonly Stmt[];
 }
 
+/**
+ * A statement of a screen (screen language 2), in source order; nested
+ * blocks are flattened into the list. Expressions are Python sources.
+ */
+export type ScreenElement =
+  | {
+      readonly kind: 'displayable';
+      readonly loc: Location;
+      /** Statement name: "text", "add", "imagebutton"…; "screen" for the screen's own keywords. */
+      readonly name: string;
+      readonly positional: readonly string[];
+      readonly keywords: readonly (readonly [string, string])[];
+    }
+  /** The condition of an `if`/`elif` or `showif` branch. */
+  | { readonly kind: 'condition'; readonly loc: Location; readonly code: string }
+  | {
+      readonly kind: 'for';
+      readonly loc: Location;
+      readonly variable: string;
+      readonly code: string;
+    }
+  | {
+      readonly kind: 'use';
+      readonly loc: Location;
+      /** Screen used; for `use expression`, the expression. */
+      readonly target: string;
+      readonly args: readonly string[];
+    }
+  | { readonly kind: 'python'; readonly loc: Location; readonly code: string }
+  | {
+      readonly kind: 'default';
+      readonly loc: Location;
+      readonly variable: string;
+      readonly code: string;
+    };
+
+/** The Python expressions and code of a screen element, in source order. */
+export function screenElementCode(element: ScreenElement): string[] {
+  switch (element.kind) {
+    case 'displayable':
+      return [...element.positional, ...element.keywords.map(([, code]) => code)];
+    case 'use':
+      return [...element.args];
+    default:
+      return [element.code];
+  }
+}
+
 export interface ScreenStmt extends Node<'screen'> {
   readonly name: string;
   /** Every string constant found in the screen, e.g. label names in Jump("..."). */
   readonly strings: readonly string[];
+  /** The screen's statements (empty for screens older than screen language 2). */
+  readonly elements: readonly ScreenElement[];
 }
 
 export interface StyleStmt extends Node<'style'> {

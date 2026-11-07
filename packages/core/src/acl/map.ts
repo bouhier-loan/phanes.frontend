@@ -9,6 +9,7 @@ import {
 } from '@phanes/renpy-formats';
 import type { ImageSpec, Location, MenuItem, Stmt } from '../model/ast';
 import { itemsOf, NodeReader, textOf } from './read';
+import { screenElements } from './screen';
 
 /** Nesting deeper than this is treated as hostile and cut. */
 const MAX_DEPTH = 200;
@@ -216,6 +217,7 @@ function mapNode(node: PyObject, ctx: Ctx, depth: number): Stmt {
         name: r.strings('imgname'),
         value: r.code('code'),
         hasAtl: (r.raw('atl') ?? null) !== null,
+        atl: collectStrings(r.raw('atl') ?? null),
       };
     case 'Transform':
       return { kind: 'transform', loc, name: r.text('varname') ?? '' };
@@ -268,7 +270,13 @@ function mapNode(node: PyObject, ctx: Ctx, depth: number): Stmt {
     case 'Screen': {
       const screen = r.raw('screen');
       const name = screen instanceof PyObject ? new NodeReader(screen).text('name') : null;
-      return { kind: 'screen', loc, name: name ?? '', strings: collectStrings(screen ?? null) };
+      return {
+        kind: 'screen',
+        loc,
+        name: name ?? '',
+        strings: collectStrings(screen ?? null),
+        elements: screenElements(screen, ctx.defaultFile),
+      };
     }
     case 'Style': {
       const properties: [string, string][] = [];

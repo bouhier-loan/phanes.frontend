@@ -44,7 +44,26 @@ function projection(stmt: Stmt): unknown[] {
     case 'translate-string':
       return ['translate-string', line, stmt.language, stmt.old, stmt.new];
     case 'screen':
-      return ['screen', line, stmt.name];
+      return [
+        'screen',
+        line,
+        stmt.name,
+        stmt.elements.map((e) => {
+          const at = e.loc.line;
+          switch (e.kind) {
+            case 'displayable':
+              return [e.kind, at, e.name, e.positional, e.keywords];
+            case 'condition':
+            case 'python':
+              return [e.kind, at, e.code];
+            case 'for':
+            case 'default':
+              return [e.kind, at, e.variable, e.code];
+            case 'use':
+              return [e.kind, at, e.target, e.args];
+          }
+        }),
+      ];
     default:
       return [stmt.kind, line];
   }

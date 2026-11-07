@@ -243,6 +243,65 @@ describe('variables', () => {
     expect(byName['config.name']?.engine).toBe(true);
     expect(v.totals).toMatchObject({ neverRead: 1, neverWritten: 2 });
   });
+
+  it('reads screens statement by statement, with their actions and values', () => {
+    const at = (line: number) => ({ file: 'game/screens.rpy', line });
+    const v = variables(
+      project([
+        script([
+          s.default(1, 'gold', '0'),
+          s.default(2, 'courage', '5'),
+          s.default(3, 'plan', '{}'),
+          s.default(4, 'shown', 'False'),
+          s.default(5, 'volume', '1.0', 'store.persistent'),
+          s.default(6, 'local', '0'),
+          s.screen(
+            10,
+            'hud',
+            [],
+            [
+              { kind: 'condition', loc: at(11), code: 'gold > 0' },
+              {
+                kind: 'displayable',
+                loc: at(12),
+                name: 'textbutton',
+                positional: ['_("Gold: [gold]")'],
+                keywords: [['action', 'SetVariable("shown", True)']],
+              },
+              {
+                kind: 'displayable',
+                loc: at(13),
+                name: 'bar',
+                positional: [],
+                keywords: [['value', 'FieldValue(persistent, "volume", 1.0)']],
+              },
+              {
+                kind: 'displayable',
+                loc: at(14),
+                name: 'textbutton',
+                positional: ['"Train"'],
+                keywords: [['action', '[SetDict(plan, "day", 1), SetScreenVariable("x", 1)]']],
+              },
+              { kind: 'python', loc: at(15), code: 'local = 1\nstore.courage += 1' },
+              { kind: 'default', loc: at(17), variable: 'tab', code: 'gold' },
+            ],
+          ),
+          s.user(20, 'call screen hud(courage)'),
+        ]),
+      ]),
+    );
+    const byName = Object.fromEntries(v.variables.map((x) => [x.name, x]));
+    const lines = (name: string, list: 'reads' | 'writes') =>
+      byName[name]?.[list].map((site) => site.loc.line);
+    expect(lines('gold', 'reads')).toEqual([11, 12, 17]);
+    expect(lines('shown', 'writes')).toEqual([12]);
+    expect(lines('persistent.volume', 'writes')).toEqual([13]);
+    expect(lines('plan', 'writes')).toEqual([14]);
+    // A plain name assigned in a screen is a screen variable.
+    expect(lines('local', 'writes')).toEqual([]);
+    expect(lines('courage', 'writes')).toEqual([17]);
+    expect(lines('courage', 'reads')).toEqual([20]);
+  });
 });
 
 describe('assets', () => {
@@ -335,6 +394,77 @@ describe('assets', () => {
     ]);
   });
 
+  it('finds the images, sounds and videos of screens', () => {
+    const at = (line: number) => ({ file: 'game/screens.rpy', line });
+    const a = assets(
+      project(
+        [
+          script([
+            s.screen(
+              1,
+              'main',
+              [],
+              [
+                {
+                  kind: 'displayable',
+                  loc: at(2),
+                  name: 'add',
+                  positional: ['"logo"'],
+                  keywords: [],
+                },
+                {
+                  kind: 'displayable',
+                  loc: at(3),
+                  name: 'imagebutton',
+                  positional: [],
+                  keywords: [
+                    ['auto', '"gui/start_%s.png"'],
+                    ['hover_sound', '"sfx/hover.ogg"'],
+                    ['action', 'Play("sound", "sfx/click.ogg")'],
+                  ],
+                },
+                {
+                  kind: 'displayable',
+                  loc: at(4),
+                  name: 'frame',
+                  positional: [],
+                  keywords: [
+                    ['background', 'Frame("panel.png", 10, 10)'],
+                    ['style', '"logo"'],
+                  ],
+                },
+                {
+                  kind: 'displayable',
+                  loc: at(5),
+                  name: 'add',
+                  positional: ['Movie(play="intro.webm", loop=False)'],
+                  keywords: [],
+                },
+              ],
+            ),
+          ]),
+        ],
+        [
+          'images/logo.png',
+          'gui/start_idle.png',
+          'gui/start_hover.png',
+          'images/panel.png',
+          'sfx/hover.ogg',
+          'sfx/click.ogg',
+          'intro.webm',
+        ],
+      ),
+    );
+    const byName = Object.fromEntries(a.images.entries.map((i) => [i.name, i]));
+    expect(byName.logo?.displays.map((d) => d.loc.line)).toEqual([2]);
+    expect(byName.panel?.displays.map((d) => d.loc.line)).toEqual([4]);
+    expect(a.audio.files.map((f) => [f.file.gamePath, f.plays.map((p) => p.channel)])).toEqual([
+      ['sfx/hover.ogg', ['sound']],
+      ['sfx/click.ogg', ['screen']],
+    ]);
+    expect(a.video.totals.used).toBe(1);
+  });
+
   it('describes the movies of Movie images', () => {
     const a = assets(
       project(
@@ -399,5 +529,34 @@ describe('translations', () => {
       orphans: [{ id: 'start_old' }],
       missingByFile: [{ file: 'game/script.rpy', missing: 1, total: 2 }],
     });
+  });
+
+  it('counts the _() strings of screens, styles and images', () => {
+    const t = translations(
+      project([
+        script([
+          s.screen(
+            1,
+            'menu',
+            [],
+            [
+              {
+                kind: 'displayable',
+                loc: { file: 'game/screens.rpy', line: 2 },
+                name: 'textbutton',
+                positional: ['_("Start")'],
+                keywords: [['action', 'Start()']],
+              },
+            ],
+          ),
+          s.style(3, 'title', [['text', '_("Title")']]),
+          s.image(4, 'card', 'Text(_("Card"))'),
+          s.menu(5, [['Go', 'True', []]]),
+        ]),
+        script([s.translateString(1, 'german', 'Start', 'Anfang')], 'tl/german/common.rpyc'),
+      ]),
+    );
+    expect(t.default.strings).toBe(4);
+    expect(t.languages[0]?.strings).toEqual({ translated: 1, total: 4, extra: 0 });
   });
 });
