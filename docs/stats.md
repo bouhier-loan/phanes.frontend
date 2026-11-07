@@ -13,6 +13,8 @@ Ces règles sont implémentées dans `packages/core/src/analyses/dialogue.ts` et
 - `extend "..."` ajoute ses mots au locuteur précédent (dans l'ordre du fichier), sans compter
   comme réplique.
 - Les textes des choix de menu sont comptés à part (`choices`), pas comme répliques.
+- Les répliques du bloc de script d'une instruction créée par l'auteur (CDS `block="script"`)
+  comptent comme les autres.
 - Les dialogues émis depuis du Python (`renpy.say`, `e("...")` dans un bloc python) ne sont pas
   comptés.
 

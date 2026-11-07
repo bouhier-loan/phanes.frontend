@@ -9,6 +9,8 @@ import {
 } from '@phanes/renpy-formats';
 import type { ImageSpec, Location, MenuItem, Stmt } from '../model/ast';
 import { itemsOf, NodeReader, textOf } from './read';
+import { layeredImage } from './layered';
+import { screenElements } from './screen';
 
 /** Nesting deeper than this is treated as hostile and cut. */
 const MAX_DEPTH = 200;
@@ -216,6 +218,7 @@ function mapNode(node: PyObject, ctx: Ctx, depth: number): Stmt {
         name: r.strings('imgname'),
         value: r.code('code'),
         hasAtl: (r.raw('atl') ?? null) !== null,
+        atl: collectStrings(r.raw('atl') ?? null),
       };
     case 'Transform':
       return { kind: 'transform', loc, name: r.text('varname') ?? '' };
@@ -225,11 +228,24 @@ function mapNode(node: PyObject, ctx: Ctx, depth: number): Stmt {
       const words = itemsOf(parsed[0])
         .map(textOf)
         .filter((s): s is string => s !== null);
+      if (words.join(' ') === 'layeredimage') {
+        const layered = layeredImage(parsed[1]);
+        if (layered) return { kind: 'layeredimage', loc, ...layered };
+      }
+      // Script blocks of creator-defined statements: code_block (block="script")
+      // and the blocks of their subparses (renpy/ast.py UserStatement, Ren'Py 7+).
+      const nested = [
+        ...r.items('code_block'),
+        ...r
+          .items('subparses')
+          .flatMap((sub) => (sub instanceof PyObject ? new NodeReader(sub).items('block') : [])),
+      ];
       return {
         kind: 'user',
         loc,
         line,
         name: words.length > 0 ? words.join(' ') : (line.split(/\s+/)[0] ?? ''),
+        block: mapBlock(nested, ctx, depth + 1),
       };
     }
     case 'Translate':
@@ -244,7 +260,7 @@ function mapNode(node: PyObject, ctx: Ctx, depth: number): Stmt {
       return {
         kind: 'translate-string',
         loc,
-        language: r.text('language') ?? '',
+        language: r.text('language'),
         old: r.text('old') ?? '',
         new: r.text('new') ?? '',
       };
@@ -259,10 +275,23 @@ function mapNode(node: PyObject, ctx: Ctx, depth: number): Stmt {
     case 'Screen': {
       const screen = r.raw('screen');
       const name = screen instanceof PyObject ? new NodeReader(screen).text('name') : null;
-      return { kind: 'screen', loc, name: name ?? '', strings: collectStrings(screen ?? null) };
+      return {
+        kind: 'screen',
+        loc,
+        name: name ?? '',
+        strings: collectStrings(screen ?? null),
+        elements: screenElements(screen, ctx.defaultFile),
+      };
     }
-    case 'Style':
-      return { kind: 'style', loc, name: r.text('style_name') ?? '' };
+    case 'Style': {
+      const properties: [string, string][] = [];
+      for (const [key, value] of r.dict('properties')?.items() ?? []) {
+        const name = textOf(key);
+        const code = textOf(value);
+        if (name !== null && code !== null) properties.push([name, code]);
+      }
+      return { kind: 'style', loc, name: r.text('style_name') ?? '', properties };
+    }
     default:
       break;
   }

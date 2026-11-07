@@ -1,4 +1,4 @@
-import type { Location } from '../model/ast';
+import { type Location, screenElementCode } from '../model/ast';
 import type { Project } from '../model/project';
 import { translatableStrings } from '../python-lite/names';
 import type { Analysis } from './analysis';
@@ -63,15 +63,24 @@ export function translations(project: Project): TranslationsResult {
       return;
     }
     if (stmt.kind === 'translate-string') {
+      // `translate None strings` customizes the default language: not a translation.
+      if (stmt.language === null) return;
       ensure(stmt.language);
       translatedStrings.get(stmt.language)?.add(stmt.old);
       return;
     }
     if (ctx.language !== null) return;
+    // Ren'Py extracts menu texts and the _() markers of the whole source
+    // (renpy/translation/scanstrings.py): code, declarations, screens, styles, images.
+    const code: string[] = [];
     if (stmt.kind === 'menu') for (const item of stmt.items) strings.add(item.text);
-    else if (stmt.kind === 'python') for (const s of translatableStrings(stmt.code)) strings.add(s);
-    else if (stmt.kind === 'define' || stmt.kind === 'default')
-      for (const s of translatableStrings(stmt.value)) strings.add(s);
+    else if (stmt.kind === 'python') code.push(stmt.code);
+    else if (stmt.kind === 'define' || stmt.kind === 'default') code.push(stmt.value);
+    else if (stmt.kind === 'screen') code.push(...stmt.elements.flatMap(screenElementCode));
+    else if (stmt.kind === 'style') code.push(...stmt.properties.map(([, value]) => value));
+    else if (stmt.kind === 'image' && stmt.value !== null) code.push(stmt.value);
+    else if (stmt.kind === 'user') code.push(stmt.line);
+    for (const source of code) for (const s of translatableStrings(source)) strings.add(s);
   });
 
   const totalsByFile = new Map<string, number>();

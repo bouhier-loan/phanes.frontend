@@ -228,7 +228,9 @@ export function readLabel(project: Project, name: string): ReaderLabel | null {
               file: expr ? stringLiteralValue(expr.trim()) : null,
               code: line,
             });
-          } else push(stmt, depth, { kind: 'other', code: line });
+          } else
+            push(stmt, depth, { kind: 'other', code: stmt.block.length > 0 ? `${line}:` : line });
+          visit(stmt.block, depth + 1);
           break;
         }
         case 'menu': {

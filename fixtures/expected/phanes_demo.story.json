@@ -55,7 +55,7 @@
     "sites": {
       "affection": {
         "writes": ["game/script.rpy:17", "game/script.rpy:53"],
-        "reads": ["game/script.rpy:18", "game/story/extra.rpy:3"]
+        "reads": ["game/script.rpy:18", "game/story/extra.rpy:6"]
       },
       "met_lucy": { "writes": ["game/script.rpy:34"], "reads": ["game/script.rpy:50"] },
       "player_name": {

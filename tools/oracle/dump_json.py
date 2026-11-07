@@ -8,13 +8,16 @@ the result is what a faithful, non-executing unpickler must produce.
 
 Container formats follow Ren'Py (renpy/script.py, renpy/loader.py; MIT).
 
-Usage: python3 -I tools/oracle/dump_json.py ROOT OUT_DIR
-Writes OUT_DIR/<path relative to ROOT>.json, and for archive entries
-OUT_DIR/<archive path>/<entry name>.json.
+Usage: python3 -I tools/oracle/dump_json.py ROOT OUT
+Writes OUT/<path relative to ROOT>.json, and for archive entries
+OUT/<archive path>/<entry name>.json. When OUT ends with .json.gz, writes a
+single gzipped JSON object instead, mapping each of those paths (without
+.json) to its dump: the corpus references are bundled that way.
 """
 import _compat_pickle
 import codecs
 import collections
+import gzip
 import io
 import json
 import math
@@ -367,31 +370,47 @@ def rpa_entries(path):
             yield name, b"".join(chunks)
 
 
-def dump(data, out_path):
+def dump(data):
     slot, payload = rpyc_payload(data)
     value, proto = unpickle(payload)
-    doc = {"slot": slot, "protocol": proto, "payload": canonical(value)}
+    return {"slot": slot, "protocol": proto, "payload": canonical(value)}
+
+
+def write_json(doc, out_path):
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(doc, f, ensure_ascii=True, separators=(",", ":"), sort_keys=True)
 
 
-def main(root, out_dir):
-    count = 0
-    for dirpath, _, filenames in os.walk(root):
+def write_bundle(docs, out_path):
+    """One gzipped JSON object, byte-identical across runs (no timestamp)."""
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    text = json.dumps(docs, ensure_ascii=True, separators=(",", ":"), sort_keys=True)
+    with open(out_path, "wb") as raw:
+        with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0, compresslevel=9) as f:
+            f.write(text.encode("ascii"))
+
+
+def main(root, out):
+    docs = {}
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames.sort()
         for filename in sorted(filenames):
             full = os.path.join(dirpath, filename)
             rel = os.path.relpath(full, root).replace(os.sep, "/")
             if filename.endswith((".rpyc", ".rpymc")):
                 with open(full, "rb") as f:
-                    dump(f.read(), os.path.join(out_dir, rel + ".json"))
-                count += 1
+                    docs[rel] = dump(f.read())
             elif filename.endswith(".rpa"):
                 for name, data in rpa_entries(full):
                     if name.endswith((".rpyc", ".rpymc")):
-                        dump(data, os.path.join(out_dir, rel, name + ".json"))
-                        count += 1
-    sys.stderr.write("%d scripts dumped to %s\n" % (count, out_dir))
+                        docs[rel + "/" + name] = dump(data)
+    if out.endswith(".json.gz"):
+        write_bundle(docs, out)
+    else:
+        for rel, doc in docs.items():
+            write_json(doc, os.path.join(out, rel + ".json"))
+    sys.stderr.write("%d scripts dumped to %s\n" % (len(docs), out))
 
 
 if __name__ == "__main__":

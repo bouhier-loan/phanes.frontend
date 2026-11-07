@@ -141,7 +141,7 @@ export function hasTranslations(scripts: readonly ScriptFile[]): boolean {
   let found = false;
   walkStatements(scripts, (stmt) => {
     if (found) return;
-    if (stmt.kind === 'translate-string') found = true;
+    if (stmt.kind === 'translate-string' && stmt.language !== null) found = true;
     else if (stmt.kind === 'translate' && stmt.language !== null) found = true;
     else if (stmt.kind === 'say' && stmt.language !== null) found = true;
   });

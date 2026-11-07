@@ -36,7 +36,9 @@ function image(name: string, displays = 0, file: string | null = `images/${name}
     value: null,
     file: file === null ? null : { path: `G/game/${file}`, gamePath: file, size: 1, archive: null },
     missingFile: null,
+    alias: null,
     movie: null,
+    layered: null,
     displays: Array.from({ length: displays }, () => ({
       loc: { file: 'game/script.rpy', line: 1 },
       label: null,

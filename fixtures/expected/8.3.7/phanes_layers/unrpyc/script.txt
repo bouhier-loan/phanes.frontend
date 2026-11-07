@@ -1,0 +1,462 @@
+[
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Define 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'script.rpy',
+                    3,
+                    <renpy.ast.PyExpr 
+                        .filename = 'script.rpy',
+                        .linenumber = 3,
+                        .py = 3
+                    > = 'Character("Eileen", image="eileen")',
+                    0
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.ast.PyExpr 
+                    .filename = 'script.rpy',
+                    .linenumber = 3,
+                    .py = 3
+                > = 'Character("Eileen", image="eileen")'
+            >,
+            .filename = 'script.rpy',
+            .index = None,
+            .linenumber = 3,
+            .name = (
+                b'script.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .operator = '=',
+            .store = 'store',
+            .varname = 'e'
+        >],
+        .filename = 'script.rpy',
+        .linenumber = 3,
+        .name = (
+            b'script.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.Default 
+            .code = <renpy.ast.PyCode 
+                .bytecode = None,
+                .col_offset = 0,
+                .hashcode = None,
+                .location = (
+                    'script.rpy',
+                    5,
+                    <renpy.ast.PyExpr 
+                        .filename = 'script.rpy',
+                        .linenumber = 5,
+                        .py = 3
+                    > = 'False',
+                    0
+                ),
+                .mode = 'eval',
+                .py = 3,
+                .source = <renpy.ast.PyExpr 
+                    .filename = 'script.rpy',
+                    .linenumber = 5,
+                    .py = 3
+                > = 'False'
+            >,
+            .filename = 'script.rpy',
+            .linenumber = 5,
+            .name = (
+                b'script.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .store = 'store.persistent',
+            .varname = 'glasses'
+        >],
+        .filename = 'script.rpy',
+        .linenumber = 5,
+        .name = (
+            b'script.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.UserStatement 
+            .atl = None,
+            .block = [
+                (
+                    'game/script.rpy',
+                    8,
+                    'always:',
+                    [(
+                        'game/script.rpy',
+                        9,
+                        '"eileen_base"',
+                        []
+                    )]
+                ),
+                (
+                    'game/script.rpy',
+                    11,
+                    'group outfit:',
+                    [
+                        (
+                            'game/script.rpy',
+                            12,
+                            'attribute casual default:',
+                            [(
+                                'game/script.rpy',
+                                13,
+                                '"eileen_casual"',
+                                []
+                            )]
+                        ),
+                        (
+                            'game/script.rpy',
+                            14,
+                            'attribute dress',
+                            []
+                        ),
+                        (
+                            'game/script.rpy',
+                            15,
+                            'attribute hat',
+                            []
+                        )
+                    ]
+                ),
+                (
+                    'game/script.rpy',
+                    17,
+                    'group face auto:',
+                    [(
+                        'game/script.rpy',
+                        18,
+                        'attribute happy default',
+                        []
+                    )]
+                ),
+                (
+                    'game/script.rpy',
+                    20,
+                    'if persistent.glasses:',
+                    [(
+                        'game/script.rpy',
+                        21,
+                        '"eileen_glasses"',
+                        []
+                    )]
+                )
+            ],
+            .code_block = None,
+            .filename = 'script.rpy',
+            .init_priority = 0,
+            .line = 'layeredimage eileen:',
+            .linenumber = 7,
+            .name = (
+                b'script.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .parsed = (
+                ('layeredimage'),
+                <store.layeredimage.RawLayeredImage 
+                    .children = <class 'renpy.revertable.RevertableList'>[
+                        <store.layeredimage.RawAlways 
+                            .image = <renpy.ast.PyExpr 
+                                .filename = 'script.rpy',
+                                .linenumber = 9,
+                                .py = 3
+                            > = '"eileen_base"',
+                            .properties = <class 'collections.OrderedDict'>{}
+                        >,
+                        <store.layeredimage.RawAttributeGroup 
+                            .children = <class 'renpy.revertable.RevertableList'>[
+                                <store.layeredimage.RawAttribute 
+                                    .image = <renpy.ast.PyExpr 
+                                        .filename = 'script.rpy',
+                                        .linenumber = 13,
+                                        .py = 3
+                                    > = '"eileen_casual"',
+                                    .name = 'casual',
+                                    .properties = <class 'collections.OrderedDict'>{'default': 'True'}
+                                >,
+                                <store.layeredimage.RawAttribute 
+                                    .image = None,
+                                    .name = 'dress',
+                                    .properties = <class 'collections.OrderedDict'>{}
+                                >,
+                                <store.layeredimage.RawAttribute 
+                                    .image = None,
+                                    .name = 'hat',
+                                    .properties = <class 'collections.OrderedDict'>{}
+                                >
+                            ],
+                            .group = 'outfit',
+                            .image_name = 'eileen',
+                            .properties = <class 'collections.OrderedDict'>{}
+                        >,
+                        <store.layeredimage.RawAttributeGroup 
+                            .children = <class 'renpy.revertable.RevertableList'>[<store.layeredimage.RawAttribute 
+                                .image = None,
+                                .name = 'happy',
+                                .properties = <class 'collections.OrderedDict'>{'default': 'True'}
+                            >],
+                            .group = 'face',
+                            .image_name = 'eileen',
+                            .properties = <class 'collections.OrderedDict'>{'auto': 'True'}
+                        >,
+                        <store.layeredimage.RawConditionGroup .conditions = <class 'renpy.revertable.RevertableList'>[<store.layeredimage.RawCondition 
+                            .condition = <renpy.ast.PyExpr 
+                                .filename = 'script.rpy',
+                                .linenumber = 20,
+                                .py = 3
+                            > = 'persistent.glasses',
+                            .image = <renpy.ast.PyExpr 
+                                .filename = 'script.rpy',
+                                .linenumber = 21,
+                                .py = 3
+                            > = '"eileen_glasses"',
+                            .properties = <class 'collections.OrderedDict'>{}
+                        >]>
+                    ],
+                    .name = 'eileen',
+                    .properties = <class 'collections.OrderedDict'>{}
+                >
+            ),
+            .rollback = 'normal',
+            .subparses = [],
+            .translation_relevant = False
+        >],
+        .filename = 'script.rpy',
+        .linenumber = 7,
+        .name = (
+            b'script.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Init 
+        .block = [<renpy.ast.UserStatement 
+            .atl = None,
+            .block = [(
+                'game/script.rpy',
+                24,
+                'attribute smile default',
+                []
+            )],
+            .code_block = None,
+            .filename = 'script.rpy',
+            .init_priority = 0,
+            .line = 'layeredimage lucy far:',
+            .linenumber = 23,
+            .name = (
+                b'script.rpy',
+                0,
+                0
+            ),
+            .next = None,
+            .parsed = (
+                ('layeredimage'),
+                <store.layeredimage.RawLayeredImage 
+                    .children = <class 'renpy.revertable.RevertableList'>[<store.layeredimage.RawAttribute 
+                        .image = None,
+                        .name = 'smile',
+                        .properties = <class 'collections.OrderedDict'>{'default': 'True'}
+                    >],
+                    .name = 'lucy far',
+                    .properties = <class 'collections.OrderedDict'>{}
+                >
+            ),
+            .rollback = 'normal',
+            .subparses = [],
+            .translation_relevant = False
+        >],
+        .filename = 'script.rpy',
+        .linenumber = 23,
+        .name = (
+            b'script.rpy',
+            0,
+            0
+        ),
+        .next = None,
+        .priority = 0
+    >,
+    <renpy.ast.Label 
+        .block = [
+            <renpy.ast.Show 
+                .atl = None,
+                .filename = 'script.rpy',
+                .imspec = (
+                    ('eileen'),
+                    None,
+                    None,
+                    [],
+                    None,
+                    None,
+                    []
+                ),
+                .linenumber = 27,
+                .name = (
+                    b'script.rpy',
+                    0,
+                    0
+                ),
+                .next = None,
+                .warp = True
+            >,
+            <renpy.ast.Say 
+                .arguments = None,
+                .explicit_identifier = False,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 28,
+                .name = (
+                    b'script.rpy',
+                    0,
+                    0
+                ),
+                .next = None,
+                .what = 'Hello.',
+                .who = 'e',
+                .who_fast = True,
+                .with_ = None
+            >,
+            <renpy.ast.Show 
+                .atl = None,
+                .filename = 'script.rpy',
+                .imspec = (
+                    (
+                        'eileen',
+                        'dress'
+                    ),
+                    None,
+                    None,
+                    [],
+                    None,
+                    None,
+                    []
+                ),
+                .linenumber = 29,
+                .name = (
+                    b'script.rpy',
+                    0,
+                    0
+                ),
+                .next = None,
+                .warp = True
+            >,
+            <renpy.ast.Say 
+                .arguments = None,
+                .attributes = ('sad'),
+                .explicit_identifier = False,
+                .filename = 'script.rpy',
+                .identifier = None,
+                .interact = True,
+                .linenumber = 30,
+                .name = (
+                    b'script.rpy',
+                    0,
+                    0
+                ),
+                .next = None,
+                .what = 'Oh.',
+                .who = 'e',
+                .who_fast = True,
+                .with_ = None
+            >,
+            <renpy.ast.Show 
+                .atl = None,
+                .filename = 'script.rpy',
+                .imspec = (
+                    (
+                        'lucy',
+                        'far',
+                        'smile'
+                    ),
+                    None,
+                    None,
+                    [],
+                    None,
+                    None,
+                    []
+                ),
+                .linenumber = 31,
+                .name = (
+                    b'script.rpy',
+                    0,
+                    0
+                ),
+                .next = None,
+                .warp = True
+            >,
+            <renpy.ast.Show 
+                .atl = None,
+                .filename = 'script.rpy',
+                .imspec = (
+                    (
+                        'eileen',
+                        'cape'
+                    ),
+                    None,
+                    None,
+                    [],
+                    None,
+                    None,
+                    []
+                ),
+                .linenumber = 32,
+                .name = (
+                    b'script.rpy',
+                    0,
+                    0
+                ),
+                .next = None,
+                .warp = True
+            >,
+            <renpy.ast.Return 
+                .expression = None,
+                .filename = 'script.rpy',
+                .linenumber = 33,
+                .name = (
+                    b'script.rpy',
+                    0,
+                    0
+                ),
+                .next = None
+            >
+        ],
+        .filename = 'script.rpy',
+        .linenumber = 26,
+        .name = 'start',
+        .next = None,
+        .parameters = None,
+        .translation_relevant = True
+    >,
+    <renpy.ast.Return 
+        .expression = None,
+        .filename = 'script.rpy',
+        .linenumber = 26,
+        .name = (
+            b'script.rpy',
+            0,
+            0
+        ),
+        .next = None
+    >
+]

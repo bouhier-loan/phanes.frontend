@@ -1,0 +1,111 @@
+{
+  "renpy": {
+    "version": "7.4.11.2266",
+    "confidence": "exact",
+    "python": 2
+  },
+  "title": "The Question",
+  "scripts": {
+    "compiled": 36,
+    "decoded": 36,
+    "failed": 0,
+    "sourceOnly": 0
+  },
+  "labels": 6,
+  "dialogue": {
+    "lines": 71,
+    "words": 756,
+    "cjkChars": 0,
+    "menus": 2,
+    "choices": 4
+  },
+  "languages": [
+    "french",
+    "japanese",
+    "korean",
+    "malay",
+    "russian",
+    "schinese",
+    "spanish",
+    "tchinese"
+  ],
+  "diagnostics": {},
+  "unknownNodes": {},
+  "characters": [
+    "narrator builtin 31",
+    "m define 22",
+    "s define 18"
+  ],
+  "graph": {
+    "endings": [
+      "marry",
+      "later"
+    ],
+    "unreachable": [],
+    "broken": [],
+    "dynamic": []
+  },
+  "menus": {
+    "menus": 2,
+    "options": 4,
+    "conditional": 0,
+    "withPrompt": 2
+  },
+  "variables": {
+    "totals": {
+      "variables": 157,
+      "default": 4,
+      "define": 153,
+      "characters": 2,
+      "engine": 153,
+      "neverRead": 0,
+      "neverWritten": 3
+    },
+    "neverRead": [],
+    "neverWritten": [
+      "preferences.afm_time",
+      "preferences.text_cps",
+      "quick_menu"
+    ]
+  },
+  "images": {
+    "totals": {
+      "declared": 12,
+      "statement": 0,
+      "automatic": 12,
+      "displayed": 11,
+      "neverDisplayed": 1,
+      "missing": 0
+    },
+    "neverDisplayed": [
+      "sylvie green giggle"
+    ],
+    "missing": [],
+    "dynamic": 0
+  },
+  "audio": {
+    "totals": {
+      "files": 1,
+      "played": 1,
+      "neverPlayed": 0,
+      "missing": 0
+    },
+    "neverPlayed": [],
+    "missing": []
+  },
+  "video": {
+    "files": 0,
+    "used": 0,
+    "missing": 0
+  },
+  "translations": [
+    "french: 70/70 lines, 110/111 strings (+280), 0 orphans",
+    "japanese: 70/70 lines, 110/111 strings (+292), 0 orphans",
+    "korean: 70/70 lines, 110/111 strings (+272), 0 orphans",
+    "malay: 70/70 lines, 110/111 strings (+257), 0 orphans",
+    "russian: 70/70 lines, 110/111 strings (+269), 0 orphans",
+    "schinese: 70/70 lines, 110/111 strings (+280), 0 orphans",
+    "spanish: 70/70 lines, 111/111 strings (+304), 0 orphans",
+    "tchinese: 70/70 lines, 110/111 strings (+0), 0 orphans"
+  ]
+}

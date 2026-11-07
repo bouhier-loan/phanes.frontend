@@ -1,0 +1,176 @@
+{
+  "renpy": {
+    "version": "8.5.3.26051504",
+    "confidence": "exact",
+    "python": 3
+  },
+  "title": "Ren'Py Tutorial Game",
+  "scripts": {
+    "compiled": 237,
+    "decoded": 237,
+    "failed": 0,
+    "sourceOnly": 1
+  },
+  "labels": 108,
+  "dialogue": {
+    "lines": 822,
+    "words": 15980,
+    "cjkChars": 0,
+    "menus": 11,
+    "choices": 47
+  },
+  "languages": [
+    "french",
+    "italian",
+    "japanese",
+    "korean",
+    "piglatin",
+    "portuguese",
+    "russian",
+    "schinese",
+    "spanish",
+    "ukrainian"
+  ],
+  "diagnostics": {
+    "info AST_UNKNOWN_NODE": 1
+  },
+  "unknownNodes": {
+    "renpy.ast.Testcase": 2
+  },
+  "characters": [
+    "e define 763",
+    "nvle define 12",
+    "e7 define 4",
+    "l define 5",
+    "narrator builtin 11",
+    "\"Eileen\" literal 3",
+    "e5 define 3",
+    "egreen define 3",
+    "e4 define 2",
+    "e2 define 2",
+    "e8 define 2",
+    "e1 define 1",
+    "\"Lucy\" literal 2",
+    "e9 define 1",
+    "e6 define 1",
+    "e3 define 1",
+    "eslow define 1",
+    "e1a define 1",
+    "l8 define 1",
+    "e_whisper define 1",
+    "g define 1",
+    "e_shout define 1"
+  ],
+  "graph": {
+    "endings": [
+      "demo_character",
+      "simple_displayables",
+      "new_gui",
+      "after_a_label",
+      "translations",
+      "end",
+      "tutorial_positions",
+      "tutorial_atl",
+      "transform_properties",
+      "director",
+      "distribute",
+      "after_nvl_menu",
+      "tutorial_rollback_done",
+      "tutorial_create",
+      "tutorial_dialogue",
+      "tutorial_images",
+      "tutorial_simple_positions",
+      "tutorial_transitions",
+      "tutorial_music",
+      "menu3_done",
+      "tutorial_input",
+      "tutorial_video"
+    ],
+    "unreachable": [],
+    "broken": [],
+    "dynamic": [
+      "tutorial.label @ game/script.rpy:186"
+    ]
+  },
+  "menus": {
+    "menus": 11,
+    "options": 47,
+    "conditional": 0,
+    "withPrompt": 10
+  },
+  "variables": {
+    "totals": {
+      "variables": 204,
+      "default": 19,
+      "define": 185,
+      "characters": 20,
+      "engine": 157,
+      "neverRead": 4,
+      "neverWritten": 12
+    },
+    "neverRead": [
+      "director.show_tags",
+      "stat_chutzpah",
+      "stat_intelligence",
+      "stat_moxie"
+    ],
+    "neverWritten": [
+      "eileen_hp",
+      "eileen_hp_max",
+      "eileen_lv",
+      "player_hp_max",
+      "player_lv",
+      "preferences.afm_time",
+      "preferences.text_cps",
+      "stat_chutzpah",
+      "stat_intelligence",
+      "stat_moxie",
+      "stat_strength",
+      "tutorials_adjustment"
+    ]
+  },
+  "images": {
+    "totals": {
+      "declared": 88,
+      "statement": 36,
+      "automatic": 52,
+      "displayed": 85,
+      "neverDisplayed": 3,
+      "missing": 0
+    },
+    "neverDisplayed": [
+      "bg red",
+      "overlay blue",
+      "overlay red"
+    ],
+    "missing": [],
+    "dynamic": 0
+  },
+  "audio": {
+    "totals": {
+      "files": 6,
+      "played": 6,
+      "neverPlayed": 0,
+      "missing": 0
+    },
+    "neverPlayed": [],
+    "missing": []
+  },
+  "video": {
+    "files": 1,
+    "used": 1,
+    "missing": 0
+  },
+  "translations": [
+    "french: 818/824 lines, 242/243 strings (+330), 7 orphans",
+    "italian: 824/824 lines, 241/243 strings (+370), 118 orphans",
+    "japanese: 818/824 lines, 242/243 strings (+359), 12 orphans",
+    "korean: 816/824 lines, 239/243 strings (+273), 12 orphans",
+    "piglatin: 824/824 lines, 242/243 strings (+303), 0 orphans",
+    "portuguese: 818/824 lines, 241/243 strings (+304), 12 orphans",
+    "russian: 815/824 lines, 241/243 strings (+271), 13 orphans",
+    "schinese: 816/824 lines, 241/243 strings (+292), 13 orphans",
+    "spanish: 818/824 lines, 242/243 strings (+303), 12 orphans",
+    "ukrainian: 818/824 lines, 240/243 strings (+289), 7 orphans"
+  ]
+}

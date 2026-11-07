@@ -1,13 +1,23 @@
 /*
  * Automatic image names follow Ren'Py's renpy/common/00images.rpy
  * (_scan_images_directory) and the audio namespace renpy/common/00audio.rpy;
- * Movie arguments follow renpy/display/video.py.
+ * Movie arguments follow renpy/display/video.py; strings used as displayables
+ * follow renpy/easy.py (displayable_or_none); built-in images come from
+ * renpy/common/00definitions.rpy and 00defaults.rpy; say attributes from
+ * renpy/character.py (resolve_say_attributes).
  * Ren'Py is MIT licensed (see NOTICE).
  */
-import type { ImageSpec, Location, Stmt } from '../model/ast';
+import {
+  type ImageSpec,
+  type LayeredImageStmt,
+  type Location,
+  screenElementCode,
+  type Stmt,
+} from '../model/ast';
 import type { Project } from '../model/project';
 import { parseCall } from '../python-lite/call';
 import { stringLiteralValue } from '../python-lite/literal';
+import { stringConstants } from '../python-lite/names';
 import { tokenize } from '../python-lite/tokens';
 import { effectiveGameEntries, type VfsEntry } from '../vfs/vfs';
 import type { Analysis } from './analysis';
@@ -41,21 +51,53 @@ export type ImageMovie = {
   sideMask: boolean;
 };
 
+/** An attribute of a layered image, and the layer it shows. */
+export type LayeredAttribute = {
+  name: string;
+  /** Its group (null outside a group). */
+  group: string | null;
+  default: boolean;
+  /** Found by an `auto` group among the game's images. */
+  auto: boolean;
+  /** Image name or file of the layer, as written or derived (`eileen_face_happy`); null for an expression. */
+  image: string | null;
+  /** The layer's image or file exists. */
+  found: boolean;
+};
+
+/** What a `layeredimage` statement defines (renpy/common/00layeredimage.rpy). */
+export type LayeredImage = {
+  attributes: LayeredAttribute[];
+  /** Images of `always` layers and of `if` layers (with their condition, null for `else`). */
+  always: string[];
+  conditions: { condition: string | null; image: string | null }[];
+  /** Names of the declared images its layers show. */
+  parts: string[];
+};
+
 export type ImageAsset = {
   /** Image name, e.g. "eileen happy". */
   name: string;
   tag: string;
   attributes: string[];
   category: ImageCategory;
-  /** An `image` statement, or Ren'Py's automatic definition from images/. */
-  declaration: 'statement' | 'automatic';
+  /** An `image` statement, a `layeredimage`, or Ren'Py's automatic definition from images/. */
+  declaration: 'statement' | 'layered' | 'automatic';
   loc: Location | null;
   value: string | null;
   file: AssetFile | null;
   /** A file named by the definition but absent from the game. */
   missingFile: string | null;
+  /** Image named by the definition, `image logo alias = "logo base"`. */
+  alias: string | null;
   movie: ImageMovie | null;
-  /** scene/show statements that display it (or may, for a bare tag). */
+  /** Attributes and layers of a `layeredimage`; null for other images. */
+  layered: LayeredImage | null;
+  /**
+   * What displays it: scene/show statements (or may, for a bare tag), say
+   * attributes of its character, aliases, and code, styles or other images
+   * that name it or its file.
+   */
   displays: AssetSite[];
 };
 
@@ -101,6 +143,77 @@ export type AssetsResult = {
     totals: { files: number; used: number; missing: number };
   };
 };
+
+/** Images Ren'Py defines itself: `black`, and the `text`/`vtext` tags (parameterized). */
+const BUILTIN_IMAGES = new Set(['black']);
+const BUILTIN_TAGS = new Set(['text', 'vtext']);
+const IMAGE_FILE = /\.(?:png|jpe?g|webp|avif|svg|gif|bmp|tga|jxl)$/i;
+
+/** What a string means where Ren'Py expects a displayable (renpy/easy.py). */
+export type StringDisplayable =
+  | { kind: 'dynamic' }
+  | { kind: 'color' }
+  | { kind: 'file'; path: string }
+  | { kind: 'image'; name: string };
+
+export function stringDisplayable(value: string): StringDisplayable | null {
+  if (value === '') return null;
+  if (value.includes('[')) return { kind: 'dynamic' };
+  if (value.startsWith('#')) return { kind: 'color' };
+  if (value.includes('.')) return { kind: 'file', path: value };
+  const name = value.split(/\s+/).filter(Boolean).join(' ');
+  return name === '' ? null : { kind: 'image', name };
+}
+
+/**
+ * Style properties and screen keywords that take a displayable: backgrounds,
+ * bars and thumbs, imagebutton and imagemap states, `auto` patterns.
+ */
+const DISPLAYABLE_PROPERTY =
+  /(?:^|_)(?:background|foreground|child|ground|idle|hover|insensitive|bar|thumb|thumb_shadow|auto)$/;
+/** States an `auto` pattern ("button_%s.png") expands to (renpy/ui.py, _imagebutton). */
+const AUTO_STATES = [
+  'idle',
+  'hover',
+  'insensitive',
+  'selected_idle',
+  'selected_hover',
+  'selected_insensitive',
+];
+
+const MOVIE = /\bMovie\s*\(/g;
+
+/** Videos of `Movie(play="…")` (or a first positional string) calls in Python source. */
+function movieFiles(code: string): string[] {
+  const out: string[] = [];
+  for (const match of code.matchAll(MOVIE)) {
+    const call = parseCall(code.slice(match.index));
+    const play = call?.keywords.get('play')?.string ?? call?.positional[0]?.string;
+    if (play) out.push(play);
+  }
+  return out;
+}
+
+/** Files of `Play("channel", "file")` and `Queue(…)` screen actions. */
+function playActionFiles(code: string): string[] {
+  const tokens = tokenize(code);
+  const out: string[] = [];
+  for (let i = 0; i + 4 < tokens.length; i++) {
+    const [name, open, channel, comma, file] = tokens.slice(i, i + 5);
+    if (
+      name?.type === 'name' &&
+      (name.value === 'Play' || name.value === 'Queue') &&
+      open?.type === 'op' &&
+      open.value === '(' &&
+      channel?.type === 'string' &&
+      comma?.type === 'op' &&
+      comma.value === ',' &&
+      file?.type === 'string'
+    )
+      out.push(file.value);
+  }
+  return out;
+}
 
 /** Extensions Ren'Py turns into automatic images (renpy/common/00images.rpy). */
 const AUTOMATIC_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.avif', '.svg'];
@@ -214,14 +327,23 @@ export function assets(project: Project): AssetsResult {
     videoUses.set(entry.gamePath, [...(videoUses.get(entry.gamePath) ?? []), site]);
   };
 
+  /** Image statements whose value or ATL block may name other images or image files. */
+  const definitions: { name: string; code: string[]; site: AssetSite }[] = [];
+  const layeredStatements: LayeredImageStmt[] = [];
   walkStatements(project.scripts, (stmt, ctx) => {
+    if (ctx.language === null && stmt.kind === 'layeredimage') layeredStatements.push(stmt);
     if (ctx.language !== null || stmt.kind !== 'image' || stmt.name.length === 0) return;
     const name = stmt.name.join(' ');
     if (images.has(name)) return;
     const value = stmt.value;
-    let path = value === null ? null : stringLiteralValue(value);
+    const literal = value === null ? null : stringLiteralValue(value);
+    const meaning = literal === null ? null : stringDisplayable(literal);
+    let path = meaning?.kind === 'file' ? meaning.path : null;
+    const alias = meaning?.kind === 'image' ? meaning.name : null;
     const call = value === null ? null : parseCall(value);
     const site = { loc: stmt.loc, label: ctx.label, code: `image ${name} = ${value ?? '…'}` };
+    const code = [...(value === null ? [] : [value]), ...stmt.atl];
+    if (code.length > 0) definitions.push({ name, code, site });
     let movie: ImageMovie | null = null;
     if (call && (call.callee.split('.').pop() ?? '') === 'Movie') {
       const play = call.keywords.get('play')?.string ?? call.positional[0]?.string;
@@ -256,7 +378,9 @@ export function assets(project: Project): AssetsResult {
       value,
       file: entry ? fileOf(entry) : null,
       missingFile: path !== null && !entry ? path : null,
+      alias,
       movie,
+      layered: null,
       displays: [],
     });
   });
@@ -279,15 +403,206 @@ export function assets(project: Project): AssetsResult {
       value: null,
       file: fileOf(entry),
       missingFile: null,
+      alias: null,
       movie: null,
+      layered: null,
       displays: [],
     });
   }
 
+  // Layered images, once every other image is known (auto groups look them up).
+  const layerSources = new Map<ImageAsset, { attribute: string | null; source: string }[]>();
+  for (const stmt of layeredStatements) {
+    const name = stmt.name.split(/\s+/).filter(Boolean).join(' ');
+    const existing = images.get(name);
+    if (name === '' || (existing && existing.declaration !== 'automatic')) continue;
+    const prefix = name.replace(/ /g, '_');
+    const derived = (...parts: (string | null)[]) =>
+      [prefix, ...parts.filter((p): p is string => p !== null)].join('_');
+    // A layer written as a string literal designates it; another expression is kept as code.
+    const written = (source: string) => stringLiteralValue(source.trim());
+    const attributes: LayeredAttribute[] = [];
+    const sources: { attribute: string | null; source: string }[] = [];
+    const conditions: LayeredImage['conditions'] = [];
+    const always: string[] = [];
+    for (const layer of stmt.layers) {
+      if (layer.kind === 'attribute') {
+        const image =
+          layer.image === null
+            ? derived(layer.group, layer.variant, layer.name)
+            : written(layer.image);
+        attributes.push({
+          name: layer.name,
+          group: layer.group,
+          default: layer.default,
+          auto: false,
+          image,
+          found: false,
+        });
+        sources.push({ attribute: layer.name, source: layer.image ?? JSON.stringify(image) });
+      } else if (layer.kind === 'auto') {
+        const pattern = `${derived(layer.group, layer.variant)}_`;
+        for (const other of images.values()) {
+          const rest = other.name.startsWith(pattern) ? other.name.slice(pattern.length) : '';
+          if (rest === '' || /\s/.test(rest) || attributes.some((a) => a.name === rest)) continue;
+          attributes.push({
+            name: rest,
+            group: layer.group,
+            default: false,
+            auto: true,
+            image: other.name,
+            found: true,
+          });
+          sources.push({ attribute: rest, source: JSON.stringify(other.name) });
+        }
+      } else if (layer.image !== null) {
+        const image = written(layer.image);
+        if (layer.kind === 'always') always.push(image ?? layer.image);
+        else conditions.push({ condition: layer.condition, image: image ?? layer.image });
+        sources.push({ attribute: null, source: layer.image });
+      }
+    }
+    const [tag = '', ...nameAttributes] = name.split(' ');
+    const asset: ImageAsset = {
+      name,
+      tag,
+      attributes: nameAttributes,
+      category: category(tag),
+      declaration: 'layered',
+      loc: stmt.loc,
+      value: null,
+      file: null,
+      missingFile: null,
+      alias: null,
+      movie: null,
+      layered: { attributes, always, conditions, parts: [] },
+      displays: [],
+    };
+    images.set(name, asset);
+    layerSources.set(asset, sources);
+  }
+
   const byTag = new Map<string, ImageAsset[]>();
-  for (const image of images.values())
+  const byFile = new Map<string, ImageAsset[]>();
+  for (const image of images.values()) {
     byTag.set(image.tag, [...(byTag.get(image.tag) ?? []), image]);
+    if (image.file)
+      byFile.set(image.file.gamePath, [...(byFile.get(image.file.gamePath) ?? []), image]);
+  }
+  const display = (image: ImageAsset, site: AssetSite) => {
+    const last = image.displays[image.displays.length - 1];
+    if (
+      last?.loc.file === site.loc.file &&
+      last.loc.line === site.loc.line &&
+      last.code === site.code
+    )
+      return;
+    image.displays.push(site);
+  };
+  /**
+   * Images a string designates where Ren'Py expects a displayable: an image
+   * file (`"bg park.png"`) or, when `names` is set, an image name.
+   */
+  const designated = (value: string, names: boolean): ImageAsset[] => {
+    const meaning = stringDisplayable(value);
+    if (meaning?.kind === 'file' && IMAGE_FILE.test(meaning.path)) {
+      const entry = resolve(meaning.path, ['', 'images/']);
+      return entry ? (byFile.get(entry.gamePath) ?? []) : [];
+    }
+    if (names && meaning?.kind === 'image') {
+      const image = images.get(meaning.name);
+      return image ? [image] : [];
+    }
+    return [];
+  };
+  const builtin = (name: readonly string[]) =>
+    BUILTIN_IMAGES.has(name.join(' ')) || BUILTIN_TAGS.has(name[0] ?? '');
+  /** Closest declared name, same tag first, within a quarter of the length. */
+  const suggest = (name: string, tag: string): string | null => {
+    const max = Math.max(2, Math.floor(name.length / 4));
+    let suggestion: string | null = null;
+    let best = max + 1;
+    for (const other of [...(byTag.get(tag) ?? []), ...images.values()]) {
+      const d = distance(other.name, name, max);
+      if (d < best) {
+        best = d;
+        suggestion = other.name;
+      }
+    }
+    return suggestion;
+  };
   const missing: MissingImage[] = [];
+  /** What each layer of a layered image shows, by attribute (null: always or conditional). */
+  const layerTargets = new Map<ImageAsset, { attribute: string | null; images: ImageAsset[] }[]>();
+  for (const [image, sources] of layerSources) {
+    const layers = sources.map(({ attribute, source }) => ({
+      attribute,
+      images: stringConstants(source).flatMap((v) => designated(v, true)),
+    }));
+    layerTargets.set(image, layers);
+    const parts = new Set<string>();
+    for (const layer of layers) for (const part of layer.images) parts.add(part.name);
+    if (image.layered) {
+      image.layered.parts = [...parts].sort();
+      for (const a of image.layered.attributes)
+        a.found = a.auto || layers.some((l) => l.attribute === a.name && l.images.length > 0);
+    }
+  }
+  /** A layered image accepts the attributes of its name and of its layers. */
+  const accepts = (image: ImageAsset, attrs: readonly string[]) =>
+    attrs.every(
+      (a) =>
+        image.attributes.includes(a) ||
+        (image.layered?.attributes.some((la) => la.name === a) ?? false),
+    );
+  /**
+   * Displays an image; for a layered image, the layers its attributes show:
+   * those asked for, the defaults of the other groups, `always` and `if` layers.
+   */
+  const show = (image: ImageAsset, attrs: readonly string[], site: AssetSite) => {
+    display(image, site);
+    const info = image.layered;
+    if (!info) return;
+    const asked = info.attributes.filter((a) => attrs.includes(a.name));
+    const groups = new Set(asked.map((a) => a.group));
+    const shown = new Set([
+      ...asked.map((a) => a.name),
+      ...info.attributes
+        .filter((a) => a.default && (a.group === null || !groups.has(a.group)))
+        .map((a) => a.name),
+    ]);
+    for (const layer of layerTargets.get(image) ?? [])
+      if (layer.attribute === null || shown.has(layer.attribute))
+        for (const part of layer.images) display(part, site);
+    for (const a of info.attributes)
+      if (
+        shown.has(a.name) &&
+        !a.found &&
+        a.image !== null &&
+        stringDisplayable(a.image)?.kind !== 'dynamic'
+      )
+        missing.push({
+          name: `${image.name} ${a.name}`,
+          site,
+          reason: 'file-missing',
+          suggestion: null,
+          file: a.image,
+        });
+  };
+  // What each image's definition shows: an alias, or images and files named in its value.
+  const dependencies = new Map<ImageAsset, { site: AssetSite; images: ImageAsset[] }>();
+  for (const def of definitions) {
+    const image = images.get(def.name);
+    if (!image) continue;
+    const used = new Set<ImageAsset>();
+    if (image.alias !== null) {
+      const target = images.get(image.alias);
+      if (target) used.add(target);
+    } else
+      for (const value of def.code.flatMap(stringConstants))
+        for (const other of designated(value, true)) if (other !== image) used.add(other);
+    dependencies.set(image, { site: def.site, images: [...used] });
+  }
   const dynamic: AssetSite[] = [];
   const audioPlays: AudioPlay[] = [];
   const audioDefines = new Map<string, string>();
@@ -325,8 +640,8 @@ export function assets(project: Project): AssetsResult {
       const [tag = '', ...attrs] = image.name;
       const candidates = exact
         ? [exact]
-        : (byTag.get(tag) ?? []).filter((img) => attrs.every((a) => img.attributes.includes(a)));
-      for (const img of candidates) img.displays.push(site);
+        : (byTag.get(tag) ?? []).filter((img) => accepts(img, attrs));
+      for (const img of candidates) show(img, exact ? [] : attrs, site);
       if (exact?.missingFile) {
         missing.push({
           name,
@@ -335,19 +650,64 @@ export function assets(project: Project): AssetsResult {
           suggestion: null,
           file: exact.missingFile,
         });
-      } else if (candidates.length === 0) {
-        // Closest declared name, same tag first, within a quarter of the length.
-        const max = Math.max(2, Math.floor(name.length / 4));
-        let suggestion: string | null = null;
-        let best = max + 1;
-        for (const other of [...(byTag.get(tag) ?? []), ...images.values()]) {
-          const d = distance(other.name, name, max);
-          if (d < best) {
-            best = d;
-            suggestion = other.name;
-          }
+      } else if (candidates.length === 0 && !builtin(image.name)) {
+        missing.push({
+          name,
+          site,
+          reason: 'undeclared',
+          suggestion: suggest(name, tag),
+          file: null,
+        });
+      }
+    } else if (stmt.kind === 'say' && stmt.attributes.length > 0 && stmt.who !== null) {
+      // Say attributes change the speaker's image, or its side image when not shown.
+      const tag = index.definitions.get(stmt.who)?.imageTag;
+      if (!tag) return;
+      const attrs = stmt.attributes.filter((a) => !a.startsWith('-'));
+      const site = {
+        loc: stmt.loc,
+        label,
+        code: `${stmt.who} ${stmt.attributes.join(' ')} ${JSON.stringify(stmt.what)}`,
+      };
+      for (const img of byTag.get(tag) ?? []) if (accepts(img, attrs)) show(img, attrs, site);
+      for (const img of byTag.get('side') ?? [])
+        if (img.attributes[0] === tag && attrs.every((a) => img.attributes.includes(a)))
+          display(img, site);
+    } else if (stmt.kind === 'style') {
+      for (const [property, code] of stmt.properties) {
+        if (!DISPLAYABLE_PROPERTY.test(property)) continue;
+        const site = { loc: stmt.loc, label, code: `style ${stmt.name}: ${property} ${code}` };
+        for (const value of stringConstants(code))
+          for (const img of designated(value, true)) display(img, site);
+      }
+    } else if (stmt.kind === 'screen') {
+      for (const element of stmt.elements) {
+        const sources = screenElementCode(element);
+        const site = {
+          loc: element.loc,
+          label: null,
+          code: `screen ${stmt.name}: ${element.kind === 'displayable' ? element.name : element.kind} ${sources.join(' ')}`.trim(),
+        };
+        for (const source of sources) {
+          for (const path of movieFiles(source)) videoUse(path, site);
+          for (const file of playActionFiles(source))
+            audioPlays.push({ ...site, channel: 'screen', file });
         }
-        missing.push({ name, site, reason: 'undeclared', suggestion, file: null });
+        if (element.kind !== 'displayable') continue;
+        const shown: string[] = element.name === 'add' ? element.positional.slice(0, 1) : [];
+        for (const [key, code] of element.keywords) {
+          if (DISPLAYABLE_PROPERTY.test(key)) shown.push(code);
+          if (key.endsWith('_sound'))
+            for (const file of stringConstants(code))
+              audioPlays.push({ ...site, channel: 'sound', file });
+        }
+        for (const code of shown)
+          for (const value of stringConstants(code)) {
+            const values = value.includes('%s')
+              ? AUTO_STATES.map((state) => value.replace('%s', state))
+              : [value];
+            for (const v of values) for (const img of designated(v, true)) display(img, site);
+          }
       }
     } else if (stmt.kind === 'user') {
       const line = stmt.line.trim();
@@ -370,15 +730,48 @@ export function assets(project: Project): AssetsResult {
         audioPlays.push({ loc: stmt.loc, label, code: line, channel, file });
     } else if (stmt.kind === 'python') {
       const site = { loc: stmt.loc, label, code: `$ ${stmt.code.trim()}` };
-      for (const path of callStrings(stmt.code, new Set(['renpy.movie_cutscene', 'Movie'])))
+      for (const path of [
+        ...callStrings(stmt.code, new Set(['renpy.movie_cutscene'])),
+        ...movieFiles(stmt.code),
+      ])
         videoUse(path, site);
       for (const path of callStrings(stmt.code, new Set(['renpy.music.play', 'renpy.sound.play'])))
         audioPlays.push({ ...site, channel: 'python', file: path });
+      for (const value of stringConstants(stmt.code))
+        for (const img of designated(value, false)) display(img, site);
     } else if (stmt.kind === 'define' || stmt.kind === 'default') {
       const site = { loc: stmt.loc, label, code: `${stmt.kind} ${stmt.name} = ${stmt.value}` };
-      for (const path of callStrings(stmt.value, new Set(['Movie']))) videoUse(path, site);
+      for (const path of movieFiles(stmt.value)) videoUse(path, site);
+      for (const value of stringConstants(stmt.value))
+        for (const img of designated(value, false)) display(img, site);
     }
   });
+
+  // A displayed image displays what its definition shows (aliases, composites…).
+  const queue = [...images.values()].filter((i) => i.displays.length > 0);
+  const done = new Set<ImageAsset>();
+  while (queue.length > 0) {
+    const image = queue.pop();
+    if (!image || done.has(image)) continue;
+    done.add(image);
+    const dep = dependencies.get(image);
+    if (dep)
+      for (const other of dep.images) {
+        display(other, dep.site);
+        queue.push(other);
+      }
+    if (dep && image.alias !== null && !images.has(image.alias)) {
+      const name = image.alias.split(' ');
+      if (!builtin(name))
+        missing.push({
+          name: image.alias,
+          site: dep.site,
+          reason: 'undeclared',
+          suggestion: suggest(image.alias, name[0] ?? ''),
+          file: null,
+        });
+    }
+  }
 
   const audioFiles = entries.filter((e) => e.kind === 'audio');
   const playsByFile = new Map<string, AudioPlay[]>();

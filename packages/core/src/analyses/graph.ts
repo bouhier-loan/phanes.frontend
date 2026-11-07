@@ -1,6 +1,7 @@
-import type { CallStmt, JumpStmt, Location } from '../model/ast';
+import type { CallStmt, JumpStmt, Location, Stmt } from '../model/ast';
 import type { Project } from '../model/project';
 import { foldStringExpression, stringConstants } from '../python-lite/names';
+import { hyperlinkLabels } from '../text/tags';
 import type { Analysis } from './analysis';
 import { dialogueIndex } from './dialogue';
 import { type FlowContext, scanFlow, TOP } from './flow';
@@ -163,9 +164,9 @@ export function storyGraph(project: Project): StoryGraphResult {
       const label = current();
       if (label !== null) returns.add(label);
     },
-    enterLabel: (stmt: { name: string; loc: Location }, ctx: FlowContext) => {
+    enterLabel: (stmt: { name: string; loc: Location }, ctx: FlowContext, flowing: boolean) => {
       const from = current();
-      if (from !== null)
+      if (from !== null && flowing)
         edges.push({ ...fallthrough(from, stmt.name, stmt.loc), conditional: ctx.conditional });
       stack.push(stmt.name);
     },
@@ -177,7 +178,7 @@ export function storyGraph(project: Project): StoryGraphResult {
   for (const script of project.scripts) {
     let flowing = false;
     stack.length = 0;
-    for (const stmt of script.statements) {
+    for (const stmt of topLevel(script.statements)) {
       if (stmt.kind === 'label') {
         const from = current();
         if (from !== null && flowing) edges.push(fallthrough(from, stmt.name, stmt.loc));
@@ -191,18 +192,25 @@ export function storyGraph(project: Project): StoryGraphResult {
     }
   }
 
-  // References: label names written as strings in screens and Python code.
+  // References: label names written as strings in screens and Python code, and
+  // labels that the {a=jump:…} hyperlinks of dialogue and menu choices go to.
   const seen = new Set<string>();
   walkStatements(project.scripts, (stmt, ctx) => {
     if (ctx.language !== null) return;
     let strings: readonly string[] = [];
     // Screen strings are the sources of its Python expressions, e.g. Jump("x").
-    if (stmt.kind === 'screen') strings = stmt.strings.flatMap(stringConstants);
-    else if (stmt.kind === 'python') strings = stringConstants(stmt.code);
+    if (stmt.kind === 'screen') {
+      const constants = stmt.strings.flatMap(stringConstants);
+      strings = [...constants, ...constants.flatMap(hyperlinkLabels)];
+    } else if (stmt.kind === 'python') strings = stringConstants(stmt.code);
     else if (stmt.kind === 'define' || stmt.kind === 'default')
       strings = stringConstants(stmt.value);
+    else if (stmt.kind === 'say' && stmt.language === null) strings = hyperlinkLabels(stmt.what);
+    else if (stmt.kind === 'menu') strings = stmt.items.flatMap((i) => hyperlinkLabels(i.text));
     const from = stmt.kind === 'screen' ? null : ctx.label;
-    for (const s of strings) {
+    for (const raw of strings) {
+      // A local hyperlink target is resolved in the current global label.
+      const s = raw.startsWith('.') && from !== null ? `${from.split('.')[0] ?? from}${raw}` : raw;
       const key = `${from ?? ''}\u0000${s}\u0000${stmt.loc.file}:${stmt.loc.line}`;
       if (!nodes.has(s) || seen.has(key)) continue;
       seen.add(key);
@@ -257,6 +265,21 @@ export function storyGraph(project: Project): StoryGraphResult {
     unreachable: list.filter((n) => !n.reachable).map((n) => n.name),
     endings: list.filter((n) => n.ending).map((n) => n.name),
   };
+}
+
+/**
+ * Top-level statements, with the script blocks of creator-defined statements
+ * spliced in place: they run in sequence, so a label in one (the tutorial's
+ * `example:` blocks) starts a top-level label like any other.
+ */
+function topLevel(statements: readonly Stmt[], depth = 0): Stmt[] {
+  const out: Stmt[] = [];
+  for (const stmt of statements) {
+    if (stmt.kind === 'user' && stmt.block.length > 0 && depth < 50) {
+      out.push({ ...stmt, block: [] }, ...topLevel(stmt.block, depth + 1));
+    } else out.push(stmt);
+  }
+  return out;
 }
 
 function fallthrough(from: string, to: string, loc: Location): GraphEdge {

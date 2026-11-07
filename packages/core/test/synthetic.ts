@@ -4,6 +4,7 @@ import {
   kindOf,
   type MenuItem,
   type Project,
+  type ScreenElement,
   type ScriptFile,
   type Stmt,
   type TranslationId,
@@ -31,6 +32,23 @@ export const s = {
     interact,
     identifier: null,
     language: null,
+  }),
+  /** A say statement with image attributes, `e happy "…"`. */
+  sayAs: (line: number, who: string, attributes: string[], what: string): Stmt => ({
+    kind: 'say',
+    loc: loc(line),
+    who,
+    what,
+    attributes,
+    interact: true,
+    identifier: null,
+    language: null,
+  }),
+  style: (line: number, name: string, properties: [string, string][]): Stmt => ({
+    kind: 'style',
+    loc: loc(line),
+    name,
+    properties,
   }),
   jump: (line: number, target: string, expression = false): Stmt => ({
     kind: 'jump',
@@ -96,6 +114,7 @@ export const s = {
     name: name.split(' '),
     value,
     hasAtl: false,
+    atl: [],
   }),
   show: (line: number, name: string, expression: string | null = null): Stmt => ({
     kind: 'show',
@@ -108,11 +127,12 @@ export const s = {
     image: spec(name, null),
     layer: null,
   }),
-  user: (line: number, text: string): Stmt => ({
+  user: (line: number, text: string, block: Stmt[] = []): Stmt => ({
     kind: 'user',
     loc: loc(line),
     name: text.split(/\s+/).slice(0, 2).join(' '),
     line: text,
+    block,
   }),
   translate: (line: number, language: string, identifier: string, block: Stmt[]): Stmt => ({
     kind: 'translate',
@@ -121,11 +141,24 @@ export const s = {
     language,
     block,
   }),
-  screen: (line: number, name: string, strings: string[]): Stmt => ({
+  translateString: (line: number, language: string, old: string, value: string): Stmt => ({
+    kind: 'translate-string',
+    loc: loc(line, `game/tl/${language}/common.rpy`),
+    language,
+    old,
+    new: value,
+  }),
+  screen: (
+    line: number,
+    name: string,
+    strings: string[],
+    elements: ScreenElement[] = [],
+  ): Stmt => ({
     kind: 'screen',
     loc: loc(line),
     name,
     strings,
+    elements,
   }),
 };
 

@@ -6,6 +6,7 @@ export type { ScriptFile, ScriptTraits } from './model/script';
 export * from './vfs';
 export * from './acl';
 export * from './python-lite';
+export * from './text/tags';
 export * from './text/words';
 export * from './version/detect';
 export type { Analysis } from './analyses/analysis';

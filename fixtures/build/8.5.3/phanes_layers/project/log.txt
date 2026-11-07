@@ -1,0 +1,27 @@
+2026-11-07 02:00:55 UTC
+Linux-6.18.44-fc-v300-x86_64-with-glibc2.39
+Ren'Py 8.5.3.26051504
+
+Early init took 43 ms
+Loading error handling took 36 ms
+Loading script took 356 ms
+Loading save slot metadata took 14 ms
+Loading persistent took 0 ms
+Running init code took 45 ms
+Loading analysis data took 0 ms
+Analyze and compile ATL took 2 ms
+Reloading save slot metadata took 2 ms
+Backing up script files to '/root/.renpy/backups/phanes_layers':
+Dump and make backups took 33 ms
+Cleaning cache took 0 ms
+Making clean stores took 0 ms
+Initial gc took 45 ms
+DPI scale factor: 1.000000
+Creating interface object took 0 ms
+Init translation took 0 ms
+Cleaning stores took 0 ms
+Load screen analysis took 0 ms
+Analyze screens took 17 ms
+Save screen analysis took 7 ms
+Save pyanalysis took 3 ms
+Save bytecode took 0 ms

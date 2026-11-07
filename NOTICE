@@ -13,7 +13,13 @@ MIT License. Referenced: renpy/loader.py, renpy/script.py, renpy/ast.py,
 renpy/compat/pickle.py, renpy/cslots.pyx, launcher/game/archiver.rpy,
 renpy/translation/__init__.py, renpy/common/00images.rpy,
 renpy/common/00audio.rpy, renpy/common/000statements.rpy,
-renpy/display/video.py, renpy/exports/mediaexports.py.
+renpy/display/video.py, renpy/exports/mediaexports.py, renpy/easy.py,
+renpy/character.py, renpy/lexer.py, renpy/sl2/slast.py,
+renpy/sl2/sldisplayables.py, renpy/translation/scanstrings.py,
+renpy/common/00definitions.rpy, renpy/common/00defaults.rpy,
+renpy/common/00action_data.rpy, renpy/common/00barvalues.rpy,
+renpy/common/00inputvalues.rpy, renpy/common/00layeredimage.rpy,
+renpy/common/00layeredimage_ren.py.
 
 -------------------------------------------------------------------------------
 unrpyc — https://github.com/CensoredUsername/unrpyc

@@ -14,7 +14,12 @@ import {
  * Compares our unpickler and canonical dump with tools/oracle/dump_json.py,
  * which decodes the same scripts with CPython's own unpickler.
  */
-const SDKS = ['6.99.14.3', '7.4.11', '8.3.7', '8.5.3'] as const;
+/** Fixture games, the SDKs that build them, and their compiled scripts (project + dist). */
+const GAMES = [
+  { game: 'phanes_demo', sdks: ['6.99.14.3', '7.4.11', '8.3.7', '8.5.3'], scripts: 12 },
+  // layeredimage exists since Ren'Py 7.
+  { game: 'phanes_layers', sdks: ['7.4.11', '8.3.7', '8.5.3'], scripts: 4 },
+] as const;
 
 interface OracleDump {
   slot: number;
@@ -43,31 +48,32 @@ async function openScript(buildDir: string, rel: string): Promise<FileSource> {
   return openRpaEntry(archive, entry, rel);
 }
 
-for (const sdk of SDKS) {
-  const expectedDir = fixturePath('expected', sdk, 'phanes_demo', 'canonical');
-  const buildDir = fixturePath('build', sdk, 'phanes_demo');
-  const files = await listJson(expectedDir);
+for (const { game, sdks, scripts } of GAMES)
+  for (const sdk of sdks) {
+    const expectedDir = fixturePath('expected', sdk, game, 'canonical');
+    const buildDir = fixturePath('build', sdk, game);
+    const files = await listJson(expectedDir);
 
-  describe(`scripts compiled by Ren'Py ${sdk} match CPython's unpickler`, () => {
-    it('has oracle dumps', () => {
-      expect(files.length).toBe(12);
-    });
-
-    for (const file of files) {
-      const rel = relative(expectedDir, file)
-        .replace(/\.json$/, '')
-        .split('\\')
-        .join('/');
-      it(rel, async () => {
-        const expected = JSON.parse(await readFile(file, 'utf8')) as OracleDump;
-        const payload = await readRpycPayload(await openScript(buildDir, rel));
-        expect(payload.slot).toBe(expected.slot);
-        expect(payload.pickleProtocol).toBe(expected.protocol);
-        expect(payload.warnings).toEqual([]);
-        // Round-trip through JSON text, like the oracle's output.
-        const actual = JSON.parse(JSON.stringify(toCanonicalJson(payload.value))) as unknown;
-        expect(actual).toEqual(expected.payload);
+    describe(`${game} scripts compiled by Ren'Py ${sdk} match CPython's unpickler`, () => {
+      it('has oracle dumps', () => {
+        expect(files.length).toBe(scripts);
       });
-    }
-  });
-}
+
+      for (const file of files) {
+        const rel = relative(expectedDir, file)
+          .replace(/\.json$/, '')
+          .split('\\')
+          .join('/');
+        it(rel, async () => {
+          const expected = JSON.parse(await readFile(file, 'utf8')) as OracleDump;
+          const payload = await readRpycPayload(await openScript(buildDir, rel));
+          expect(payload.slot).toBe(expected.slot);
+          expect(payload.pickleProtocol).toBe(expected.protocol);
+          expect(payload.warnings).toEqual([]);
+          // Round-trip through JSON text, like the oracle's output.
+          const actual = JSON.parse(JSON.stringify(toCanonicalJson(payload.value))) as unknown;
+          expect(actual).toEqual(expected.payload);
+        });
+      }
+    });
+  }

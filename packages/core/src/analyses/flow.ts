@@ -14,8 +14,12 @@ export interface FlowHandlers {
   jump?(stmt: JumpStmt, ctx: FlowContext): void;
   call?(stmt: CallStmt, ctx: FlowContext): void;
   return?(stmt: Stmt): void;
-  /** A label nested in a block: execution falls into it, then back to the outer block. */
-  enterLabel?(stmt: LabelStmt, ctx: FlowContext): void;
+  /**
+   * A label nested in a block: execution falls into it (`flowing`), or only
+   * reaches it by a jump when the statements before it stop; then back to
+   * the outer block.
+   */
+  enterLabel?(stmt: LabelStmt, ctx: FlowContext, flowing: boolean): void;
   exitLabel?(stmt: LabelStmt): void;
 }
 
@@ -31,27 +35,44 @@ export function menuKey(loc: Location): string {
  * end (rules in docs/analyses.md): a jump or return stops it; an `if` stops
  * it when it has an `else` and no branch completes; a menu when no choice
  * completes; `while True` never completes. Nested labels are scanned in
- * place between `enterLabel` and `exitLabel`; `init` and translation blocks
- * are skipped.
+ * place between `enterLabel` and `exitLabel`, even after a stop, since a jump
+ * can reach them; the rest of a stopped block is skipped. `init` and
+ * translation blocks are skipped. `reachable` false scans a block that
+ * control cannot enter, only for its nested labels.
  */
 export function scanFlow(
   block: readonly Stmt[],
   handlers: FlowHandlers,
   ctx: FlowContext = TOP,
   depth = 0,
+  reachable = true,
 ): boolean {
   if (depth > 400) return true;
+  let flowing = reachable;
   for (const stmt of block) {
+    if (stmt.kind === 'label') {
+      handlers.enterLabel?.(stmt, ctx, flowing);
+      flowing = scanFlow(stmt.block, handlers, ctx, depth + 1);
+      handlers.exitLabel?.(stmt);
+      continue;
+    }
+    if (!flowing) {
+      // Skipped, but the script block of a statement may hold labels.
+      if (stmt.kind === 'user') flowing = scanFlow(stmt.block, handlers, ctx, depth + 1, false);
+      continue;
+    }
     switch (stmt.kind) {
       case 'jump':
         handlers.jump?.(stmt, ctx);
-        return false;
+        flowing = false;
+        break;
       case 'call':
         handlers.call?.(stmt, ctx);
         break;
       case 'return':
         handlers.return?.(stmt);
-        return false;
+        flowing = false;
+        break;
       case 'if': {
         let completes = false;
         for (const branch of stmt.branches) {
@@ -59,12 +80,12 @@ export function scanFlow(
           if (scanFlow(branch.block, handlers, inner, depth + 1)) completes = true;
         }
         const hasElse = stmt.branches.some((b) => b.condition.trim() === 'True');
-        if (hasElse && !completes) return false;
+        if (hasElse && !completes) flowing = false;
         break;
       }
       case 'while': {
         scanFlow(stmt.block, handlers, { ...ctx, conditional: true }, depth + 1);
-        if (stmt.condition.trim() === 'True' || stmt.condition.trim() === '1') return false;
+        if (stmt.condition.trim() === 'True' || stmt.condition.trim() === '1') flowing = false;
         break;
       }
       case 'menu': {
@@ -80,16 +101,13 @@ export function scanFlow(
           };
           if (scanFlow(item.block, handlers, inner, depth + 1)) completes = true;
         }
-        if (blocks > 0 && !completes) return false;
+        if (blocks > 0 && !completes) flowing = false;
         break;
       }
-      case 'label': {
-        handlers.enterLabel?.(stmt, ctx);
-        const completes = scanFlow(stmt.block, handlers, ctx, depth + 1);
-        handlers.exitLabel?.(stmt);
-        if (!completes) return false;
+      case 'user':
+        // A script block runs in place, then execution goes on after the statement.
+        flowing = scanFlow(stmt.block, handlers, ctx, depth + 1);
         break;
-      }
       case 'unknown':
         scanFlow(stmt.block, handlers, ctx, depth + 1);
         break;
@@ -97,5 +115,5 @@ export function scanFlow(
         break;
     }
   }
-  return true;
+  return flowing;
 }

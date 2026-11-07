@@ -97,6 +97,73 @@ describe('story graph rules', () => {
     expect(g.unreachable).toEqual([]);
   });
 
+  it('runs the script blocks of creator-defined statements in place', () => {
+    const g = storyGraph(
+      project([
+        script([
+          s.label(1, 'start', [
+            s.user(2, 'example intro', [s.say(3, null, 'inside'), s.jump(4, 'game')]),
+            s.say(5, null, 'never reached'),
+          ]),
+          s.user(6, 'example game', [s.label(7, 'game', [s.say(8, null, 'play')])]),
+          s.label(9, 'after', [s.ret(10)]),
+        ]),
+      ]),
+    );
+    expect(g.edges.map((e) => `${e.from}>${e.to}:${e.kind}`)).toEqual([
+      'start>game:jump',
+      'game>after:fallthrough',
+    ]);
+    expect(g.unreachable).toEqual([]);
+    expect(g.endings).toEqual(['after']);
+    expect(g.nodes.find((n) => n.name === 'start')?.lines).toBe(2);
+  });
+
+  it('enters nested labels that only a jump reaches', () => {
+    const g = storyGraph(
+      project([
+        script([
+          s.label(1, 'start', [
+            s.menu(2, [
+              ['A', 'True', [s.jump(3, '.a')]],
+              ['B', 'True', [s.jump(4, '.b')]],
+            ]),
+            s.label(5, 'start.a', [s.say(6, null, 'a'), s.jump(7, 'done')]),
+            s.label(8, 'start.b', [s.say(9, null, 'b')]),
+          ]),
+          s.label(10, 'done', [s.ret(11)]),
+        ]),
+      ]),
+    );
+    expect(g.edges.map((e) => `${e.from}>${e.to}:${e.kind}`)).toEqual([
+      'start>start.a:jump',
+      'start>start.b:jump',
+      'start.a>done:jump',
+      'start>done:fallthrough',
+    ]);
+    expect(g.unreachable).toEqual([]);
+  });
+
+  it('follows the label hyperlinks of dialogue and menu choices', () => {
+    const g = storyGraph(
+      project([
+        script([
+          s.label(1, 'start', [
+            s.say(2, null, 'See {a=jump:secret}this{/a} or {a=https://renpy.org}that{/a}.'),
+            s.menu(3, [['{a=bonus}Bonus{/a}', 'True', [s.ret(4)]]]),
+          ]),
+          s.label(5, 'secret', [s.ret(6)]),
+          s.label(7, 'bonus', [s.ret(8)]),
+        ]),
+      ]),
+    );
+    expect(g.edges.map((e) => `${e.from}>${e.to}:${e.kind}`)).toEqual([
+      'start>secret:reference',
+      'start>bonus:reference',
+    ]);
+    expect(g.unreachable).toEqual([]);
+  });
+
   it('resolves local jumps, flags broken and unresolved targets', () => {
     const g = storyGraph(
       project([
@@ -176,6 +243,65 @@ describe('variables', () => {
     expect(byName['config.name']?.engine).toBe(true);
     expect(v.totals).toMatchObject({ neverRead: 1, neverWritten: 2 });
   });
+
+  it('reads screens statement by statement, with their actions and values', () => {
+    const at = (line: number) => ({ file: 'game/screens.rpy', line });
+    const v = variables(
+      project([
+        script([
+          s.default(1, 'gold', '0'),
+          s.default(2, 'courage', '5'),
+          s.default(3, 'plan', '{}'),
+          s.default(4, 'shown', 'False'),
+          s.default(5, 'volume', '1.0', 'store.persistent'),
+          s.default(6, 'local', '0'),
+          s.screen(
+            10,
+            'hud',
+            [],
+            [
+              { kind: 'condition', loc: at(11), code: 'gold > 0' },
+              {
+                kind: 'displayable',
+                loc: at(12),
+                name: 'textbutton',
+                positional: ['_("Gold: [gold]")'],
+                keywords: [['action', 'SetVariable("shown", True)']],
+              },
+              {
+                kind: 'displayable',
+                loc: at(13),
+                name: 'bar',
+                positional: [],
+                keywords: [['value', 'FieldValue(persistent, "volume", 1.0)']],
+              },
+              {
+                kind: 'displayable',
+                loc: at(14),
+                name: 'textbutton',
+                positional: ['"Train"'],
+                keywords: [['action', '[SetDict(plan, "day", 1), SetScreenVariable("x", 1)]']],
+              },
+              { kind: 'python', loc: at(15), code: 'local = 1\nstore.courage += 1' },
+              { kind: 'default', loc: at(17), variable: 'tab', code: 'gold' },
+            ],
+          ),
+          s.user(20, 'call screen hud(courage)'),
+        ]),
+      ]),
+    );
+    const byName = Object.fromEntries(v.variables.map((x) => [x.name, x]));
+    const lines = (name: string, list: 'reads' | 'writes') =>
+      byName[name]?.[list].map((site) => site.loc.line);
+    expect(lines('gold', 'reads')).toEqual([11, 12, 17]);
+    expect(lines('shown', 'writes')).toEqual([12]);
+    expect(lines('persistent.volume', 'writes')).toEqual([13]);
+    expect(lines('plan', 'writes')).toEqual([14]);
+    // A plain name assigned in a screen is a screen variable.
+    expect(lines('local', 'writes')).toEqual([]);
+    expect(lines('courage', 'writes')).toEqual([17]);
+    expect(lines('courage', 'reads')).toEqual([20]);
+  });
 });
 
 describe('assets', () => {
@@ -212,6 +338,131 @@ describe('assets', () => {
     expect(a.images.dynamic).toHaveLength(1);
     expect(a.audio.missing.map((p) => p.file)).toEqual(['sfx/door.ogg']);
     expect(a.audio.totals).toMatchObject({ files: 1, neverPlayed: 1 });
+  });
+
+  it("reads strings, aliases, say attributes, styles and code like Ren'Py", () => {
+    const a = assets(
+      project(
+        [
+          script([
+            s.define(1, 'e', 'Character("Eileen", image="eileen")'),
+            s.image(2, 'logo alias', '"logo base"'),
+            s.image(3, 'bg red', '"#c00"'),
+            s.image(4, 'logo composite', 'Composite((100, 100), (0, 0), "logo base.png")'),
+            s.image(5, 'broken alias', '"nothing here"'),
+            s.style(6, 'button', [['background', '"button idle"']]),
+            s.define(7, 'iris', 'ImageDissolve("imagedissolve iris.png", 1.0)'),
+            s.label(8, 'start', [
+              s.scene(9, 'black'),
+              s.show(10, 'logo alias'),
+              s.sayAs(11, 'e', ['happy'], 'Hi!'),
+              s.show(12, 'text "Title"'),
+              s.show(13, 'broken alias'),
+            ]),
+          ]),
+        ],
+        [
+          'images/logo base.png',
+          'images/eileen happy.png',
+          'images/side eileen happy.png',
+          'images/eileen sad.png',
+          'images/button idle.png',
+          'images/imagedissolve iris.png',
+          'images/unused.png',
+        ],
+      ),
+    );
+    const byName = Object.fromEntries(a.images.entries.map((i) => [i.name, i]));
+    const lines = (name: string) => byName[name]?.displays.map((d) => d.loc.line);
+    expect(byName['logo alias']).toMatchObject({
+      alias: 'logo base',
+      file: null,
+      missingFile: null,
+    });
+    expect(byName['bg red']).toMatchObject({ alias: null, file: null, missingFile: null });
+    expect(lines('logo base')).toEqual([2]);
+    expect(lines('eileen happy')).toEqual([11]);
+    expect(lines('side eileen happy')).toEqual([11]);
+    expect(lines('eileen sad')).toEqual([]);
+    expect(lines('button idle')).toEqual([6]);
+    expect(lines('imagedissolve iris')).toEqual([7]);
+    expect(lines('logo composite')).toEqual([]);
+    expect(lines('unused')).toEqual([]);
+    // `black` and `text` are Ren'Py's own; a broken alias is missing once displayed.
+    expect(a.images.missing).toEqual([
+      expect.objectContaining({ name: 'nothing here', reason: 'undeclared' }),
+    ]);
+  });
+
+  it('finds the images, sounds and videos of screens', () => {
+    const at = (line: number) => ({ file: 'game/screens.rpy', line });
+    const a = assets(
+      project(
+        [
+          script([
+            s.screen(
+              1,
+              'main',
+              [],
+              [
+                {
+                  kind: 'displayable',
+                  loc: at(2),
+                  name: 'add',
+                  positional: ['"logo"'],
+                  keywords: [],
+                },
+                {
+                  kind: 'displayable',
+                  loc: at(3),
+                  name: 'imagebutton',
+                  positional: [],
+                  keywords: [
+                    ['auto', '"gui/start_%s.png"'],
+                    ['hover_sound', '"sfx/hover.ogg"'],
+                    ['action', 'Play("sound", "sfx/click.ogg")'],
+                  ],
+                },
+                {
+                  kind: 'displayable',
+                  loc: at(4),
+                  name: 'frame',
+                  positional: [],
+                  keywords: [
+                    ['background', 'Frame("panel.png", 10, 10)'],
+                    ['style', '"logo"'],
+                  ],
+                },
+                {
+                  kind: 'displayable',
+                  loc: at(5),
+                  name: 'add',
+                  positional: ['Movie(play="intro.webm", loop=False)'],
+                  keywords: [],
+                },
+              ],
+            ),
+          ]),
+        ],
+        [
+          'images/logo.png',
+          'gui/start_idle.png',
+          'gui/start_hover.png',
+          'images/panel.png',
+          'sfx/hover.ogg',
+          'sfx/click.ogg',
+          'intro.webm',
+        ],
+      ),
+    );
+    const byName = Object.fromEntries(a.images.entries.map((i) => [i.name, i]));
+    expect(byName.logo?.displays.map((d) => d.loc.line)).toEqual([2]);
+    expect(byName.panel?.displays.map((d) => d.loc.line)).toEqual([4]);
+    expect(a.audio.files.map((f) => [f.file.gamePath, f.plays.map((p) => p.channel)])).toEqual([
+      ['sfx/hover.ogg', ['sound']],
+      ['sfx/click.ogg', ['screen']],
+    ]);
+    expect(a.video.totals.used).toBe(1);
   });
 
   it('describes the movies of Movie images', () => {
@@ -278,5 +529,34 @@ describe('translations', () => {
       orphans: [{ id: 'start_old' }],
       missingByFile: [{ file: 'game/script.rpy', missing: 1, total: 2 }],
     });
+  });
+
+  it('counts the _() strings of screens, styles and images', () => {
+    const t = translations(
+      project([
+        script([
+          s.screen(
+            1,
+            'menu',
+            [],
+            [
+              {
+                kind: 'displayable',
+                loc: { file: 'game/screens.rpy', line: 2 },
+                name: 'textbutton',
+                positional: ['_("Start")'],
+                keywords: [['action', 'Start()']],
+              },
+            ],
+          ),
+          s.style(3, 'title', [['text', '_("Title")']]),
+          s.image(4, 'card', 'Text(_("Card"))'),
+          s.menu(5, [['Go', 'True', []]]),
+        ]),
+        script([s.translateString(1, 'german', 'Start', 'Anfang')], 'tl/german/common.rpyc'),
+      ]),
+    );
+    expect(t.default.strings).toBe(4);
+    expect(t.languages[0]?.strings).toEqual({ translated: 1, total: 4, extra: 0 });
   });
 });
