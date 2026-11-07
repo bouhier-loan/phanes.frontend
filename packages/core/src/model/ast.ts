@@ -176,6 +176,8 @@ export interface ScreenStmt extends Node<'screen'> {
 
 export interface StyleStmt extends Node<'style'> {
   readonly name: string;
+  /** Style properties and the source of their values, e.g. ["background", '"#000"']. */
+  readonly properties: readonly (readonly [string, string])[];
 }
 
 export type SimpleStmt = Node<'pass' | 'end-translate'>;

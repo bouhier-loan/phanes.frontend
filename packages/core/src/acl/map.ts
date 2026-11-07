@@ -270,8 +270,15 @@ function mapNode(node: PyObject, ctx: Ctx, depth: number): Stmt {
       const name = screen instanceof PyObject ? new NodeReader(screen).text('name') : null;
       return { kind: 'screen', loc, name: name ?? '', strings: collectStrings(screen ?? null) };
     }
-    case 'Style':
-      return { kind: 'style', loc, name: r.text('style_name') ?? '' };
+    case 'Style': {
+      const properties: [string, string][] = [];
+      for (const [key, value] of r.dict('properties')?.items() ?? []) {
+        const name = textOf(key);
+        const code = textOf(value);
+        if (name !== null && code !== null) properties.push([name, code]);
+      }
+      return { kind: 'style', loc, name: r.text('style_name') ?? '', properties };
+    }
     default:
       break;
   }

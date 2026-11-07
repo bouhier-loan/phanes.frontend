@@ -1,6 +1,7 @@
 import type { CallStmt, JumpStmt, Location, Stmt } from '../model/ast';
 import type { Project } from '../model/project';
 import { foldStringExpression, stringConstants } from '../python-lite/names';
+import { hyperlinkLabels } from '../text/tags';
 import type { Analysis } from './analysis';
 import { dialogueIndex } from './dialogue';
 import { type FlowContext, scanFlow, TOP } from './flow';
@@ -163,9 +164,9 @@ export function storyGraph(project: Project): StoryGraphResult {
       const label = current();
       if (label !== null) returns.add(label);
     },
-    enterLabel: (stmt: { name: string; loc: Location }, ctx: FlowContext) => {
+    enterLabel: (stmt: { name: string; loc: Location }, ctx: FlowContext, flowing: boolean) => {
       const from = current();
-      if (from !== null)
+      if (from !== null && flowing)
         edges.push({ ...fallthrough(from, stmt.name, stmt.loc), conditional: ctx.conditional });
       stack.push(stmt.name);
     },
@@ -191,18 +192,25 @@ export function storyGraph(project: Project): StoryGraphResult {
     }
   }
 
-  // References: label names written as strings in screens and Python code.
+  // References: label names written as strings in screens and Python code, and
+  // labels that the {a=jump:…} hyperlinks of dialogue and menu choices go to.
   const seen = new Set<string>();
   walkStatements(project.scripts, (stmt, ctx) => {
     if (ctx.language !== null) return;
     let strings: readonly string[] = [];
     // Screen strings are the sources of its Python expressions, e.g. Jump("x").
-    if (stmt.kind === 'screen') strings = stmt.strings.flatMap(stringConstants);
-    else if (stmt.kind === 'python') strings = stringConstants(stmt.code);
+    if (stmt.kind === 'screen') {
+      const constants = stmt.strings.flatMap(stringConstants);
+      strings = [...constants, ...constants.flatMap(hyperlinkLabels)];
+    } else if (stmt.kind === 'python') strings = stringConstants(stmt.code);
     else if (stmt.kind === 'define' || stmt.kind === 'default')
       strings = stringConstants(stmt.value);
+    else if (stmt.kind === 'say' && stmt.language === null) strings = hyperlinkLabels(stmt.what);
+    else if (stmt.kind === 'menu') strings = stmt.items.flatMap((i) => hyperlinkLabels(i.text));
     const from = stmt.kind === 'screen' ? null : ctx.label;
-    for (const s of strings) {
+    for (const raw of strings) {
+      // A local hyperlink target is resolved in the current global label.
+      const s = raw.startsWith('.') && from !== null ? `${from.split('.')[0] ?? from}${raw}` : raw;
       const key = `${from ?? ''}\u0000${s}\u0000${stmt.loc.file}:${stmt.loc.line}`;
       if (!nodes.has(s) || seen.has(key)) continue;
       seen.add(key);

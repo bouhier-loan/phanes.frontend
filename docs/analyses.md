@@ -18,8 +18,9 @@ peut atteindre sa fin.
 - `menu` : chaque choix est parcouru ; l'instruction arrête le bloc si aucun choix ne se
   termine. Un choix soumis à une condition rend ses sauts conditionnels.
 - `while` : le corps est parcouru ; `while True` ne se termine jamais.
-- Un `label` imbriqué dans un bloc est atteint en passant ; les blocs `init` et `translate`
-  ne participent pas au déroulement.
+- Un `label` imbriqué dans un bloc est atteint en passant ; s'il suit un arrêt (`jump`,
+  `return`…), seul un saut l'atteint, mais son bloc est parcouru et l'exécution reprend après
+  lui. Les blocs `init` et `translate` ne participent pas au déroulement.
 - Le bloc de script d'une instruction créée par l'auteur (CDS déclaré avec `block="script"`,
   comme `example:` dans le tutoriel de Ren'Py, et les sous-blocs `subparses`) est parcouru en
   place, puis l'exécution continue : ses répliques, déclarations et labels comptent comme les
@@ -33,8 +34,10 @@ peut atteindre sa fin.
   une chaîne constante, `"bad" + "_ending"`), **enchaînement** (`fallthrough`) quand le bloc
   d'un label se termine et qu'un autre label le suit au premier niveau du même fichier, et
   **référence** quand le nom d'un label apparaît comme chaîne constante dans un écran
-  (`Jump("x")`, `Call("x")`) ou dans du code Python (`renpy.jump("x")`). Une arête porte le
-  choix de menu dont elle provient.
+  (`Jump("x")`, `Call("x")`) ou dans du code Python (`renpy.jump("x")`), ou qu'un hyperlien
+  `{a=jump:x}`, `{a=call:x}` ou `{a=x}` (protocole par défaut `call_in_new_context`,
+  `renpy/common/00defaults.rpy`) d'une réplique, d'un choix de menu ou d'un texte d'écran le
+  vise. Une arête porte le choix de menu dont elle provient.
 - Une cible locale `.x` est résolue dans le label global courant. Une cible qui ne nomme aucun
   label est un **saut cassé** ; une expression non constante est listée comme **dynamique**.
 - **Atteignable** : depuis `start`, les labels appelés par Ren'Py (`splashscreen`,
@@ -75,9 +78,11 @@ peut atteindre sa fin.
 
 ## Ressources (`assets`)
 
-- **Images déclarées** : les instructions `image` ; une valeur qui est un chemin littéral (ou
-  le premier argument chaîne d'un appel, `Image("x.png")`) est cherchée dans le jeu, puis sous
-  `images/`. S'y ajoutent les **images automatiques** de Ren'Py : chaque fichier `.png`,
+- **Images déclarées** : les instructions `image`. Une valeur chaîne se lit comme Ren'Py
+  (`renpy/easy.py`) : avec `[` elle est dynamique, avec `#` c'est une couleur, avec un point
+  c'est un fichier, sinon c'est le nom d'une autre image (**alias**,
+  `image logo alias = "logo base"`). Un fichier (ou le premier argument chaîne d'un appel,
+  `Image("x.png")`) est cherché dans le jeu, puis sous `images/`. S'y ajoutent les **images automatiques** de Ren'Py : chaque fichier `.png`,
   `.jpg`, `.jpeg`, `.webp`, `.avif` ou `.svg` sous `images/`, nommé d'après son nom de fichier
   sans extension, en minuscules, découpé aux espaces ; une déclaration explicite l'emporte.
 - **Catégorie** : étiquette `bg` → décor, `cg` → CG, étiquette d'un personnage (voir plus bas)
@@ -96,8 +101,15 @@ peut atteindre sa fin.
   la même étiquette qui portent les attributs demandés comptent comme affichées (un `show`
   d'étiquette seule les compte toutes, par prudence). Rien ne correspond → image
   **manquante**, avec le nom déclaré le plus proche (distance d'édition au plus un quart de
-  la longueur, deux au minimum). Une image déclarée vers un fichier absent est manquante
-  aussi. `show expression` n'est pas résolu.
+  la longueur, deux au minimum), sauf pour les images de Ren'Py (`black`, et les étiquettes
+  `text` et `vtext`). Une image déclarée vers un fichier absent est manquante aussi.
+  `show expression` n'est pas résolu.
+- Comptent aussi comme affichages : les **attributs d'une réplique** (`e happy "…"`) pour les
+  images de l'étiquette `image=` du personnage et ses portraits latéraux `side <étiquette> …`
+  (`renpy/character.py`) ; une **propriété de style** qui nomme une image ou un fichier
+  d'image ; un fichier d'image écrit dans du code Python ou une déclaration
+  (`ImageDissolve("x.png")`). Une image affichée affiche ce que sa définition nomme : la cible
+  d'un alias (manquante si elle n'existe pas), les images et fichiers d'un `Composite`…
 - **Audio** : `play <canal>`, `queue <canal>` et `voice` (chemin littéral, liste, ou nom
   `audio.x` défini par `define audio.x = "…"` ou par un fichier de `audio/`), et
   `renpy.music.play` / `renpy.sound.play` en Python. Les fichiers audio du jeu sont joués ou

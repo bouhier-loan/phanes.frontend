@@ -119,6 +119,51 @@ describe('story graph rules', () => {
     expect(g.nodes.find((n) => n.name === 'start')?.lines).toBe(2);
   });
 
+  it('enters nested labels that only a jump reaches', () => {
+    const g = storyGraph(
+      project([
+        script([
+          s.label(1, 'start', [
+            s.menu(2, [
+              ['A', 'True', [s.jump(3, '.a')]],
+              ['B', 'True', [s.jump(4, '.b')]],
+            ]),
+            s.label(5, 'start.a', [s.say(6, null, 'a'), s.jump(7, 'done')]),
+            s.label(8, 'start.b', [s.say(9, null, 'b')]),
+          ]),
+          s.label(10, 'done', [s.ret(11)]),
+        ]),
+      ]),
+    );
+    expect(g.edges.map((e) => `${e.from}>${e.to}:${e.kind}`)).toEqual([
+      'start>start.a:jump',
+      'start>start.b:jump',
+      'start.a>done:jump',
+      'start>done:fallthrough',
+    ]);
+    expect(g.unreachable).toEqual([]);
+  });
+
+  it('follows the label hyperlinks of dialogue and menu choices', () => {
+    const g = storyGraph(
+      project([
+        script([
+          s.label(1, 'start', [
+            s.say(2, null, 'See {a=jump:secret}this{/a} or {a=https://renpy.org}that{/a}.'),
+            s.menu(3, [['{a=bonus}Bonus{/a}', 'True', [s.ret(4)]]]),
+          ]),
+          s.label(5, 'secret', [s.ret(6)]),
+          s.label(7, 'bonus', [s.ret(8)]),
+        ]),
+      ]),
+    );
+    expect(g.edges.map((e) => `${e.from}>${e.to}:${e.kind}`)).toEqual([
+      'start>secret:reference',
+      'start>bonus:reference',
+    ]);
+    expect(g.unreachable).toEqual([]);
+  });
+
   it('resolves local jumps, flags broken and unresolved targets', () => {
     const g = storyGraph(
       project([
@@ -234,6 +279,60 @@ describe('assets', () => {
     expect(a.images.dynamic).toHaveLength(1);
     expect(a.audio.missing.map((p) => p.file)).toEqual(['sfx/door.ogg']);
     expect(a.audio.totals).toMatchObject({ files: 1, neverPlayed: 1 });
+  });
+
+  it("reads strings, aliases, say attributes, styles and code like Ren'Py", () => {
+    const a = assets(
+      project(
+        [
+          script([
+            s.define(1, 'e', 'Character("Eileen", image="eileen")'),
+            s.image(2, 'logo alias', '"logo base"'),
+            s.image(3, 'bg red', '"#c00"'),
+            s.image(4, 'logo composite', 'Composite((100, 100), (0, 0), "logo base.png")'),
+            s.image(5, 'broken alias', '"nothing here"'),
+            s.style(6, 'button', [['background', '"button idle"']]),
+            s.define(7, 'iris', 'ImageDissolve("imagedissolve iris.png", 1.0)'),
+            s.label(8, 'start', [
+              s.scene(9, 'black'),
+              s.show(10, 'logo alias'),
+              s.sayAs(11, 'e', ['happy'], 'Hi!'),
+              s.show(12, 'text "Title"'),
+              s.show(13, 'broken alias'),
+            ]),
+          ]),
+        ],
+        [
+          'images/logo base.png',
+          'images/eileen happy.png',
+          'images/side eileen happy.png',
+          'images/eileen sad.png',
+          'images/button idle.png',
+          'images/imagedissolve iris.png',
+          'images/unused.png',
+        ],
+      ),
+    );
+    const byName = Object.fromEntries(a.images.entries.map((i) => [i.name, i]));
+    const lines = (name: string) => byName[name]?.displays.map((d) => d.loc.line);
+    expect(byName['logo alias']).toMatchObject({
+      alias: 'logo base',
+      file: null,
+      missingFile: null,
+    });
+    expect(byName['bg red']).toMatchObject({ alias: null, file: null, missingFile: null });
+    expect(lines('logo base')).toEqual([2]);
+    expect(lines('eileen happy')).toEqual([11]);
+    expect(lines('side eileen happy')).toEqual([11]);
+    expect(lines('eileen sad')).toEqual([]);
+    expect(lines('button idle')).toEqual([6]);
+    expect(lines('imagedissolve iris')).toEqual([7]);
+    expect(lines('logo composite')).toEqual([]);
+    expect(lines('unused')).toEqual([]);
+    // `black` and `text` are Ren'Py's own; a broken alias is missing once displayed.
+    expect(a.images.missing).toEqual([
+      expect.objectContaining({ name: 'nothing here', reason: 'undeclared' }),
+    ]);
   });
 
   it('describes the movies of Movie images', () => {

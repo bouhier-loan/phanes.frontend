@@ -32,6 +32,23 @@ export const s = {
     identifier: null,
     language: null,
   }),
+  /** A say statement with image attributes, `e happy "…"`. */
+  sayAs: (line: number, who: string, attributes: string[], what: string): Stmt => ({
+    kind: 'say',
+    loc: loc(line),
+    who,
+    what,
+    attributes,
+    interact: true,
+    identifier: null,
+    language: null,
+  }),
+  style: (line: number, name: string, properties: [string, string][]): Stmt => ({
+    kind: 'style',
+    loc: loc(line),
+    name,
+    properties,
+  }),
   jump: (line: number, target: string, expression = false): Stmt => ({
     kind: 'jump',
     loc: loc(line),

@@ -79,16 +79,12 @@
       "automatic": 12,
       "displayed": 11,
       "neverDisplayed": 1,
-      "missing": 3
+      "missing": 0
     },
     "neverDisplayed": [
       "sylvie green giggle"
     ],
-    "missing": [
-      "black (undeclared) @ game/script.rpy:161",
-      "black (undeclared) @ game/script.rpy:224",
-      "black (undeclared) @ game/script.rpy:241"
-    ],
+    "missing": [],
     "dynamic": 0
   },
   "audio": {
