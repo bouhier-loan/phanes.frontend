@@ -90,6 +90,10 @@ export function scanFlow(
         if (!completes) return false;
         break;
       }
+      case 'user':
+        // A script block runs in place, then execution goes on after the statement.
+        if (!scanFlow(stmt.block, handlers, ctx, depth + 1)) return false;
+        break;
       case 'unknown':
         scanFlow(stmt.block, handlers, ctx, depth + 1);
         break;

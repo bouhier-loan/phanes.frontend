@@ -225,11 +225,20 @@ function mapNode(node: PyObject, ctx: Ctx, depth: number): Stmt {
       const words = itemsOf(parsed[0])
         .map(textOf)
         .filter((s): s is string => s !== null);
+      // Script blocks of creator-defined statements: code_block (block="script")
+      // and the blocks of their subparses (renpy/ast.py UserStatement, Ren'Py 7+).
+      const nested = [
+        ...r.items('code_block'),
+        ...r
+          .items('subparses')
+          .flatMap((sub) => (sub instanceof PyObject ? new NodeReader(sub).items('block') : [])),
+      ];
       return {
         kind: 'user',
         loc,
         line,
         name: words.length > 0 ? words.join(' ') : (line.split(/\s+/)[0] ?? ''),
+        block: mapBlock(nested, ctx, depth + 1),
       };
     }
     case 'Translate':

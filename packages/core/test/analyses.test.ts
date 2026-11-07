@@ -97,6 +97,28 @@ describe('story graph rules', () => {
     expect(g.unreachable).toEqual([]);
   });
 
+  it('runs the script blocks of creator-defined statements in place', () => {
+    const g = storyGraph(
+      project([
+        script([
+          s.label(1, 'start', [
+            s.user(2, 'example intro', [s.say(3, null, 'inside'), s.jump(4, 'game')]),
+            s.say(5, null, 'never reached'),
+          ]),
+          s.user(6, 'example game', [s.label(7, 'game', [s.say(8, null, 'play')])]),
+          s.label(9, 'after', [s.ret(10)]),
+        ]),
+      ]),
+    );
+    expect(g.edges.map((e) => `${e.from}>${e.to}:${e.kind}`)).toEqual([
+      'start>game:jump',
+      'game>after:fallthrough',
+    ]);
+    expect(g.unreachable).toEqual([]);
+    expect(g.endings).toEqual(['after']);
+    expect(g.nodes.find((n) => n.name === 'start')?.lines).toBe(2);
+  });
+
   it('resolves local jumps, flags broken and unresolved targets', () => {
     const g = storyGraph(
       project([

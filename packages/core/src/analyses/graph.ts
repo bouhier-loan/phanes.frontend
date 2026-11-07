@@ -1,4 +1,4 @@
-import type { CallStmt, JumpStmt, Location } from '../model/ast';
+import type { CallStmt, JumpStmt, Location, Stmt } from '../model/ast';
 import type { Project } from '../model/project';
 import { foldStringExpression, stringConstants } from '../python-lite/names';
 import type { Analysis } from './analysis';
@@ -177,7 +177,7 @@ export function storyGraph(project: Project): StoryGraphResult {
   for (const script of project.scripts) {
     let flowing = false;
     stack.length = 0;
-    for (const stmt of script.statements) {
+    for (const stmt of topLevel(script.statements)) {
       if (stmt.kind === 'label') {
         const from = current();
         if (from !== null && flowing) edges.push(fallthrough(from, stmt.name, stmt.loc));
@@ -257,6 +257,21 @@ export function storyGraph(project: Project): StoryGraphResult {
     unreachable: list.filter((n) => !n.reachable).map((n) => n.name),
     endings: list.filter((n) => n.ending).map((n) => n.name),
   };
+}
+
+/**
+ * Top-level statements, with the script blocks of creator-defined statements
+ * spliced in place: they run in sequence, so a label in one (the tutorial's
+ * `example:` blocks) starts a top-level label like any other.
+ */
+function topLevel(statements: readonly Stmt[], depth = 0): Stmt[] {
+  const out: Stmt[] = [];
+  for (const stmt of statements) {
+    if (stmt.kind === 'user' && stmt.block.length > 0 && depth < 50) {
+      out.push({ ...stmt, block: [] }, ...topLevel(stmt.block, depth + 1));
+    } else out.push(stmt);
+  }
+  return out;
 }
 
 function fallthrough(from: string, to: string, loc: Location): GraphEdge {

@@ -108,11 +108,12 @@ export const s = {
     image: spec(name, null),
     layer: null,
   }),
-  user: (line: number, text: string): Stmt => ({
+  user: (line: number, text: string, block: Stmt[] = []): Stmt => ({
     kind: 'user',
     loc: loc(line),
     name: text.split(/\s+/).slice(0, 2).join(' '),
     line: text,
+    block,
   }),
   translate: (line: number, language: string, identifier: string, block: Stmt[]): Stmt => ({
     kind: 'translate',

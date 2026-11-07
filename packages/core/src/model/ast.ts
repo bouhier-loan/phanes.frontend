@@ -142,6 +142,11 @@ export interface UserStmt extends Node<'user'> {
   /** Statement name, e.g. "play music", "voice", "nvl clear". */
   readonly name: string;
   readonly line: string;
+  /**
+   * Statements of a creator-defined statement's script block (`block="script"`,
+   * run in place, then execution goes on) and of its subparses.
+   */
+  readonly block: readonly Stmt[];
 }
 
 export interface TranslateStmt extends Node<'translate'> {
@@ -218,6 +223,7 @@ export function childBlocks(stmt: Stmt): (readonly Stmt[])[] {
     case 'translate':
     case 'translate-block':
     case 'unknown':
+    case 'user':
       return [stmt.block];
     case 'if':
       return stmt.branches.map((b) => b.block);

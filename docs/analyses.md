@@ -20,6 +20,11 @@ peut atteindre sa fin.
 - `while` : le corps est parcouru ; `while True` ne se termine jamais.
 - Un `label` imbriqué dans un bloc est atteint en passant ; les blocs `init` et `translate`
   ne participent pas au déroulement.
+- Le bloc de script d'une instruction créée par l'auteur (CDS déclaré avec `block="script"`,
+  comme `example:` dans le tutoriel de Ren'Py, et les sous-blocs `subparses`) est parcouru en
+  place, puis l'exécution continue : ses répliques, déclarations et labels comptent comme les
+  autres, et un label qu'il contient au premier niveau d'un fichier est un label de premier
+  niveau.
 
 ## Graphe de l'histoire (`storyGraph`)
 

@@ -12,7 +12,8 @@ Projection (one list per statement, pre-order, nested blocks included):
   if [line, [conditions]]          init [line, priority]
   define/default [line, store, name, value]   python [line, code]
   scene/show/hide [line, [name...]]  image [line, [name...], value]
-  user [line, line_text]           translate [line, identifier, language]
+  user [line, line_text], then its code_block and subparse blocks
+  translate [line, identifier, language]
   translate-string [line, language, old, new]   screen [line, name]
   other statements: [kind, line]
 
@@ -98,6 +99,9 @@ def project(node, out):
         out.append(["image", line, [str(t) for t in get("imgname")], text(code) if code is not None else None])
     elif kind == "user":
         out.append(["user", line, text(get("line"))])
+        walk(get("code_block") or [], out)
+        for sub in get("subparses") or []:
+            walk(getattr(sub, "block", None) or [], out)
     elif kind == "translate":
         out.append(["translate", line, text(get("identifier")), text(get("language"))])
         walk(get("block"), out)
