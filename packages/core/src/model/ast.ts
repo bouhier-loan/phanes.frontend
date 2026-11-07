@@ -151,6 +151,38 @@ export interface UserStmt extends Node<'user'> {
   readonly block: readonly Stmt[];
 }
 
+/**
+ * A layer of a layered image. `image` is the source of the layer's
+ * displayable, null when Ren'Py derives an image name from the attribute
+ * (`<name>_<group>_<variant>_<attribute>`).
+ */
+export type LayeredLayer =
+  | { readonly kind: 'always'; readonly image: string | null }
+  | {
+      readonly kind: 'attribute';
+      readonly name: string;
+      /** Group used in derived image names: null outside a group, or in a `multiple` group. */
+      readonly group: string | null;
+      readonly variant: string | null;
+      readonly default: boolean;
+      readonly image: string | null;
+    }
+  /** An `auto` group: one more attribute per image named `<name>_<group>_<variant>_<x>`. */
+  | { readonly kind: 'auto'; readonly group: string | null; readonly variant: string | null }
+  /** An `if`/`elif`/`else` layer; `condition` is null for `else`. */
+  | {
+      readonly kind: 'condition';
+      readonly condition: string | null;
+      readonly image: string | null;
+    };
+
+/** `layeredimage <name>:` (a creator-defined statement of renpy/common, Ren'Py 7+). */
+export interface LayeredImageStmt extends Node<'layeredimage'> {
+  /** Image name, e.g. "eileen" or "lucy far". */
+  readonly name: string;
+  readonly layers: readonly LayeredLayer[];
+}
+
 export interface TranslateStmt extends Node<'translate'> {
   readonly identifier: string;
   /** null for the default language (wrappers added in slot 2). */
@@ -260,6 +292,7 @@ export type Stmt =
   | ImageStmt
   | TransformStmt
   | UserStmt
+  | LayeredImageStmt
   | TranslateStmt
   | TranslateStringStmt
   | TranslateBlockStmt

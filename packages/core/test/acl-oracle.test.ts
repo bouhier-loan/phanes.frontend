@@ -43,6 +43,24 @@ function projection(stmt: Stmt): unknown[] {
       return ['translate', line, stmt.identifier, stmt.language];
     case 'translate-string':
       return ['translate-string', line, stmt.language, stmt.old, stmt.new];
+    case 'layeredimage':
+      return [
+        'layeredimage',
+        line,
+        stmt.name,
+        stmt.layers.map((l) => {
+          switch (l.kind) {
+            case 'always':
+              return [l.kind, l.image];
+            case 'attribute':
+              return [l.kind, l.name, l.group, l.variant, l.default, l.image];
+            case 'auto':
+              return [l.kind, l.group, l.variant];
+            case 'condition':
+              return [l.kind, l.condition, l.image];
+          }
+        }),
+      ];
     case 'screen':
       return [
         'screen',
@@ -77,10 +95,8 @@ export function project(script: ScriptFile): unknown[][] {
 
 export const SDKS = ['6.99.14.3', '7.4.11', '8.3.7', '8.5.3'] as const;
 
-export async function projectScripts(sdk: string): Promise<ScriptFile[]> {
-  const { vfs } = await buildVfs(
-    await walkDirectory(fixturePath('build', sdk, 'phanes_demo', 'project')),
-  );
+export async function projectScripts(sdk: string, game = 'phanes_demo'): Promise<ScriptFile[]> {
+  const { vfs } = await buildVfs(await walkDirectory(fixturePath('build', sdk, game, 'project')));
   const { scripts, diagnostics } = await loadScripts(vfs);
   expect(diagnostics).toEqual([]);
   return scripts;
@@ -105,6 +121,31 @@ for (const sdk of SDKS) {
               'expected',
               sdk,
               'phanes_demo',
+              'semantic',
+              'game',
+              `${script.gamePath}.json`,
+            ),
+            'utf8',
+          ),
+        ) as unknown;
+        expect(project(script), script.gamePath).toEqual(expected);
+      }
+    });
+  });
+}
+
+for (const sdk of ['7.4.11', '8.3.7', '8.5.3']) {
+  describe(`layered images compiled by Ren'Py ${sdk} match unrpyc`, () => {
+    it('for every script', async () => {
+      const scripts = await projectScripts(sdk, 'phanes_layers');
+      expect(scripts.map((s) => s.gamePath)).toEqual(['options.rpyc', 'script.rpyc']);
+      for (const script of scripts) {
+        const expected = JSON.parse(
+          await readFile(
+            fixturePath(
+              'expected',
+              sdk,
+              'phanes_layers',
               'semantic',
               'game',
               `${script.gamePath}.json`,

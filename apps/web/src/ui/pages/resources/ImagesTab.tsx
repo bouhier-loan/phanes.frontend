@@ -108,7 +108,7 @@ function Viewer({
       </div>
       <div className={actual ? 'viewer-stage actual' : 'viewer-stage'}>
         {!image.file ? (
-          <p className="faint">{res.noFile}</p>
+          <p className="faint">{image.layered ? res.layeredNoFile : res.noFile}</p>
         ) : failed ? (
           <p className="faint">{res.cannotShow}</p>
         ) : url ? (
@@ -149,13 +149,59 @@ function Viewer({
             <dd className="mono text-red">{res.fileMissing(image.missingFile)}</dd>
           </div>
         )}
+        {image.alias && (
+          <div>
+            <dt>{res.alias}</dt>
+            <dd className="mono">{image.alias}</dd>
+          </div>
+        )}
+        {image.layered && (
+          <div>
+            <dt>{res.layers}</dt>
+            <dd>
+              <ul data-testid="layered-attributes">
+                {image.layered.attributes.map((a) => (
+                  <li key={`${a.group ?? ''}/${a.name}`} className="mono small">
+                    {a.group ? `${a.group} · ` : ''}
+                    <strong>{a.name}</strong>
+                    {a.default ? ` · ${res.defaultAttribute}` : ''}
+                    {a.auto ? ` · ${res.autoAttribute}` : ''}
+                    {a.image && (
+                      <span className={a.found ? 'faint' : 'text-red'}>
+                        {' '}
+                        → {a.image}
+                        {a.found ? '' : ` (${res.layerMissing})`}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {(image.layered.always.length > 0 || image.layered.conditions.length > 0) && (
+                <p className="small faint">
+                  {[
+                    image.layered.always.length > 0
+                      ? res.alwaysLayers(image.layered.always.length)
+                      : null,
+                    image.layered.conditions.length > 0
+                      ? res.conditionalLayers(image.layered.conditions.length)
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
+              )}
+            </dd>
+          </div>
+        )}
         <div>
           <dt>{res.declaration}</dt>
           <dd className="mono">
             {image.declaration === 'automatic'
               ? res.automaticDeclaration
               : image.loc
-                ? res.statementAt(formatLocation(image.loc))
+                ? (image.declaration === 'layered' ? res.layeredAt : res.statementAt)(
+                    formatLocation(image.loc),
+                  )
                 : ''}
           </dd>
         </div>

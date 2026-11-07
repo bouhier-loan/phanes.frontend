@@ -9,7 +9,7 @@ export type CharacterImageKey = { key: string; match: CharacterImageMatch };
 export type CharacterImages = {
   /** Keys that matched at least one image or file. */
   matched: CharacterImageKey[];
-  /** Declared images whose tag is one of the keys. */
+  /** Declared images whose tag is one of the keys, and the layers of its layered images. */
   sprites: ImageAsset[];
   /** `side <key> …` images. */
   side: ImageAsset[];
@@ -78,7 +78,10 @@ export function characterImages(
     if (hit) matched.add(hit.key);
     return hit;
   };
-  const sprites = images.filter((i) => keyOf(i.tag) !== undefined);
+  const tagged = images.filter((i) => keyOf(i.tag) !== undefined);
+  // The layers of a layered image are the character's sprites too.
+  const parts = new Set(tagged.flatMap((i) => i.layered?.parts ?? []));
+  const sprites = [...tagged, ...images.filter((i) => parts.has(i.name) && !tagged.includes(i))];
   const side = images.filter((i) => i.tag === 'side' && keyOf(i.attributes[0] ?? '') !== undefined);
 
   const declared = new Set(images.flatMap((i) => (i.file ? [i.file.path] : [])));

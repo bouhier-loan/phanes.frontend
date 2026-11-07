@@ -14,8 +14,11 @@
 #                                             (path and size of every other file,
 #                                             read back as empty virtual files)
 #
-# Usage: tools/fixtures/build.sh [--corpus] [VERSION...]
-#   (default: all pinned versions; --corpus only rebuilds the corpus)
+# A game with a sdks.txt file is only built with the versions it lists.
+#
+# Usage: tools/fixtures/build.sh [--corpus | --game NAME] [VERSION...]
+#   (default: all pinned versions; --corpus only rebuilds the corpus,
+#   --game only rebuilds one game of fixtures/games)
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
@@ -39,9 +42,13 @@ declare -A CORPUS=(
 )
 
 ONLY_CORPUS=false
+ONLY_GAME=""
 if [ "${1:-}" = "--corpus" ]; then
   ONLY_CORPUS=true
   shift
+elif [ "${1:-}" = "--game" ]; then
+  ONLY_GAME=$2
+  shift 2
 fi
 if [ "$#" -gt 0 ]; then VERSIONS=("$@"); else VERSIONS=(6.99.14.3 7.4.11 8.3.7 8.5.3); fi
 
@@ -125,8 +132,15 @@ PY
 for v in "${VERSIONS[@]}"; do
   fetch_sdk "$v"
   if ! $ONLY_CORPUS; then
-    for game in "$ROOT"/fixtures/games/*/; do build_game "$v" "$(basename "$game")"; done
+    for game in "$ROOT"/fixtures/games/*/; do
+      name=$(basename "$game")
+      if [ -n "$ONLY_GAME" ] && [ "$name" != "$ONLY_GAME" ]; then continue; fi
+      if [ -f "$game/sdks.txt" ] && ! grep -qx "$v" "$game/sdks.txt"; then continue; fi
+      build_game "$v" "$name"
+    done
   fi
-  for game in ${CORPUS[$v]:-}; do build_corpus "$v" "$game"; done
+  if [ -z "$ONLY_GAME" ]; then
+    for game in ${CORPUS[$v]:-}; do build_corpus "$v" "$game"; done
+  fi
 done
 echo "fixtures written to $OUT and $CORPUS_OUT"

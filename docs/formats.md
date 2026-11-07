@@ -53,6 +53,11 @@ Ren'Py 8 décode ces chaînes en UTF-8 avec `surrogateescape` ; Phanes fait de m
   de la langue par défaut.
 - Une instruction créée par l'auteur (`UserStatement`) garde son bloc de script
   (`block="script"`) dans `code_block` et ceux de ses `subparses` dans `subparses[i].block`.
+- `layeredimage` est une instruction créée par Ren'Py : son `UserStatement` garde dans `parsed`
+  le `RawLayeredImage` (`store.layeredimage`) avec ses `children` : `RawAlways`,
+  `RawAttributeGroup`, `RawAttribute`, `RawConditionGroup` (`conditions` : `RawCondition`).
+  Jusqu'à 8.3 : `properties` (sources Python), groupe dans `group` ; depuis 8.4 :
+  `final_properties` (constantes), `expr_properties` (sources), groupe dans `group_name`.
 - Écrans (`renpy.sl2.slast`) : `SLScreen` → `children` de `SLDisplayable` (`positional` : liste
   de `PyExpr`, `keyword` : liste de paires `(nom, PyExpr)`), `SLIf`/`SLShowIf` (`entries` :
   `(condition | None, SLBlock)`), `SLFor`, `SLUse` (`target`, `args` : `ArgumentInfo`),

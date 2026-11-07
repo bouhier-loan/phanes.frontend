@@ -92,6 +92,13 @@ peut atteindre sa fin.
   `Image("x.png")`) est cherché dans le jeu, puis sous `images/`. S'y ajoutent les **images automatiques** de Ren'Py : chaque fichier `.png`,
   `.jpg`, `.jpeg`, `.webp`, `.avif` ou `.svg` sous `images/`, nommé d'après son nom de fichier
   sans extension, en minuscules, découpé aux espaces ; une déclaration explicite l'emporte.
+- **Images en couches** (`layeredimage`, Ren'Py 7+, `renpy/common/00layeredimage.rpy`) : une
+  image du nom déclaré, dont les **attributs** sont ceux de ses groupes et ses attributs hors
+  groupe. Le calque d'un attribut est l'image écrite, sinon le nom dérivé par Ren'Py
+  `<nom>_<groupe>_<variante>_<attribut>` (espaces du nom remplacées par `_`, sans le groupe
+  dans un groupe `multiple`) ; un groupe `auto` ajoute un attribut pour chaque image nommée
+  `<nom>_<groupe>_<variante>_<x>`. Les calques `always` et `if`/`elif`/`else` sont toujours
+  affichés avec l'image (les conditions ne sont pas évaluées).
 - **Catégorie** : étiquette `bg` → décor, `cg` → CG, étiquette d'un personnage (voir plus bas)
   → sprite, sinon autre.
 - **Images d'un personnage** (`character-images.ts`, fiches des personnages) : ses étiquettes
@@ -101,15 +108,18 @@ peut atteindre sa fin.
   celles de ces étiquettes, ses portraits latéraux les images `side <étiquette> …`, et ses
   fichiers associés les fichiers d'image qui ne sont le fichier d'aucune image déclarée et dont
   un dossier porte une de ces étiquettes, ou dont le nom commence par l'une d'elles suivie
-  d'une espace, de `_`, `-` ou `.` (parties d'une `layeredimage`, dont le bloc n'est pas dans
-  l'AST). Le portrait est l'image la plus affichée, sinon un portrait latéral, sinon le premier
-  fichier associé.
+  d'une espace, de `_`, `-` ou `.`. Les calques de ses images en couches sont aussi ses
+  sprites. Le portrait est l'image la plus affichée, sinon un portrait latéral, sinon le
+  premier fichier associé.
 - **Affichage** : `scene` et `show`. Un nom exact désigne son image ; sinon toutes les images de
   la même étiquette qui portent les attributs demandés comptent comme affichées (un `show`
   d'étiquette seule les compte toutes, par prudence). Rien ne correspond → image
   **manquante**, avec le nom déclaré le plus proche (distance d'édition au plus un quart de
   la longueur, deux au minimum), sauf pour les images de Ren'Py (`black`, et les étiquettes
-  `text` et `vtext`). Une image déclarée vers un fichier absent est manquante aussi.
+  `text` et `vtext`). Une image en couches accepte les attributs de son nom et de ses calques ;
+  elle affiche les calques des attributs demandés, ceux par défaut des autres groupes, et ses
+  calques `always` et `if`. Un attribut inconnu rend l'image manquante, un calque introuvable
+  aussi dès qu'il est affiché. Une image déclarée vers un fichier absent est manquante aussi.
   `show expression` n'est pas résolu.
 - **Écrans** (langage d'écran 2, décodé instruction par instruction) : l'image ou le fichier
   d'un `add`, et les mots-clés qui prennent un displayable (`background`, `foreground`,

@@ -9,6 +9,7 @@ import {
 } from '@phanes/renpy-formats';
 import type { ImageSpec, Location, MenuItem, Stmt } from '../model/ast';
 import { itemsOf, NodeReader, textOf } from './read';
+import { layeredImage } from './layered';
 import { screenElements } from './screen';
 
 /** Nesting deeper than this is treated as hostile and cut. */
@@ -227,6 +228,10 @@ function mapNode(node: PyObject, ctx: Ctx, depth: number): Stmt {
       const words = itemsOf(parsed[0])
         .map(textOf)
         .filter((s): s is string => s !== null);
+      if (words.join(' ') === 'layeredimage') {
+        const layered = layeredImage(parsed[1]);
+        if (layered) return { kind: 'layeredimage', loc, ...layered };
+      }
       // Script blocks of creator-defined statements: code_block (block="script")
       // and the blocks of their subparses (renpy/ast.py UserStatement, Ren'Py 7+).
       const nested = [

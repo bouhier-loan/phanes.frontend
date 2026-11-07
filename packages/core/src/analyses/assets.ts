@@ -7,7 +7,13 @@
  * renpy/character.py (resolve_say_attributes).
  * Ren'Py is MIT licensed (see NOTICE).
  */
-import { type ImageSpec, type Location, screenElementCode, type Stmt } from '../model/ast';
+import {
+  type ImageSpec,
+  type LayeredImageStmt,
+  type Location,
+  screenElementCode,
+  type Stmt,
+} from '../model/ast';
 import type { Project } from '../model/project';
 import { parseCall } from '../python-lite/call';
 import { stringLiteralValue } from '../python-lite/literal';
@@ -45,14 +51,38 @@ export type ImageMovie = {
   sideMask: boolean;
 };
 
+/** An attribute of a layered image, and the layer it shows. */
+export type LayeredAttribute = {
+  name: string;
+  /** Its group (null outside a group). */
+  group: string | null;
+  default: boolean;
+  /** Found by an `auto` group among the game's images. */
+  auto: boolean;
+  /** Image name or file of the layer, as written or derived (`eileen_face_happy`); null for an expression. */
+  image: string | null;
+  /** The layer's image or file exists. */
+  found: boolean;
+};
+
+/** What a `layeredimage` statement defines (renpy/common/00layeredimage.rpy). */
+export type LayeredImage = {
+  attributes: LayeredAttribute[];
+  /** Images of `always` layers and of `if` layers (with their condition, null for `else`). */
+  always: string[];
+  conditions: { condition: string | null; image: string | null }[];
+  /** Names of the declared images its layers show. */
+  parts: string[];
+};
+
 export type ImageAsset = {
   /** Image name, e.g. "eileen happy". */
   name: string;
   tag: string;
   attributes: string[];
   category: ImageCategory;
-  /** An `image` statement, or Ren'Py's automatic definition from images/. */
-  declaration: 'statement' | 'automatic';
+  /** An `image` statement, a `layeredimage`, or Ren'Py's automatic definition from images/. */
+  declaration: 'statement' | 'layered' | 'automatic';
   loc: Location | null;
   value: string | null;
   file: AssetFile | null;
@@ -61,6 +91,8 @@ export type ImageAsset = {
   /** Image named by the definition, `image logo alias = "logo base"`. */
   alias: string | null;
   movie: ImageMovie | null;
+  /** Attributes and layers of a `layeredimage`; null for other images. */
+  layered: LayeredImage | null;
   /**
    * What displays it: scene/show statements (or may, for a bare tag), say
    * attributes of its character, aliases, and code, styles or other images
@@ -297,7 +329,9 @@ export function assets(project: Project): AssetsResult {
 
   /** Image statements whose value or ATL block may name other images or image files. */
   const definitions: { name: string; code: string[]; site: AssetSite }[] = [];
+  const layeredStatements: LayeredImageStmt[] = [];
   walkStatements(project.scripts, (stmt, ctx) => {
+    if (ctx.language === null && stmt.kind === 'layeredimage') layeredStatements.push(stmt);
     if (ctx.language !== null || stmt.kind !== 'image' || stmt.name.length === 0) return;
     const name = stmt.name.join(' ');
     if (images.has(name)) return;
@@ -346,6 +380,7 @@ export function assets(project: Project): AssetsResult {
       missingFile: path !== null && !entry ? path : null,
       alias,
       movie,
+      layered: null,
       displays: [],
     });
   });
@@ -370,8 +405,81 @@ export function assets(project: Project): AssetsResult {
       missingFile: null,
       alias: null,
       movie: null,
+      layered: null,
       displays: [],
     });
+  }
+
+  // Layered images, once every other image is known (auto groups look them up).
+  const layerSources = new Map<ImageAsset, { attribute: string | null; source: string }[]>();
+  for (const stmt of layeredStatements) {
+    const name = stmt.name.split(/\s+/).filter(Boolean).join(' ');
+    const existing = images.get(name);
+    if (name === '' || (existing && existing.declaration !== 'automatic')) continue;
+    const prefix = name.replace(/ /g, '_');
+    const derived = (...parts: (string | null)[]) =>
+      [prefix, ...parts.filter((p): p is string => p !== null)].join('_');
+    // A layer written as a string literal designates it; another expression is kept as code.
+    const written = (source: string) => stringLiteralValue(source.trim());
+    const attributes: LayeredAttribute[] = [];
+    const sources: { attribute: string | null; source: string }[] = [];
+    const conditions: LayeredImage['conditions'] = [];
+    const always: string[] = [];
+    for (const layer of stmt.layers) {
+      if (layer.kind === 'attribute') {
+        const image =
+          layer.image === null
+            ? derived(layer.group, layer.variant, layer.name)
+            : written(layer.image);
+        attributes.push({
+          name: layer.name,
+          group: layer.group,
+          default: layer.default,
+          auto: false,
+          image,
+          found: false,
+        });
+        sources.push({ attribute: layer.name, source: layer.image ?? JSON.stringify(image) });
+      } else if (layer.kind === 'auto') {
+        const pattern = `${derived(layer.group, layer.variant)}_`;
+        for (const other of images.values()) {
+          const rest = other.name.startsWith(pattern) ? other.name.slice(pattern.length) : '';
+          if (rest === '' || /\s/.test(rest) || attributes.some((a) => a.name === rest)) continue;
+          attributes.push({
+            name: rest,
+            group: layer.group,
+            default: false,
+            auto: true,
+            image: other.name,
+            found: true,
+          });
+          sources.push({ attribute: rest, source: JSON.stringify(other.name) });
+        }
+      } else if (layer.image !== null) {
+        const image = written(layer.image);
+        if (layer.kind === 'always') always.push(image ?? layer.image);
+        else conditions.push({ condition: layer.condition, image: image ?? layer.image });
+        sources.push({ attribute: null, source: layer.image });
+      }
+    }
+    const [tag = '', ...nameAttributes] = name.split(' ');
+    const asset: ImageAsset = {
+      name,
+      tag,
+      attributes: nameAttributes,
+      category: category(tag),
+      declaration: 'layered',
+      loc: stmt.loc,
+      value: null,
+      file: null,
+      missingFile: null,
+      alias: null,
+      movie: null,
+      layered: { attributes, always, conditions, parts: [] },
+      displays: [],
+    };
+    images.set(name, asset);
+    layerSources.set(asset, sources);
   }
 
   const byTag = new Map<string, ImageAsset[]>();
@@ -423,6 +531,64 @@ export function assets(project: Project): AssetsResult {
     }
     return suggestion;
   };
+  const missing: MissingImage[] = [];
+  /** What each layer of a layered image shows, by attribute (null: always or conditional). */
+  const layerTargets = new Map<ImageAsset, { attribute: string | null; images: ImageAsset[] }[]>();
+  for (const [image, sources] of layerSources) {
+    const layers = sources.map(({ attribute, source }) => ({
+      attribute,
+      images: stringConstants(source).flatMap((v) => designated(v, true)),
+    }));
+    layerTargets.set(image, layers);
+    const parts = new Set<string>();
+    for (const layer of layers) for (const part of layer.images) parts.add(part.name);
+    if (image.layered) {
+      image.layered.parts = [...parts].sort();
+      for (const a of image.layered.attributes)
+        a.found = a.auto || layers.some((l) => l.attribute === a.name && l.images.length > 0);
+    }
+  }
+  /** A layered image accepts the attributes of its name and of its layers. */
+  const accepts = (image: ImageAsset, attrs: readonly string[]) =>
+    attrs.every(
+      (a) =>
+        image.attributes.includes(a) ||
+        (image.layered?.attributes.some((la) => la.name === a) ?? false),
+    );
+  /**
+   * Displays an image; for a layered image, the layers its attributes show:
+   * those asked for, the defaults of the other groups, `always` and `if` layers.
+   */
+  const show = (image: ImageAsset, attrs: readonly string[], site: AssetSite) => {
+    display(image, site);
+    const info = image.layered;
+    if (!info) return;
+    const asked = info.attributes.filter((a) => attrs.includes(a.name));
+    const groups = new Set(asked.map((a) => a.group));
+    const shown = new Set([
+      ...asked.map((a) => a.name),
+      ...info.attributes
+        .filter((a) => a.default && (a.group === null || !groups.has(a.group)))
+        .map((a) => a.name),
+    ]);
+    for (const layer of layerTargets.get(image) ?? [])
+      if (layer.attribute === null || shown.has(layer.attribute))
+        for (const part of layer.images) display(part, site);
+    for (const a of info.attributes)
+      if (
+        shown.has(a.name) &&
+        !a.found &&
+        a.image !== null &&
+        stringDisplayable(a.image)?.kind !== 'dynamic'
+      )
+        missing.push({
+          name: `${image.name} ${a.name}`,
+          site,
+          reason: 'file-missing',
+          suggestion: null,
+          file: a.image,
+        });
+  };
   // What each image's definition shows: an alias, or images and files named in its value.
   const dependencies = new Map<ImageAsset, { site: AssetSite; images: ImageAsset[] }>();
   for (const def of definitions) {
@@ -437,7 +603,6 @@ export function assets(project: Project): AssetsResult {
         for (const other of designated(value, true)) if (other !== image) used.add(other);
     dependencies.set(image, { site: def.site, images: [...used] });
   }
-  const missing: MissingImage[] = [];
   const dynamic: AssetSite[] = [];
   const audioPlays: AudioPlay[] = [];
   const audioDefines = new Map<string, string>();
@@ -475,8 +640,8 @@ export function assets(project: Project): AssetsResult {
       const [tag = '', ...attrs] = image.name;
       const candidates = exact
         ? [exact]
-        : (byTag.get(tag) ?? []).filter((img) => attrs.every((a) => img.attributes.includes(a)));
-      for (const img of candidates) display(img, site);
+        : (byTag.get(tag) ?? []).filter((img) => accepts(img, attrs));
+      for (const img of candidates) show(img, exact ? [] : attrs, site);
       if (exact?.missingFile) {
         missing.push({
           name,
@@ -504,8 +669,7 @@ export function assets(project: Project): AssetsResult {
         label,
         code: `${stmt.who} ${stmt.attributes.join(' ')} ${JSON.stringify(stmt.what)}`,
       };
-      for (const img of byTag.get(tag) ?? [])
-        if (attrs.every((a) => img.attributes.includes(a))) display(img, site);
+      for (const img of byTag.get(tag) ?? []) if (accepts(img, attrs)) show(img, attrs, site);
       for (const img of byTag.get('side') ?? [])
         if (img.attributes[0] === tag && attrs.every((a) => img.attributes.includes(a)))
           display(img, site);

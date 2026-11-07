@@ -1,4 +1,9 @@
-import { type Location, type ScreenElement, screenElementCode } from '../model/ast';
+import {
+  type LayeredLayer,
+  type Location,
+  type ScreenElement,
+  screenElementCode,
+} from '../model/ast';
 import type { Project } from '../model/project';
 import { parseCall } from '../python-lite/call';
 import { stringLiteralValue } from '../python-lite/literal';
@@ -98,6 +103,20 @@ function isEngine(name: string): boolean {
 
 function lineOf(code: string, index: number): string {
   return (code.split('\n')[index] ?? code).trim();
+}
+
+/** A layer of a layered image as written, e.g. `attribute happy default` or `if x`. */
+function layerCode(layer: LayeredLayer): string {
+  switch (layer.kind) {
+    case 'always':
+      return `always ${layer.image ?? ''}`.trim();
+    case 'attribute':
+      return `attribute ${layer.name}${layer.default ? ' default' : ''} ${layer.image ?? ''}`.trim();
+    case 'auto':
+      return `group ${layer.group ?? ''} auto`;
+    case 'condition':
+      return layer.condition === null ? 'else' : `if ${layer.condition}`;
+  }
 }
 
 /** A screen element as written, e.g. `textbutton "Go" action SetVariable("x", 1)`. */
@@ -349,6 +368,19 @@ export function variables(project: Project): VariablesResult {
         for (const at of image.atList) expression(at, stmt.loc, label, 'image', shown);
         break;
       }
+      case 'layeredimage':
+        for (const layer of stmt.layers) {
+          const shown = `layeredimage ${stmt.name}: ${layerCode(layer)}`;
+          if (layer.kind === 'condition' && layer.condition !== null)
+            expression(layer.condition, stmt.loc, label, 'image', shown);
+          if (
+            layer.kind !== 'auto' &&
+            layer.image !== null &&
+            stringLiteralValue(layer.image) === null
+          )
+            expression(layer.image, stmt.loc, label, 'image', shown);
+        }
+        break;
       case 'image':
         if (stmt.value)
           expression(

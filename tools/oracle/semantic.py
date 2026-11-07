@@ -13,6 +13,8 @@ Projection (one list per statement, pre-order, nested blocks included):
   define/default [line, store, name, value]   python [line, code]
   scene/show/hide [line, [name...]]  image [line, [name...], value]
   user [line, line_text], then its code_block and subparse blocks
+  layeredimage [line, name, [layer...]]: always [image], attribute [name, group, variant,
+    default, image], auto [group, variant], condition [condition, image]
   translate [line, identifier, language]
   translate-string [line, language, old, new]
   screen [line, name, [element...]], its SL2 statements flattened:
@@ -25,6 +27,7 @@ Usage: python3 tools/oracle/semantic.py UNRPYC_DIR ROOT OUT
 When OUT ends with .json.gz, writes a single gzipped JSON object mapping each
 script path to its projection instead (the corpus references).
 """
+import ast
 import gzip
 import json
 import os
@@ -101,6 +104,9 @@ def project(node, out):
     elif kind == "image":
         code = get("code")
         out.append(["image", line, [str(t) for t in get("imgname")], text(code) if code is not None else None])
+    elif kind == "user" and layered(get("parsed")) is not None:
+        name, layers = layered(get("parsed"))
+        out.append(["layeredimage", line, name, layers])
     elif kind == "user":
         out.append(["user", line, text(get("line"))])
         walk(get("code_block") or [], out)
@@ -201,6 +207,76 @@ def screen_elements(node, out, depth):
         out.append(["default", line, text(node.variable), text(node.expression)])
     else:
         children()
+
+
+def layered_props(node):
+    """Properties as Python sources (same rules as acl/layered.ts)."""
+    props = {}
+    for attr in ("properties", "expr_properties"):
+        for k, v in dict(getattr(node, attr, None) or {}).items():
+            if text(v) is not None:
+                props[text(k)] = text(v)
+    for k, v in dict(getattr(node, "final_properties", None) or {}).items():
+        if isinstance(v, bool):
+            props[text(k)] = "True" if v else "False"
+        elif isinstance(v, (str, bytes)):
+            props[text(k)] = json.dumps(text(v))
+        elif isinstance(v, int):
+            props[text(k)] = str(v)
+    return props
+
+
+def flag(props, name):
+    source = props.get(name)
+    return source is not None and source.strip() not in ("False", "None", "0")
+
+
+def variant_of(props):
+    source = props.get("variant")
+    if source is None:
+        return None
+    try:
+        value = ast.literal_eval(source.strip())
+    except (ValueError, SyntaxError):
+        return None
+    return value if isinstance(value, str) else None
+
+
+def layered(parsed):
+    """[name, layers] of a layeredimage statement's RawLayeredImage, else None."""
+    if not isinstance(parsed, tuple) or len(parsed) != 2 or type(parsed[1]).__name__ != "RawLayeredImage":
+        return None
+    root = parsed[1]
+    layers = []
+    image = lambda n: text(getattr(n, "image", None))  # noqa: E731
+
+    def attribute(node, group, inherited):
+        props = dict(inherited)
+        props.update(layered_props(node))
+        layers.append(["attribute", text(node.name), group, variant_of(props), flag(props, "default"), image(node)])
+
+    for child in root.children:
+        cls = type(child).__name__
+        if cls == "RawAlways":
+            layers.append(["always", image(child)])
+        elif cls == "RawAttribute":
+            attribute(child, None, {})
+        elif cls == "RawAttributeGroup":
+            props = layered_props(child)
+            name = text(getattr(child, "group_name", None) or getattr(child, "group", None))
+            group = None if flag(props, "multiple") else name
+            inherited = dict((k, v) for k, v in props.items() if k not in ("default", "auto"))
+            for a in child.children:
+                if type(a).__name__ == "RawAttribute":
+                    attribute(a, group, inherited)
+            if flag(props, "auto"):
+                layers.append(["auto", name, variant_of(props)])
+        elif cls == "RawConditionGroup":
+            for c in child.conditions:
+                layers.append(["condition", text(c.condition), image(c)])
+        elif cls == "RawCondition":
+            layers.append(["condition", text(child.condition), image(child)])
+    return [text(root.name), layers]
 
 
 def walk(block, out):

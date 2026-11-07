@@ -43,7 +43,8 @@ Browser-only analyzer for Ren'Py games. pnpm monorepo, TypeScript strict, Vite +
 
 `fixtures/README.md` explains how fixtures are produced. `tools/fixtures/build.sh` downloads the
 pinned Ren'Py SDKs (6.99.14.3, 7.4.11, 8.3.7, 8.5.3) into `tools/fixtures/.cache` (gitignored) and
-rebuilds `fixtures/build`. The 7.4.11 SDK ships a Python 2.7 interpreter
+rebuilds `fixtures/build` (a game with `sdks.txt` is only built with the listed SDKs:
+`phanes_layers` uses `layeredimage`, Ren'Py 7+). The 7.4.11 SDK ships a Python 2.7 interpreter
 (`lib/linux-x86_64/python`), used to generate Python 2 pickles.
 
 `fixtures/corpus` holds the games shipped with the SDKs (`build.sh --corpus`): compiled scripts
