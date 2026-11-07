@@ -70,6 +70,7 @@ pnpm lint && pnpm typecheck && pnpm test
 pnpm build                      # build statique dans apps/web/dist
 pnpm e2e                        # Playwright sur le build de prod (CSP active)
 pnpm phanes analyze <dossier>   # CLI de développement
+pnpm phanes bench <dossier>     # temps de chaque étape et de chaque analyse
 ```
 
 Les tests E2E vérifient qu'aucune requête réseau n'a lieu pendant l'analyse, qu'aucune

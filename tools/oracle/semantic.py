@@ -16,8 +16,11 @@ Projection (one list per statement, pre-order, nested blocks included):
   translate-string [line, language, old, new]   screen [line, name]
   other statements: [kind, line]
 
-Usage: python3 tools/oracle/semantic.py UNRPYC_DIR ROOT OUT_DIR
+Usage: python3 tools/oracle/semantic.py UNRPYC_DIR ROOT OUT
+When OUT ends with .json.gz, writes a single gzipped JSON object mapping each
+script path to its projection instead (the corpus references).
 """
+import gzip
 import json
 import os
 import struct
@@ -130,9 +133,10 @@ def payload(data):
     return zlib.decompress(data[start : start + length])
 
 
-def main(root, out_dir):
-    count = 0
-    for dirpath, _, files in os.walk(root):
+def main(root, out_path):
+    projections = {}
+    for dirpath, dirnames, files in os.walk(root):
+        dirnames.sort()
         for filename in sorted(files):
             if not filename.endswith((".rpyc", ".rpymc")):
                 continue
@@ -141,12 +145,20 @@ def main(root, out_dir):
                 _, stmts = pickle_safe_loads(payload(f.read()))
             out = []
             walk(stmts, out)
-            target = os.path.join(out_dir, os.path.relpath(full, root) + ".json")
+            projections[os.path.relpath(full, root).replace(os.sep, "/")] = out
+    if out_path.endswith(".json.gz"):
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+        text = json.dumps(projections, ensure_ascii=True, separators=(",", ":"), sort_keys=True)
+        with open(out_path, "wb") as raw:
+            with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0, compresslevel=9) as f:
+                f.write(text.encode("ascii"))
+    else:
+        for rel, out in projections.items():
+            target = os.path.join(out_path, rel + ".json")
             os.makedirs(os.path.dirname(target), exist_ok=True)
             with open(target, "w", encoding="utf-8") as f:
                 json.dump(out, f, ensure_ascii=False, indent=0)
-            count += 1
-    sys.stderr.write("%d scripts projected to %s\n" % (count, out_dir))
+    sys.stderr.write("%d scripts projected to %s\n" % (len(projections), out_path))
 
 
 if __name__ == "__main__":

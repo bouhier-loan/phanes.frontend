@@ -244,7 +244,7 @@ function mapNode(node: PyObject, ctx: Ctx, depth: number): Stmt {
       return {
         kind: 'translate-string',
         loc,
-        language: r.text('language') ?? '',
+        language: r.text('language'),
         old: r.text('old') ?? '',
         new: r.text('new') ?? '',
       };

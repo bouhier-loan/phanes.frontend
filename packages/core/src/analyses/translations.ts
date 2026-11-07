@@ -63,6 +63,8 @@ export function translations(project: Project): TranslationsResult {
       return;
     }
     if (stmt.kind === 'translate-string') {
+      // `translate None strings` customizes the default language: not a translation.
+      if (stmt.language === null) return;
       ensure(stmt.language);
       translatedStrings.get(stmt.language)?.add(stmt.old);
       return;

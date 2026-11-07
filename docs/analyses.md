@@ -114,6 +114,8 @@ peut atteindre sa fin.
 - **Répliques** : blocs d'identifiant qui contiennent une réplique (un `nvl clear` seul a un
   identifiant mais pas de texte) ; une langue traduit ceux dont elle a un
   `translate <langue> <identifiant>`.
+- **Langues** : celles des blocs `translate <langue>` ; `translate None strings` (dossier
+  `tl/None`) personnalise les chaînes de la langue par défaut et n'est pas une traduction.
 - **Orphelines** : traductions dont l'identifiant n'existe pas dans le jeu (souvent une réplique
   modifiée après la traduction).
 - **Chaînes d'interface** : textes des menus et arguments constants de `_()`, `__()`, `_p()`

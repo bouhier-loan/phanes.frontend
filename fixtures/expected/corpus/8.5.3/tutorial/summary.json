@@ -1,0 +1,242 @@
+{
+  "renpy": {
+    "version": "8.5.3.26051504",
+    "confidence": "exact",
+    "python": 3
+  },
+  "title": "Ren'Py Tutorial Game",
+  "scripts": {
+    "compiled": 237,
+    "decoded": 237,
+    "failed": 0,
+    "sourceOnly": 1
+  },
+  "labels": 98,
+  "dialogue": {
+    "lines": 746,
+    "words": 14869,
+    "cjkChars": 0,
+    "menus": 8,
+    "choices": 41
+  },
+  "languages": [
+    "french",
+    "italian",
+    "japanese",
+    "korean",
+    "piglatin",
+    "portuguese",
+    "russian",
+    "schinese",
+    "spanish",
+    "ukrainian"
+  ],
+  "diagnostics": {
+    "info AST_UNKNOWN_NODE": 1
+  },
+  "unknownNodes": {
+    "renpy.ast.Testcase": 2
+  },
+  "characters": [
+    "e define 722",
+    "nvle undefined 6",
+    "narrator builtin 10",
+    "egreen undefined 3",
+    "e8 undefined 2",
+    "\"Lucy\" literal 1",
+    "l8 undefined 1",
+    "l define 1",
+    "eslow define 0"
+  ],
+  "graph": {
+    "endings": [
+      "demo_character",
+      "simple_displayables",
+      "pong_done",
+      "new_gui",
+      "after_a_label",
+      "translations",
+      "end",
+      "tutorial_positions",
+      "tutorial_atl",
+      "transform_properties",
+      "director",
+      "distribute",
+      "after_nvl_menu",
+      "tutorial_rollback_done",
+      "tutorial_create",
+      "tutorial_dialogue",
+      "tutorial_images",
+      "tutorial_simple_positions",
+      "tutorial_transitions",
+      "tutorial_music",
+      "menu3_done",
+      "tutorial_input",
+      "tutorial_video"
+    ],
+    "unreachable": [
+      "a_label",
+      "warp_screen_displayables"
+    ],
+    "broken": [
+      "play_pong @ game/indepth_minigame.rpy:260"
+    ],
+    "dynamic": [
+      "tutorial.label @ game/script.rpy:186"
+    ]
+  },
+  "menus": {
+    "menus": 8,
+    "options": 41,
+    "conditional": 0,
+    "withPrompt": 8
+  },
+  "variables": {
+    "totals": {
+      "variables": 179,
+      "default": 19,
+      "define": 160,
+      "characters": 3,
+      "engine": 155,
+      "neverRead": 6,
+      "neverWritten": 15
+    },
+    "neverRead": [
+      "director.show_tags",
+      "slowdissolve",
+      "stat_chutzpah",
+      "stat_intelligence",
+      "stat_moxie",
+      "tutorials_adjustment"
+    ],
+    "neverWritten": [
+      "day_plan",
+      "eileen_hp",
+      "eileen_hp_max",
+      "eileen_lv",
+      "persistent.show_translation_marker",
+      "player_hp_max",
+      "player_lv",
+      "preferences.afm_time",
+      "preferences.text_cps",
+      "quick_menu",
+      "stat_chutzpah",
+      "stat_intelligence",
+      "stat_moxie",
+      "stat_strength",
+      "tutorials_adjustment"
+    ]
+  },
+  "images": {
+    "totals": {
+      "declared": 67,
+      "statement": 14,
+      "automatic": 53,
+      "displayed": 32,
+      "neverDisplayed": 35,
+      "missing": 30
+    },
+    "neverDisplayed": [
+      "_finaleimage",
+      "bar empty hover",
+      "bar empty hover vertical",
+      "bar empty idle",
+      "bar empty idle vertical",
+      "bar full hover",
+      "bar full hover vertical",
+      "bar full idle",
+      "bar full idle vertical",
+      "bar thumb hover",
+      "bar thumb idle",
+      "bg panorama",
+      "bg pong field",
+      "button glossy hover",
+      "button glossy idle",
+      "check_foreground",
+      "check_selected_foreground",
+      "concert1",
+      "concert2",
+      "concert3",
+      "hover_background",
+      "idle_background",
+      "imagedissolve circleiris",
+      "imagedissolve circlewipe",
+      "imagedissolve dream",
+      "imagedissolve teleport",
+      "imagemap ground",
+      "imagemap hover",
+      "logo blink",
+      "logo bw",
+      "logo small",
+      "lucy mad",
+      "ninepatch",
+      "ninepatch paper",
+      "spotlight"
+    ],
+    "missing": [
+      "logo alias (undeclared) @ game/indepth_displayables.rpy:27",
+      "bg blue (undeclared) @ game/indepth_displayables.rpy:39",
+      "logo rotated (undeclared) @ game/indepth_displayables.rpy:50",
+      "logo solidexample (undeclared) @ game/indepth_displayables.rpy:60",
+      "logo text (undeclared) @ game/indepth_displayables.rpy:69",
+      "logo text rotate (undeclared) @ game/indepth_displayables.rpy:77",
+      "logo composite (undeclared) @ game/indepth_displayables.rpy:88",
+      "ninepatch frame (undeclared) @ game/indepth_displayables.rpy:98",
+      "ninepatch frame (undeclared) @ game/indepth_displayables.rpy:103",
+      "ninepatch frame tiled (undeclared) @ game/indepth_displayables.rpy:116",
+      "ninepatch paper tiled (undeclared) @ game/indepth_displayables.rpy:123",
+      "style2 (undeclared) @ game/indepth_style.rpy:145",
+      "style3 (undeclared) @ game/indepth_style.rpy:172",
+      "bg circleiris (file-missing) @ game/indepth_transitions.rpy:243",
+      "bg circleiris (file-missing) @ game/indepth_transitions.rpy:257",
+      "bg teleport (file-missing) @ game/indepth_transitions.rpy:264",
+      "black (undeclared) @ game/indepth_transitions.rpy:510",
+      "alpha_control (undeclared) @ game/indepth_transitions.rpy:521",
+      "black (undeclared) @ game/indepth_transitions.rpy:527",
+      "black (undeclared) @ game/indepth_transitions.rpy:536",
+      "eileen animated (undeclared) @ game/tutorial_atl.rpy:455",
+      "eileen animated (undeclared) @ game/tutorial_atl.rpy:495",
+      "eileen animated (undeclared) @ game/tutorial_atl.rpy:531",
+      "eileen animated twice (undeclared) @ game/tutorial_atl.rpy:544",
+      "eileen animated once (undeclared) @ game/tutorial_atl.rpy:549",
+      "bg atl transitions (undeclared) @ game/tutorial_atl.rpy:554",
+      "black (undeclared) @ game/tutorial_quickstart.rpy:84",
+      "black (undeclared) @ game/tutorial_quickstart.rpy:113",
+      "black (undeclared) @ game/tutorial_quickstart.rpy:128",
+      "black (undeclared) @ game/tutorial_quickstart.rpy:173"
+    ],
+    "dynamic": 0
+  },
+  "audio": {
+    "totals": {
+      "files": 6,
+      "played": 2,
+      "neverPlayed": 4,
+      "missing": 0
+    },
+    "neverPlayed": [
+      "pong_beep.opus",
+      "pong_boop.opus",
+      "punch.opus",
+      "tower_clock.ogg"
+    ],
+    "missing": []
+  },
+  "video": {
+    "files": 1,
+    "used": 0,
+    "missing": 0
+  },
+  "translations": [
+    "french: 745/747 lines, 82/83 strings (+490), 80 orphans",
+    "italian: 747/747 lines, 82/83 strings (+529), 195 orphans",
+    "japanese: 745/747 lines, 82/83 strings (+519), 85 orphans",
+    "korean: 743/747 lines, 82/83 strings (+430), 85 orphans",
+    "piglatin: 747/747 lines, 82/83 strings (+463), 77 orphans",
+    "portuguese: 745/747 lines, 82/83 strings (+463), 85 orphans",
+    "russian: 742/747 lines, 82/83 strings (+430), 86 orphans",
+    "schinese: 743/747 lines, 82/83 strings (+451), 86 orphans",
+    "spanish: 745/747 lines, 82/83 strings (+463), 85 orphans",
+    "ukrainian: 745/747 lines, 82/83 strings (+447), 80 orphans"
+  ]
+}

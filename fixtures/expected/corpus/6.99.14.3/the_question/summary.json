@@ -1,0 +1,101 @@
+{
+  "renpy": {
+    "version": "6.99.14.3.3347",
+    "confidence": "exact",
+    "python": 2
+  },
+  "title": "The Question",
+  "scripts": {
+    "compiled": 9,
+    "decoded": 9,
+    "failed": 0,
+    "sourceOnly": 0
+  },
+  "labels": 6,
+  "dialogue": {
+    "lines": 71,
+    "words": 756,
+    "cjkChars": 0,
+    "menus": 2,
+    "choices": 4
+  },
+  "languages": [
+    "russian"
+  ],
+  "diagnostics": {},
+  "unknownNodes": {},
+  "characters": [
+    "narrator builtin 31",
+    "m define 22",
+    "s define 18"
+  ],
+  "graph": {
+    "endings": [
+      "marry",
+      "later"
+    ],
+    "unreachable": [],
+    "broken": [],
+    "dynamic": []
+  },
+  "menus": {
+    "menus": 2,
+    "options": 4,
+    "conditional": 0,
+    "withPrompt": 2
+  },
+  "variables": {
+    "totals": {
+      "variables": 156,
+      "default": 4,
+      "define": 152,
+      "characters": 2,
+      "engine": 152,
+      "neverRead": 0,
+      "neverWritten": 3
+    },
+    "neverRead": [],
+    "neverWritten": [
+      "preferences.afm_time",
+      "preferences.text_cps",
+      "quick_menu"
+    ]
+  },
+  "images": {
+    "totals": {
+      "declared": 12,
+      "statement": 0,
+      "automatic": 12,
+      "displayed": 11,
+      "neverDisplayed": 1,
+      "missing": 3
+    },
+    "neverDisplayed": [
+      "sylvie green giggle"
+    ],
+    "missing": [
+      "black (undeclared) @ game/script.rpy:162",
+      "black (undeclared) @ game/script.rpy:225",
+      "black (undeclared) @ game/script.rpy:242"
+    ],
+    "dynamic": 0
+  },
+  "audio": {
+    "totals": {
+      "files": 1,
+      "played": 1,
+      "neverPlayed": 0,
+      "missing": 0
+    },
+    "neverPlayed": [],
+    "missing": []
+  },
+  "video": {
+    "files": 0,
+    "used": 0,
+    "missing": 0
+  },
+  "translations": [
+    "russian: 70/70 lines, 10/10 strings (+277), 0 orphans"
+  ]
+}

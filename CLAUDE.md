@@ -5,7 +5,8 @@ Browser-only analyzer for Ren'Py games. pnpm monorepo, TypeScript strict, Vite +
 ## Commands
 
 - `pnpm lint`, `pnpm format:check`, `pnpm typecheck` (`tsc -b`), `pnpm test` (Vitest projects), `pnpm build`
-- `pnpm phanes <command> <path>`: dev CLI (tsx) — see `apps/cli`
+- `pnpm phanes <command> <path>`: dev CLI (tsx) — see `apps/cli`; `pnpm phanes bench <dir>` times
+  each loading step and analysis
 - `pnpm e2e`: Playwright tests for `apps/web` (builds and serves the production bundle with its
   CSP). In a sandbox with a preinstalled Chromium: `PLAYWRIGHT_CHROMIUM_EXECUTABLE=... pnpm e2e
 --project chromium`. `PHANES_BASE_URL` targets an already running instance instead.
@@ -45,6 +46,11 @@ pinned Ren'Py SDKs (6.99.14.3, 7.4.11, 8.3.7, 8.5.3) into `tools/fixtures/.cache
 rebuilds `fixtures/build`. The 7.4.11 SDK ships a Python 2.7 interpreter
 (`lib/linux-x86_64/python`), used to generate Python 2 pickles.
 
+`fixtures/corpus` holds the games shipped with the SDKs (`build.sh --corpus`): compiled scripts
+only, other files as sizes in `files.json`, opened with `openCorpus` (`packages/testkit`).
+`core/test/corpus.test.ts` keeps a summary of each game's analyses in
+`fixtures/expected/corpus/<sdk>/<game>/summary.json`; review its diff, then `pnpm test -u`.
+
 ## Oracles
 
 - `tools/oracle/dump_json.py` decodes every fixture script with CPython's own unpickler and writes
@@ -53,6 +59,8 @@ rebuilds `fixtures/build`. The 7.4.11 SDK ships a Python 2.7 interpreter
 - `tools/oracle/unrpyc.sh` stores unrpyc's dumps and decompiled sources for human review.
 - `tools/oracle/semantic.py` projects unrpyc's view of each statement; `core/test/acl-oracle.test.ts`
   requires the anti-corruption layer to produce the same projection for every SDK.
+- Both oracles also run on the corpus, bundled in one `.json.gz` per game (OUT ending in
+  `.json.gz`).
 - Dialogue statistics follow `docs/stats.md`; hand counts live in
   `fixtures/expected/phanes_demo.stats.json`. Change both together.
 - Story and asset analyses follow `docs/analyses.md`; hand counts live in

@@ -254,7 +254,7 @@ export const dialogueIndex = memo((project: Project): DialogueIndex => {
   let previous: SpeakerStats | null = null;
   walkStatements(project.scripts, (stmt: Stmt, ctx) => {
     if (ctx.language !== null) languages.add(ctx.language);
-    if (stmt.kind === 'translate-string') languages.add(stmt.language);
+    if (stmt.kind === 'translate-string' && stmt.language !== null) languages.add(stmt.language);
     if (stmt.kind === 'say' && stmt.language !== null) languages.add(stmt.language);
     if (!isDefaultLanguage(stmt, ctx)) return;
     if (stmt.kind === 'say') {

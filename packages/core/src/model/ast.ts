@@ -152,7 +152,8 @@ export interface TranslateStmt extends Node<'translate'> {
 }
 
 export interface TranslateStringStmt extends Node<'translate-string'> {
-  readonly language: string;
+  /** null for `translate None strings`: overrides of the default language's own strings. */
+  readonly language: string | null;
   readonly old: string;
   readonly new: string;
 }

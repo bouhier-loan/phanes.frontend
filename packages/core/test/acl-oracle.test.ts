@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { fixturePath, walkDirectory } from '@phanes/testkit';
+import { CORPUS, fixturePath, openCorpus, readGzipJson, walkDirectory } from '@phanes/testkit';
 import { describe, expect, it } from 'vitest';
 import { buildVfs, loadScripts, type Stmt, walkStatements, type ScriptFile } from '../src';
 
@@ -116,3 +116,25 @@ describe('domain model across versions', () => {
     for (const sdk of SDKS) expect(await normalized(sdk), sdk).toEqual(reference);
   });
 });
+
+for (const { sdk, game } of CORPUS) {
+  describe(`domain model of ${game} (Ren'Py ${sdk}) matches unrpyc`, () => {
+    it('for every script', async () => {
+      const expected = await readGzipJson<Record<string, unknown[][]>>(
+        'expected',
+        'corpus',
+        sdk,
+        game,
+        'semantic.json.gz',
+      );
+      const { vfs } = await buildVfs(await openCorpus(sdk, game));
+      const { scripts, diagnostics } = await loadScripts(vfs);
+      expect(diagnostics.filter((d) => d.severity !== 'info')).toEqual([]);
+      expect(scripts.map((s) => `game/${s.gamePath}`).sort()).toEqual(Object.keys(expected).sort());
+      for (const script of scripts) {
+        const path = `game/${script.gamePath}`;
+        expect(project(script), path).toEqual(expected[path]);
+      }
+    });
+  });
+}
