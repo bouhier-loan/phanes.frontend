@@ -41,8 +41,9 @@ for build in fixtures/build/*/*/; do
 done
 ```
 
-Corpus réaliste : `the_question` pour les quatre SDK et `tutorial` pour 8.5.3 (≈ 110 000 lignes,
-écrans, `layeredimage`, onze langues). Seuls les scripts compilés sont commités ; les images, sons
+Corpus réaliste : `the_question` pour les quatre SDK et `tutorial` pour 8.5.3 (≈ 110 000 lignes
+avec les traductions, écrans, ATL, instructions créées par l'auteur, onze langues). Aucun des deux
+n'utilise `layeredimage` : c'est le rôle du mini-jeu `phanes_layers`. Seuls les scripts compilés sont commités ; les images, sons
 et sources sont relus comme des fichiers virtuels vides de la bonne taille (`openCorpus` dans
 `packages/testkit`), ce qui suffit à toutes les analyses.
 
